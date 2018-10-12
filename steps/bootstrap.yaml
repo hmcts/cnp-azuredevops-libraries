@@ -1,0 +1,36 @@
+parameters:
+  serviceConnection: ''
+
+steps:
+- task: AzureKeyVault@1
+  displayName: 'Get secrets from Keyvault'
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    keyVaultName: $(keyvaultName)
+    secretsFilter: 'jenkins-sp-subscription-id, jenkins-sp-id, jenkins-sp-secret, jenkins-sp-tenant-id'
+
+- task: InstallSSHKey@0
+  displayName: 'Install SSH Key'
+  inputs:
+    hostName: 'github.com'
+    sshPublicKey: 'not required'
+    sshKeySecureFile: 'jenkins_ssh_pk'
+
+- task: DownloadSecureFile@1
+  displayName: 'Download Bastion SSH key'
+  inputs:
+    secureFile: 'id_rsa_cnpadmin'
+
+- task: AzureCLI@1
+  displayName: 'Run bootstrap.sh'
+  enabled: true
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      export ARM_SUBSCRIPTION_ID=$(jenkins-sp-subscription-id)
+      export ARM_CLIENT_ID=$(jenkins-sp-id)
+      export ARM_CLIENT_SECRET=$(jenkins-sp-secret)
+      export ARM_TENANT_ID=$(jenkins-sp-tenant-id)
+      export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
+      ./bootstrap.sh $(subscriptionId) $(keyvaultName) $(environment) $(Agent.TempDirectory)/id_rsa_cnpadmin $(terraformCmd)
