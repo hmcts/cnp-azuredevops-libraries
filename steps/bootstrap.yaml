@@ -7,7 +7,7 @@ steps:
   inputs:
     azureSubscription: ${{ parameters.serviceConnection }}
     keyVaultName: $(keyvaultName)
-    secretsFilter: 'jenkins-sp-subscription-id, jenkins-sp-id, jenkins-sp-secret, jenkins-sp-tenant-id'
+    secretsFilter: 'ado-sp-subscription-id, ado-sp-id, ado-sp-secret, ado-sp-tenant-id'
 
 - task: InstallSSHKey@0
   displayName: 'Install SSH Key'
@@ -28,9 +28,9 @@ steps:
     azureSubscription: ${{ parameters.serviceConnection }}
     scriptLocation: 'inlineScript'
     inlineScript: |
-      export ARM_SUBSCRIPTION_ID=$(jenkins-sp-subscription-id)
-      export ARM_CLIENT_ID=$(jenkins-sp-id)
-      export ARM_CLIENT_SECRET=$(jenkins-sp-secret)
-      export ARM_TENANT_ID=$(jenkins-sp-tenant-id)
+      export ARM_SUBSCRIPTION_ID=$(ado-sp-subscription-id)
+      export ARM_CLIENT_ID=$(ado-sp-id)
+      export ARM_CLIENT_SECRET=$(ado-sp-secret)
+      export ARM_TENANT_ID=$(ado-sp-tenant-id)
       export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
       ./bootstrap.sh $(subscriptionId) $(keyvaultName) $(environment) $(Agent.TempDirectory)/id_rsa_cnpadmin $(terraformCmd)
