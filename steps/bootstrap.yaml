@@ -33,4 +33,4 @@ steps:
       export ARM_CLIENT_SECRET=$(ado-sp-secret)
       export ARM_TENANT_ID=$(ado-sp-tenant-id)
       export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
-      ./bootstrap.sh $(subscriptionId) $(keyvaultName) $(environment) $(Agent.TempDirectory)/id_rsa_cnpadmin $(terraformCmd)
+      ./bootstrap.sh $(subscriptionId) $(keyvaultName) $(environment) $(Agent.TempDirectory)/id_rsa_cnpadmin $(terraformCmd) $(target)
