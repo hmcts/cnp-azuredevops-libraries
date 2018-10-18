@@ -1,6 +1,7 @@
 parameters:
   serviceConnection: ''
 
+steps:
 - task: AzureCLI@1
   displayName: 'Run switch.sh'
   enabled: true
