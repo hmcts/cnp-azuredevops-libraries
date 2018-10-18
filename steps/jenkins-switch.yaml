@@ -1,0 +1,10 @@
+parameters:
+  serviceConnection: ''
+
+- task: AzureCLI@1
+  displayName: 'Run switch.sh'
+  enabled: true
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    scriptLocation: 'inlineScript'
+    inlineScript: ./switch.sh $(subscriptionId) $(environment) $(keyvaultName) $(command) $(force)
