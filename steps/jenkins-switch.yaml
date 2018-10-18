@@ -2,7 +2,7 @@ parameters:
   serviceConnection: ''
 
 steps:
-- script: sudo apt-get install python3-setuptools; python3 -m pip install --upgrade pip; python3 -m pip install https://github.com/hay/xml2json/zipball/master
+- script: sudo apt-get install python3-setuptools; sudo python3 -m pip install https://github.com/hay/xml2json/zipball/master
   displayName: 'Install xml2json'
 
 - task: AzureCLI@1
