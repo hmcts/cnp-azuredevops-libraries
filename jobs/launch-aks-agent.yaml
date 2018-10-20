@@ -1,0 +1,78 @@
+parameters:
+  serviceConnection: ''
+  agentName: ''
+
+jobs:
+- job: LaunchAgent
+  pool:
+    name: 'Hosted Ubuntu 1604'
+
+  steps:
+  - task: AzureKeyVault@1
+    displayName: 'Get secrets from Keyvault'
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      keyVaultName: 'infra-vault-sandbox'
+      secretsFilter: 'azure-devops-token'
+
+  - template: ../steps/install-helm.yaml
+
+  - template: ../steps/initialise-helm-client.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
+
+  - template: ../steps/configure-helm-acr.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
+      
+  - task: HelmDeploy@0
+    displayName: 'Launch Agent'
+    enabled: true
+    inputs:
+      connectionType: $(kubectlConnectionType)
+      azureSubscription: ${{ parameters.serviceConnection }}
+      azureResourceGroup: $(aksResourceGroup)
+      kubernetesCluster: $(clusterName)
+      command: 'install'
+      chartType: 'Name'
+      chartName: 'hmctssandbox/vsts-agent'
+      namespace: 'vsts-agents'
+      releaseName: '$(agentName)'
+      overrideValues: 'vstsAgentName=$(agentName)'
+
+  - task: CmdLine@2
+    displayName: Wait for Agent
+    inputs:
+      script: |
+        #!/bin/bash
+        #set -x
+
+        # parameters
+        TEST_URL="https://hmcts.visualstudio.com/_apis/distributedtask/pools/10/agents"
+        MAX_ATTEMPTS=10
+        SLEEP_TIME=5
+        AGENT_NAME=$(agentName)
+
+        # local
+        attempts=1
+
+        printf "Trying $TEST_URL a total of $MAX_ATTEMPTS attempts, sleeping $SLEEP_TIME second(s) in between retries.\n"
+
+        while (( attempts <= $MAX_ATTEMPTS ))
+        do
+          printf "."
+
+          response=`curl -s -u hmcts:$(azure-devops-token) -L "$TEST_URL" | jq "any(.value[].name; test(\\"^${AGENT_NAME}\\$\\"))"`
+          ((attempts++))
+
+          if [ "true" == $response ]; then
+            echo "Agent ready, proceeding..."
+            exit 0
+          else
+            sleep $SLEEP_TIME
+          fi
+        done
+
+        printf "\n"
+        printf "Agent failed to materialise, giving up.\n"
+        exit 1

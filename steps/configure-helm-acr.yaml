@@ -1,0 +1,13 @@
+parameters:
+  serviceConnection: ''
+
+steps:
+- task: AzureCLI@1
+  displayName: 'Configure Helm with ACR'
+  enabled: true
+  inputs:
+    azureSubscription:  ${{ parameters.serviceConnection }}
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az configure --defaults acr=hmctssandbox
+      az acr helm repo add

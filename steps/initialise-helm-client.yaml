@@ -1,0 +1,14 @@
+parameters:
+  serviceConnection: ''
+
+steps:
+- task: HelmDeploy@0
+  displayName: 'Initialise Helm Client'
+  enabled: true
+  inputs:
+    connectionType: $(kubectlConnectionType)
+    azureSubscription: ${{ parameters.serviceConnection }}
+    azureResourceGroup: $(aksResourceGroup)
+    kubernetesCluster: $(clusterName)
+    command: 'init'
+    arguments: '--client-only'

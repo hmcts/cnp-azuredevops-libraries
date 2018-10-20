@@ -1,0 +1,31 @@
+parameters:
+  serviceConnection: ''
+  agentName: ''
+
+  jobs:
+  - job: TerminateAgent
+  dependsOn: JavaBuild
+  pool:
+    name: 'Hosted Ubuntu 1604'
+
+  steps:
+  - template: ../steps/install-helm.yaml
+
+  - template: ../steps/initialise-helm-client.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
+
+  - template: ../steps/configure-helm-acr.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
+
+  - task: HelmDeploy@0
+    displayName: 'Delete Agent'
+    enabled: true
+    inputs:
+      connectionType: $(kubectlConnectionType)
+      azureSubscription: ${{ parameters.serviceConnection }}
+      azureResourceGroup: $(aksResourceGroup)
+      kubernetesCluster: $(clusterName)
+      command: 'delete'
+      arguments: '--purge ${{ parameters.agentName }}'
