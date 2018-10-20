@@ -2,8 +2,8 @@ parameters:
   serviceConnection: ''
   agentName: ''
 
-  jobs:
-  - job: TerminateAgent
+jobs:
+- job: TerminateAgent
   dependsOn: JavaBuild
   pool:
     name: 'Hosted Ubuntu 1604'
