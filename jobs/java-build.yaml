@@ -1,5 +1,5 @@
 parameters:
-  agentName: ''
+  serviceConnection: ''
 
 jobs:
 - job: JavaBuild
@@ -7,7 +7,7 @@ jobs:
   pool:
     name: 'mgmt-aks-sandbox'
     demands:
-    - agent.name -equals ${{ parameters.agentName }}
+    - agent.name -equals $(agentName)
 
   steps:
   - script: 'env'
@@ -16,7 +16,7 @@ jobs:
   - task: AzureKeyVault@1
     displayName: 'Get secrets from Keyvault'
     inputs:
-      azureSubscription: 'azurerm-sandbox'
+      azureSubscription: ${{ parameters.serviceConnection }}
       keyVaultName: 'infra-vault-sandbox'
       secretsFilter: 'sonarcloud-api-token,OWASPDb-Account,OWASPDb-Password'
 

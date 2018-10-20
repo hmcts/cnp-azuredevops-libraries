@@ -1,6 +1,5 @@
 parameters:
   serviceConnection: ''
-  agentName: ''
 
 jobs:
 - job: TerminateAgent
