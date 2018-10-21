@@ -1,10 +1,13 @@
 parameters:
   testUrl: ''
 
+steps:
 - task: Gradle@2
   displayName: 'Smoke Test'
   condition: eq(variables['Build.Reason'], 'PullRequest')
   enabled: true
+  env:
+    TEST_URL: ${{ parameters.testUrl }}
   inputs:
     workingDirectory: ''
     gradleWrapperFile: 'gradlew'
@@ -17,5 +20,3 @@ parameters:
     sonarQubeRunAnalysis: false
     options: '--info --rerun-tasks'
     tasks: 'smoke'
-  env:
-    TEST_URL: ${{ parameters.testUrl }}
