@@ -7,6 +7,8 @@ jobs:
     name: 'Hosted Ubuntu 1604'
 
   steps:
+  - checkout: none
+  
   - task: AzureKeyVault@1
     displayName: 'Get secrets from Keyvault'
     inputs:
