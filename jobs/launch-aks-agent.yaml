@@ -16,15 +16,7 @@ jobs:
       keyVaultName: 'infra-vault-sandbox'
       secretsFilter: 'azure-devops-token'
 
-  - template: ../steps/install-helm.yaml
-
-  - template: ../steps/initialise-helm-client.yaml
-    parameters:
-      serviceConnection: ${{ parameters.serviceConnection }}
-
-  - template: ../steps/configure-helm-acr.yaml
-    parameters:
-      serviceConnection: ${{ parameters.serviceConnection }}
+  - template: ../steps/conifgure-helm.yaml
       
   - task: HelmDeploy@0
     displayName: 'Launch Agent'

@@ -20,18 +20,8 @@ jobs:
       keyVaultName: 'infra-vault-sandbox'
       secretsFilter: 'sonarcloud-api-token,OWASPDb-Account,OWASPDb-Password'
 
-  - task: Gradle@2
-    displayName: 'Build and SonarQube'
-    enabled: true
-    inputs:
-      workingDirectory: ''
-      gradleWrapperFile: 'gradlew'
-      gradleOptions: '-Xmx3072m'
-      javaHomeOption: 'JDKVersion'
-      jdkVersionOption: '1.8'
-      jdkArchitectureOption: 'x64'
-      publishJUnitResults: true
-      testResultsFiles: '**/TEST-*.xml'
-      sonarQubeRunAnalysis: true
-      options: '-Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$(sonarcloud-api-token) -Dsonar.organization=hmcts'
-      tasks: 'assemble'
+  - template: ../tasks/gradle-assemble.yaml
+
+  - template: ../tasks/sonarcloud-build-breaker.yaml
+
+  - template: ../tasks/owasp-security-check.yaml

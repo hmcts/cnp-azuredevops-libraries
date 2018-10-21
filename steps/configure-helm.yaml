@@ -1,0 +1,13 @@
+parameters:
+  serviceConnection: ''
+
+steps:
+- template: ../tasks/install-helm.yaml
+
+- template: ../tasks/initialise-helm-client.yaml
+    parameters:
+    serviceConnection: ${{ parameters.serviceConnection }}
+    
+- template: ../tasks/configure-helm-acr.yaml
+    parameters:
+    serviceConnection: ${{ parameters.serviceConnection }}

@@ -1,0 +1,6 @@
+steps:
+- task: SimondeLang.sonarcloud-buildbreaker.sonar-buildbreaker.sonarcloud-buildbreaker@1
+  displayName: 'Check Sonarcloud Quality Gate'
+  enabled: true
+  inputs:
+    SonarCloud: 'hmcts-sonarcloud'
