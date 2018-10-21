@@ -43,7 +43,7 @@ jobs:
         #set -x
 
         # parameters
-        TEST_URL="https://hmcts.visualstudio.com/_apis/distributedtask/pools/10/agents"
+        VSTS_URL="https://hmcts.visualstudio.com/_apis/distributedtask/pools/10/agents"
         MAX_ATTEMPTS=10
         SLEEP_TIME=5
         AGENT_NAME=$(agentName)
@@ -51,13 +51,13 @@ jobs:
         # local
         attempts=1
 
-        printf "Trying $TEST_URL a total of $MAX_ATTEMPTS attempts, sleeping $SLEEP_TIME second(s) in between retries.\n"
+        printf "Trying $VSTS_URL a total of $MAX_ATTEMPTS attempts, sleeping $SLEEP_TIME second(s) in between retries.\n"
 
         while (( attempts <= $MAX_ATTEMPTS ))
         do
-          printf "Retrying...\n"
+          printf "Waiting for agent...\n"
 
-          response=`curl -s -u hmcts:$(azure-devops-token) -L "$TEST_URL" | jq "any(.value[].name; test(\\"^${AGENT_NAME}\\$\\"))"`
+          response=`curl -s -u hmcts:$(azure-devops-token) -L "$VSTS_URL" | jq "any(.value[].name; test(\\"^${AGENT_NAME}\\$\\"))"`
           ((attempts++))
 
           if [ "true" == $response ]; then
