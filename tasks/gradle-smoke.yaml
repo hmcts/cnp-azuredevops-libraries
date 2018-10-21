@@ -1,0 +1,21 @@
+parameters:
+  testUrl: ''
+
+- task: Gradle@2
+  displayName: 'Smoke Test'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  enabled: true
+  inputs:
+    workingDirectory: ''
+    gradleWrapperFile: 'gradlew'
+    gradleOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.8'
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: true
+    testResultsFiles: '**/TEST-*.xml'
+    sonarQubeRunAnalysis: false
+    options: '--info --rerun-tasks'
+    tasks: 'smoke'
+  env:
+    TEST_URL: ${{ parameters.testUrl }}

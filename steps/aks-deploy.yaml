@@ -88,25 +88,10 @@ steps:
 
 - template: ../tasks/health-check.yaml
   parameters:
-    testUrl: '$(serviceName).service.core-compute-saat.internal/health'
+    testUrl: 'https://$(serviceName).service.core-compute-saat.internal/health'
     maxAttempts: 20
     sleepTime: 5
 
-- task: Gradle@2
-  displayName: 'Smoke Test: AKS'
-  condition: eq(variables['Build.Reason'], 'PullRequest')
-  enabled: true
-  inputs:
-    workingDirectory: ''
-    gradleWrapperFile: 'gradlew'
-    gradleOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.8'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/TEST-*.xml'
-    sonarQubeRunAnalysis: true
-    options: '--info --rerun-tasks'
-    tasks: 'smoke'
-  env:
-    TEST_URL: 'https://$(serviceName).service.core-compute-saat.internal'
+- template: ../tasks/gradle-smoke.yaml
+  parameters:
+    testUrl: 'https://$(serviceName).service.core-compute-saat.internal'
