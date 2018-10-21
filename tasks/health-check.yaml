@@ -16,20 +16,21 @@ steps:
       ready=1
       attempts=1
 
+      printf "Trying $TEST_URL\n"
       while (( ready != 0 && attempts <= $MAX_ATTEMPTS ))
       do
-        echo "Attempt #$attempts on $TEST_URL"
+        printf "Attempt #$attempts\n"
         response=`curl -sk -o /dev/null -w "%{http_code}" $TEST_URL`
         ((attempts++))
 
         if (( response >= 200 && response <= 399 )); then
-          echo "Service is healthy, returned HTTP $response"
+          printf "Service is healthy, returned HTTP $response\n"
           exit 0
         else
-          echo "Returned HTTP $response, retrying..."
+          printf "Returned HTTP $response, retrying...\n"
           sleep $SLEEP_TIME
         fi
       done
 
-      echo "Service not healthy, giving up."
+      printf "Service not healthy, giving up.\n"
       exit 1
