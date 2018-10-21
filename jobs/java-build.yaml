@@ -32,4 +32,4 @@ jobs:
 
   - template: ../steps/aks-deploy.yaml
     parameters:
-    serviceConnection: ${{ parameters.serviceConnection }}
+      serviceConnection: ${{ parameters.serviceConnection }}
