@@ -10,7 +10,7 @@ jobs:
   steps:
   - checkout: none
 
-  - template: ../steps/conifgure-helm.yaml
+  - template: ../steps/configure-helm.yaml
 
   - task: HelmDeploy@0
     displayName: 'Delete Agent'
