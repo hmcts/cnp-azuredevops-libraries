@@ -20,7 +20,7 @@ steps:
       while (( ready != 0 && attempts <= $MAX_ATTEMPTS ))
       do
         echo "Attempt #$attempts on $TEST_URL"
-        response=`curl -s -o /dev/null -w "%{http_code}" $TEST_URL`
+        response=`curl -sk -o /dev/null -w "%{http_code}" $TEST_URL`
         ((attempts++))
 
         if (( response >= 200 && response <= 399 )); then
