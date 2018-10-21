@@ -26,4 +26,4 @@ steps:
   inputs:
     azureSubscription: ${{ parameters.serviceConnection }}
     scriptLocation: 'inlineScript'
-    inlineScript: 'az acr build -r ${{ parameters.acrName }} -t $(Build.Repository.Name):$(imageTag) -g ${{ parameters.acrResourceGroup }} .'
+    inlineScript: az acr build -r ${{ parameters.acrName }} -t $(Build.Repository.Name):$(imageTag) -g ${{ parameters.acrResourceGroup }} .
