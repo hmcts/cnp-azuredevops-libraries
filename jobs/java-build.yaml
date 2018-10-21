@@ -7,7 +7,7 @@ jobs:
   pool:
     name: 'mgmt-aks-sandbox'
     demands:
-    - agent.name -equals $(agentName)
+    - agent.name -equals $(projectName)-$(Build.BuildId)
 
   steps:
   - script: 'env'
