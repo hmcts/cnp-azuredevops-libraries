@@ -13,8 +13,6 @@ jobs:
   - script: 'env'
     displayName: 'Display Environment Variables'
 
-  - template: ../tasks/install-os-dependencies.yaml
-
   - task: AzureKeyVault@1
     displayName: 'Get secrets from Keyvault'
     inputs:
@@ -31,3 +29,7 @@ jobs:
   - template: ../steps/acr-build.yaml
     parameters:
       serviceConnection: ${{ parameters.serviceConnection }}
+
+  - template: ../steps/aks-deploy.yaml
+    parameters:
+    serviceConnection: ${{ parameters.serviceConnection }}

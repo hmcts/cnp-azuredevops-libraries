@@ -1,0 +1,106 @@
+parameters:
+  serviceConnection: ''
+
+steps:
+
+- template: ../tasks/install-os-dependencies.yaml
+
+- task: AzureCLI@1
+  displayName: 'Get Image Digest'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  enabled: true
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+     imageDigest=`az acr repository show --name $(acrName) --image $(Build.Repository.Name):$(imageTag) --query [digest] -otsv`
+     registryHost=`az acr show -n $(acrName) --query loginServer -otsv`
+     echo "##vso[task.setvariable variable=IMAGE_DIGEST]$imageDigest"
+     echo "##vso[task.setvariable variable=REGISTRY_HOST]$registryHost"
+
+- task: AzureCLI@1
+  displayName: 'Get Consul IP address'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  enabled: true
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      azresult=`az network lb frontend-ip show --lb-name consul-server_dns -g core-infra-$(environment) -n PrivateIPAddress --query privateIpAddress -otsv`
+      echo "##vso[task.setvariable variable=CONSUL_IP]$azresult"
+
+- script: |
+    echo '##vso[task.setvariable variable=serviceName]$(projectName)-$(imageTag)'
+  displayName: 'Set SERVICE_NAME environment variable'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+
+- script: |
+    envsubst < src/kubernetes/deployment.template.yaml > src/kubernetes/deployment.yaml
+    envsubst < src/kubernetes/config.saat.yaml > src/kubernetes/config.yaml
+  displayName: 'Replace tokens in kubernetes manifests'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  env:
+    SERVICE_NAME: $(serviceName)
+    NAMESPACE: $(serviceName)
+    IMAGE_NAME: $(REGISTRY_HOST)/$(Build.Repository.Name)@$(IMAGE_DIGEST)
+    SERVICE_FQDN: '$(serviceName).service.core-compute-saat.internal'
+    CONSUL_IP: $(CONSUL_IP)
+    INGRESS_IP: 10.100.84.103
+
+- task: Kubernetes@1
+  displayName: 'Delete Namespace if it exists'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  enabled: true
+  inputs:
+    connectionType: $(kubectlConnectionType)
+    azureSubscriptionEndpoint: ${{ parameters.serviceConnection }}
+    azureResourceGroup: $(aksResourceGroup)
+    kubernetesCluster: $(clusterName)
+    command: 'delete'
+    arguments: 'namespace $(serviceName)'
+    outputFormat: 'name'
+
+- task: Kubernetes@1
+  displayName: 'Deploy Application to Kubernetes'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  enabled: true
+  inputs:
+    connectionType: $(kubectlConnectionType)
+    azureSubscriptionEndpoint: ${{ parameters.serviceConnection }}
+    azureResourceGroup: $(aksResourceGroup)
+    kubernetesCluster: $(clusterName)
+    command: 'apply'
+    arguments: '-f src/kubernetes/deployment.yaml'
+    outputFormat: 'name'
+
+- task: Kubernetes@1
+  displayName: 'Deploy Application Configuration to Kubernetes'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  enabled: true
+  inputs:
+    connectionType: $(kubectlConnectionType)
+    azureSubscriptionEndpoint: ${{ parameters.serviceConnection }}
+    azureResourceGroup: $(aksResourceGroup)
+    kubernetesCluster: $(clusterName)
+    command: 'apply'
+    arguments: '-f src/kubernetes/config.yaml'
+    outputFormat: 'name'
+
+- task: Gradle@2
+  displayName: 'Smoke Test: AKS'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  enabled: true
+  inputs:
+    workingDirectory: ''
+    gradleWrapperFile: 'gradlew'
+    gradleOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.8'
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: true
+    testResultsFiles: '**/TEST-*.xml'
+    sonarQubeRunAnalysis: true
+    options: '--info --rerun-tasks'
+    tasks: 'smoke'
+  env:
+    TEST_URL: 'https://$(serviceName).service.core-compute-saat.internal'
