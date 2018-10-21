@@ -4,6 +4,7 @@ parameters:
 jobs:
 - job: TerminateAgent
   dependsOn: JavaBuild
+  condition: always()
   pool:
     name: 'Hosted Ubuntu 1604'
 
