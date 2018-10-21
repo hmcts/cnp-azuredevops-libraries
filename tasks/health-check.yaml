@@ -4,7 +4,6 @@ parameters:
   sleepTime: ''
 
 steps:
-
 - task: CmdLine@2
   displayName: Health Check
   env:

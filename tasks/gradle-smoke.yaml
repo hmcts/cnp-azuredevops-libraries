@@ -4,7 +4,6 @@ parameters:
 steps:
 - task: Gradle@2
   displayName: 'Smoke Test'
-  condition: eq(variables['Build.Reason'], 'PullRequest')
   enabled: true
   env:
     TEST_URL: ${{ parameters.testUrl }}

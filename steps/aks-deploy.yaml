@@ -7,7 +7,6 @@ steps:
 
 - task: AzureCLI@1
   displayName: 'Get Image Digest'
-  condition: eq(variables['Build.Reason'], 'PullRequest')
   enabled: true
   inputs:
     azureSubscription: ${{ parameters.serviceConnection }}
@@ -20,7 +19,6 @@ steps:
 
 - task: AzureCLI@1
   displayName: 'Get Consul IP address'
-  condition: eq(variables['Build.Reason'], 'PullRequest')
   enabled: true
   inputs:
     azureSubscription: ${{ parameters.serviceConnection }}
@@ -32,13 +30,11 @@ steps:
 - script: |
     echo '##vso[task.setvariable variable=serviceName]$(projectName)-$(imageTag)'
   displayName: 'Set SERVICE_NAME environment variable'
-  condition: eq(variables['Build.Reason'], 'PullRequest')
 
 - script: |
     envsubst < src/kubernetes/deployment.template.yaml > src/kubernetes/deployment.yaml
     envsubst < src/kubernetes/config.saat.yaml > src/kubernetes/config.yaml
   displayName: 'Replace tokens in kubernetes manifests'
-  condition: eq(variables['Build.Reason'], 'PullRequest')
   env:
     SERVICE_NAME: $(serviceName)
     NAMESPACE: $(serviceName)
@@ -49,7 +45,6 @@ steps:
 
 - task: Kubernetes@1
   displayName: 'Delete Namespace if it exists'
-  condition: eq(variables['Build.Reason'], 'PullRequest')
   enabled: true
   inputs:
     connectionType: $(kubectlConnectionType)
@@ -62,7 +57,6 @@ steps:
 
 - task: Kubernetes@1
   displayName: 'Deploy Application to Kubernetes'
-  condition: eq(variables['Build.Reason'], 'PullRequest')
   enabled: true
   inputs:
     connectionType: $(kubectlConnectionType)
@@ -75,7 +69,6 @@ steps:
 
 - task: Kubernetes@1
   displayName: 'Deploy Application Configuration to Kubernetes'
-  condition: eq(variables['Build.Reason'], 'PullRequest')
   enabled: true
   inputs:
     connectionType: $(kubectlConnectionType)
