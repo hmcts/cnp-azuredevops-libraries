@@ -1,7 +1,5 @@
 parameters:
   serviceConnection: ''
-  acrName: ''
-  acrResourceGroup: ''
 
 jobs:
 - job: JavaBuild
@@ -33,5 +31,3 @@ jobs:
   - template: ../steps/acr-build.yaml
     parameters:
       serviceConnection: ${{ parameters.serviceConnection }}
-      acrName: ${{ parameters.acrName }}
-      acrResourceGroup: ${{ parameters.acrResourceGroup }}
