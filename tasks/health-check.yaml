@@ -9,8 +9,8 @@ steps:
   displayName: Health Check
   env:
     TEST_URL: ${{ parameters.testUrl }}
-    MAX_ATTEMPTS: ${{ maxAttempts }}
-    SLEEP_TIME: ${{ sleepTime }}
+    MAX_ATTEMPTS: ${{ parameters.maxAttempts }}
+    SLEEP_TIME: ${{ parameters.sleepTime }}
   inputs:
     script: |
       #!/bin/bash
