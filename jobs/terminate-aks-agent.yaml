@@ -11,6 +11,8 @@ jobs:
   - checkout: none
 
   - template: ../steps/configure-helm.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
 
   - task: HelmDeploy@0
     displayName: 'Delete Agent'
