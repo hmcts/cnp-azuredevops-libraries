@@ -1,0 +1,36 @@
+parameters:
+  testUrl: ''
+  maxAttempts: ''
+  sleepTime: ''
+
+steps:
+
+- task: CmdLine@2
+  displayName: Health Check
+  env:
+    TEST_URL: ${{ parameters.testUrl }}
+    MAX_ATTEMPTS: ${{ maxAttempts }}
+    SLEEP_TIME: ${{ sleepTime }}
+  inputs:
+    script: |
+      #!/bin/bash
+      ready=1
+      attempts=1
+
+      while (( ready != 0 && attempts <= $MAX_ATTEMPTS ))
+      do
+        echo "Attempt #$attempts on $TEST_URL"
+        response=`curl -s -o /dev/null -w "%{http_code}" $TEST_URL`
+        ((attempts++))
+
+        if (( response >= 200 && response <= 399 )); then
+          echo "Service is healthy, returned HTTP $response"
+          exit 0
+        else
+          echo "Returned HTTP $response, retrying..."
+          sleep $SLEEP_TIME
+        fi
+      done
+
+      echo "Service not healthy, giving up."
+      exit 1
