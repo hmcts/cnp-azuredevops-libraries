@@ -3,17 +3,17 @@ parameters:
 
 steps:
 
-# Set the tag to the PR number
+# On PR: Set the tag to the PR number
 - script: |
     echo '##vso[task.setvariable variable=imageTag]pr-$(System.PullRequest.PullRequestNumber)'
   displayName: 'Set Image Tag: Pull Request'
   condition: eq(variables['Build.Reason'], 'PullRequest')
 
-# Set the tag to the branch name
+# Everything else: Set the tag to the branch name
 - script: |
     echo '##vso[task.setvariable variable=imageTag]$(Build.SourceBranchName)'
   displayName: 'Set Image Tag: Branch'
-  condition: eq(variables['Build.Reason'], 'IndividualCI')
+  condition: ne(variables['Build.Reason'], 'PullRequest')
 
 #
 # ACR Build
