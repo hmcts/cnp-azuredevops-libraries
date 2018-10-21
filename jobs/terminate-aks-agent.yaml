@@ -8,6 +8,8 @@ jobs:
     name: 'Hosted Ubuntu 1604'
 
   steps:
+  - checkout: none
+  
   - template: ../steps/install-helm.yaml
 
   - template: ../steps/initialise-helm-client.yaml
