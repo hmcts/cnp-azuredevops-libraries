@@ -27,4 +27,4 @@ jobs:
       azureResourceGroup: $(aksResourceGroup)
       kubernetesCluster: $(clusterName)
       command: 'delete'
-      arguments: '--purge ${{ parameters.agentName }}'
+      arguments: '--purge $(agentName)'
