@@ -6,8 +6,8 @@ steps:
 
 - template: ../tasks/initialise-helm-client.yaml
   parameters:
-  serviceConnection: ${{ parameters.serviceConnection }}
+    serviceConnection: ${{ parameters.serviceConnection }}
 
 - template: ../tasks/configure-helm-acr.yaml
   parameters:
-  serviceConnection: ${{ parameters.serviceConnection }}
+    serviceConnection: ${{ parameters.serviceConnection }}
