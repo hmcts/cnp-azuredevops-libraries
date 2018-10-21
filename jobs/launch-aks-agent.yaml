@@ -8,7 +8,7 @@ jobs:
 
   steps:
   - checkout: none
-  
+
   - task: AzureKeyVault@1
     displayName: 'Get secrets from Keyvault'
     inputs:
@@ -61,13 +61,13 @@ jobs:
 
         while (( attempts <= $MAX_ATTEMPTS ))
         do
-          printf "."
+          printf "Retrying...\n"
 
           response=`curl -s -u hmcts:$(azure-devops-token) -L "$TEST_URL" | jq "any(.value[].name; test(\\"^${AGENT_NAME}\\$\\"))"`
           ((attempts++))
 
           if [ "true" == $response ]; then
-            echo "Agent ready, proceeding..."
+            printf "Agent ready, proceeding...\n"
             exit 0
           else
             sleep $SLEEP_TIME
