@@ -1,0 +1,29 @@
+parameters:
+  serviceConnection: ''
+  acrName: ''
+  acrResourceGroup: ''
+
+steps:
+
+# Set the tag to the PR number
+- script: |
+    echo '##vso[task.setvariable variable=imageTag]pr-$(System.PullRequest.PullRequestNumber)'
+  displayName: 'Set Image Tag: Pull Request'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+
+# Set the tag to the branch name
+- script: |
+    echo '##vso[task.setvariable variable=imageTag]$(Build.SourceBranchName)'
+  displayName: 'Set Image Tag: Branch'
+  condition: eq(variables['Build.Reason'], 'IndividualCI')
+
+#
+# ACR Build
+#
+- task: AzureCLI@1
+  displayName: 'ACR Build'
+  enabled: true
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    scriptLocation: 'inlineScript'
+    inlineScript: 'az acr build -r ${{ parameters.acrName }} -t $(Build.Repository.Name):$(imageTag) -g ${{ parameters.acrResourceGroup }} .'

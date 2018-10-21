@@ -1,5 +1,7 @@
 parameters:
   serviceConnection: ''
+  acrName: ''
+  acrResourceGroup: ''
 
 jobs:
 - job: JavaBuild
@@ -13,6 +15,8 @@ jobs:
   - script: 'env'
     displayName: 'Display Environment Variables'
 
+  - template: ../tasks/install-os-dependencies.yaml
+
   - task: AzureKeyVault@1
     displayName: 'Get secrets from Keyvault'
     inputs:
@@ -25,3 +29,9 @@ jobs:
   - template: ../tasks/sonarcloud-build-breaker.yaml
 
   - template: ../tasks/owasp-security-check.yaml
+
+  - template: ../steps/acr-build.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
+      acrName: ${{ parameters.acrName }}
+      acrResourceGroup: ${{ parameters.acrResourceGroup }}
