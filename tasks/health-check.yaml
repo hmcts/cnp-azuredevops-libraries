@@ -13,11 +13,10 @@ steps:
   inputs:
     script: |
       #!/bin/bash
-      ready=1
       attempts=1
 
       printf "Trying $TEST_URL\n"
-      while (( ready != 0 && attempts <= $MAX_ATTEMPTS ))
+      while (( attempts <= $MAX_ATTEMPTS ))
       do
         printf "Attempt #$attempts\n"
         response=`curl -sk -o /dev/null -w "%{http_code}" $TEST_URL`
