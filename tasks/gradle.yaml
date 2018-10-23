@@ -1,0 +1,23 @@
+parameters:
+  displayName: ''
+  testUrl: ''
+  tasks: ''
+  options: ''
+
+steps:
+- task: Gradle@2
+  displayName: ${{ parameters.displayName }}
+  enabled: true
+  env:
+    TEST_URL: ${{ parameters.testUrl }}
+  inputs:
+    gradleWrapperFile: 'gradlew'
+    gradleOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.8'
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: true
+    testResultsFiles: '**/TEST-*.xml'
+    sonarQubeRunAnalysis: false
+    options: ${{ parameters.options }}
+    tasks: ${{ parameters.tasks }}

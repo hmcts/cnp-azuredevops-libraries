@@ -20,7 +20,11 @@ jobs:
       keyVaultName: 'infra-vault-sandbox'
       secretsFilter: 'sonarcloud-api-token,OWASPDb-Account,OWASPDb-Password'
 
-  - template: ../tasks/gradle-assemble.yaml
+  - template: ../tasks/gradle.yaml
+    parameters:
+      displayName: 'Gradle Assemble'
+      tasks: 'assemble'
+      options: '-Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$(sonarcloud-api-token) -Dsonar.organization=hmcts'
 
   - template: ../tasks/sonarcloud-build-breaker.yaml
 

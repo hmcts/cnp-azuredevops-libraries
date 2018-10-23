@@ -85,6 +85,16 @@ steps:
     maxAttempts: 20
     sleepTime: 5
 
-- template: ../tasks/gradle-smoke.yaml
+- template: ../tasks/gradle.yaml
   parameters:
+    displayName: 'Smoke Test: AKS'
     testUrl: 'https://$(serviceName).service.core-compute-saat.internal'
+    tasks: 'smoke'
+    options: '--info --rerun-tasks'
+
+- template: ../tasks/gradle.yaml
+  parameters:
+    displayName: 'Functional Test: AKS'
+    testUrl: 'https://$(serviceName).service.core-compute-saat.internal'
+    tasks: 'functional'
+    options: '--info --rerun-tasks'
