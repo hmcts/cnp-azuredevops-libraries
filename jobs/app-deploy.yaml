@@ -1,0 +1,18 @@
+parameters:
+  serviceConnection: ''
+
+jobs:
+- job: AppDeploy
+  dependsOn: JavaBuild
+  pool:
+    name: 'mgmt-aks-sandbox'
+    demands:
+    - agent.name -equals $(projectName)-$(Build.BuildId)
+
+  steps:
+  - script: 'env'
+    displayName: 'Display Environment Variables'
+
+  - template: ../tasks/webapp-deploy.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}

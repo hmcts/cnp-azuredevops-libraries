@@ -1,0 +1,17 @@
+parameters:
+  serviceConnection: ''
+
+steps:
+- task: AzureRmWebAppDeployment@4
+  inputs:
+    connectionType: 'AzureRM'
+    azureSubscription: ${{ parameters.serviceConnection }}
+    appType: 'webAppContainer'
+    webAppName: 'cnp-vsts-tf-test2'
+    #deployToSlotOrASE: false # Optional
+    #resourceGroupName: # Required when deployToSlotOrASE == True
+    #slotName: 'production' # Required when deployToSlotOrASE == True
+    dockerNamespace: 'hmctssandbox.azurecr.io'
+    dockerRepository: 'hmcts/cnp-rhubarb-recipes-service'
+    dockerImageTag: 'azure-pipelines'
+    #appSettings: # Optional
