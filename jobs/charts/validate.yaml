@@ -27,7 +27,13 @@ jobs:
         az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksCluster }}
 
   - template: ../../tasks/charts/cleanup.yaml
-    displayName: 'Before: Cleanup'
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
+      aksResourceGroup: ${{ parameters.aksResourceGroup }}
+      aksCluster: ${{ parameters.aksCluster }}
+      chartReleaseName: ${{ parameters.chartReleaseName }}
+      chartNamespace: ${{ parameters.chartNamespace }}
+      testPodName: ${{ parameters.testPodName }}
 
   - task: AzureCLI@1
     displayName: 'Lint and Test'
@@ -41,4 +47,10 @@ jobs:
         helm test ${{ parameters.chartReleaseName }}
 
   - template: ../../tasks/charts/cleanup.yaml
-    displayName: 'After: Cleanup'
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
+      aksResourceGroup: ${{ parameters.aksResourceGroup }}
+      aksCluster: ${{ parameters.aksCluster }}
+      chartReleaseName: ${{ parameters.chartReleaseName }}
+      chartNamespace: ${{ parameters.chartNamespace }}
+      testPodName: ${{ parameters.testPodName }}
