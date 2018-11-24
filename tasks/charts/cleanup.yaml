@@ -4,7 +4,6 @@ parameters:
   aksCluster: ''
   chartReleaseName: ''
   chartNamespace: ''
-  testPodName: ''
 
 steps:
 - task: AzureCLI@1
@@ -15,4 +14,3 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       helm delete --purge ${{ parameters.chartReleaseName }}
-      kubectl delete pod ${{ parameters.testPodName }} -n ${{ parameters.chartNamespace }}

@@ -6,7 +6,6 @@ parameters:
   chartName: ''
   chartReleaseName: ''
   chartNamespace: ''
-  testPodName: ''
 
 jobs:
 - job: ValidateChart
@@ -33,7 +32,6 @@ jobs:
       aksCluster: ${{ parameters.aksCluster }}
       chartReleaseName: ${{ parameters.chartReleaseName }}
       chartNamespace: ${{ parameters.chartNamespace }}
-      testPodName: ${{ parameters.testPodName }}
 
   - task: AzureCLI@1
     displayName: 'Lint and Test'
@@ -43,7 +41,7 @@ jobs:
       inlineScript: |
         helm lint ${{ parameters.chartName }}
         helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} --wait
-        helm test ${{ parameters.chartReleaseName }}
+        helm test ${{ parameters.chartReleaseName }} --cleanup
 
   - template: ../../tasks/charts/cleanup.yaml
     parameters:
@@ -52,4 +50,3 @@ jobs:
       aksCluster: ${{ parameters.aksCluster }}
       chartReleaseName: ${{ parameters.chartReleaseName }}
       chartNamespace: ${{ parameters.chartNamespace }}
-      testPodName: ${{ parameters.testPodName }}
