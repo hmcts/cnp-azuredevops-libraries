@@ -42,7 +42,7 @@ jobs:
       scriptLocation: 'inlineScript'
       inlineScript: |
         az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksCluster }}
-        helm lint $(chart)
+        helm lint ${{ parameters.chartName }}
         helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} --wait
         helm test ${{ parameters.chartReleaseName }}
 
