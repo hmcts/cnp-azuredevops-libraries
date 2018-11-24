@@ -1,8 +1,7 @@
 parameters:
-  serviceConnection: ''
-  acrName: ''
-  aksResourceGroup: ''
-  aksCluster: ''
+  serviceConnection: 'azurerm-nonprod'
+  aksResourceGroup: 'cnp-aks-rg'
+  aksCluster: 'cnp-aks-cluster'
   chartName: ''
   chartReleaseName: ''
   chartNamespace: ''
