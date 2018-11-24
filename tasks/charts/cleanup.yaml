@@ -1,0 +1,18 @@
+parameters:
+  serviceConnection: ''
+  aksResourceGroup: ''
+  aksCluster: ''
+  chartReleaseName: ''
+  chartNamespace: ''
+  testPodName: ''
+
+steps:
+- task: AzureCLI@1
+  displayName: 'Cleanup'
+  continueOnError: true
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      helm delete --purge ${{ parameters.chartReleaseName }}
+      kubectl delete pod ${{ parameters.testPodName }} -n ${{ parameters.chartNamespace }}
