@@ -39,13 +39,12 @@ jobs:
   - script: helm package ${{ parameters.chartName }}
     displayName: 'Helm Package'
 
-    script: |
+  - script: |
       CHART_FILE=$(ls $CHARTNAME-)
       az acr helm push $CHART_FILE
     displayName: Helm Publish
 
-  - script: |
-      helm delete --purge ${{ parameters.chartReleaseName }}
+  - script: helm delete --purge ${{ parameters.chartReleaseName }}
     continueOnError: true
     condition: always()
     displayName: 'Delete Test Chart'
