@@ -1,0 +1,50 @@
+parameters:
+  serviceConnection: 'azurerm-nonprod'
+  aksResourceGroup: 'cnp-aks-rg'
+  aksCluster: 'cnp-aks-cluster'
+  acrName: hmcts
+  chartName: ''
+  chartReleaseName: ''
+  chartNamespace: ''
+
+jobs:
+- job: ValidateChart
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  steps:
+  - task: HelmInstaller@0
+    inputs:
+      helmVersion: '2.11.0'
+      installKubectl: false
+
+  - task: AzureCLI@1
+    displayName: 'AKS Authenticate'
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksCluster }}
+        az configure --defaults acr=${{ parameters.acrName }}
+	      az acr helm repo add
+
+  - script: helm lint ${{ parameters.chartName }}
+    displayName: 'Helm Lint'
+
+  - script:  helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} -f ci-values.yaml --wait
+    displayName: 'Helm Install'
+
+  - script: helm test ${{ parameters.chartReleaseName }} --cleanup
+    displayName: 'Helm Test'
+
+  - script: helm package ${{ parameters.chartName }}
+    displayName: 'Helm Package'
+
+  - script: |
+      CHART_FILE=$(ls $CHARTNAME-)
+      az acr helm push $CHART_FILE
+    displayName: 'Helm Publish
+
+  - script: helm delete --purge ${{ parameters.chartReleaseName }}
+    continueOnError: true
+    condition: always()
+    displayName: 'Delete Test Chart'
