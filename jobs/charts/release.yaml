@@ -40,7 +40,7 @@ jobs:
     displayName: 'Helm Package'
 
   - script: |
-      CHART_FILE=$(ls ${{ parameters.chartName }}-)
+      CHART_FILE=$(ls ${{ parameters.chartName }}-*)
       az acr helm push $CHART_FILE
     displayName: Helm Publish
 
