@@ -28,7 +28,7 @@ jobs:
   - script: helm lint ${{ parameters.chartName }}
     displayName: 'Helm Lint'
 
-  - script:  helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} -f ci-values.yaml --wait --timeout 60
+  - script:  helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} -f ci-values.yaml --wait --timeout 120
     displayName: 'Helm Install'
 
   - script: helm test ${{ parameters.chartReleaseName }} --cleanup
