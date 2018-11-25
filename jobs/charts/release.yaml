@@ -24,8 +24,6 @@ jobs:
       scriptLocation: 'inlineScript'
       inlineScript: |
         az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksCluster }}
-        az configure --defaults acr=${{ parameters.acrName }}
-        az acr helm repo add
 
   - script: helm lint ${{ parameters.chartName }}
     displayName: 'Helm Lint'
@@ -39,10 +37,14 @@ jobs:
   - script: helm package ${{ parameters.chartName }}
     displayName: 'Helm Package'
 
-  - script: |
-      CHART_FILE=$(ls ${{ parameters.chartName }}-*)
-      az acr helm push $CHART_FILE
-    displayName: Helm Publish
+  - task: AzureCLI@1
+    displayName: 'Helm Publish'
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        CHART_FILE=$(ls ${{ parameters.chartName }}-*)
+        az acr helm push --name ${{ parameters.acrName }} $CHART_FILE
 
   - script: helm delete --purge ${{ parameters.chartReleaseName }}
     continueOnError: true
