@@ -12,7 +12,7 @@ jobs:
     pool:
       vmImage: "Ubuntu 16.04"
     steps:
-      - template: ../../steps/chart/validate.yaml
+      - template: ../../steps/charts/validate.yaml
         parameters:
           serviceConnection: ${{ parameters.serviceConnection }}
           aksResourceGroup: ${{ parameters.aksResourceGroup }}
