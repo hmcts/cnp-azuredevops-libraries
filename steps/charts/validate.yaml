@@ -20,6 +20,9 @@ steps:
       scriptLocation: "inlineScript"
       inlineScript: az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksCluster }}
 
+  - script: helm delete --purge ${{ parameters.chartReleaseName }} || true
+    displayName: "Delete Previous Test Chart"
+
   - script: helm lint ${{ parameters.chartName }}
     displayName: "Helm Lint"
 
@@ -28,8 +31,3 @@ steps:
 
   - script: helm test ${{ parameters.chartReleaseName }} --cleanup
     displayName: "Helm Test"
-
-  - script: helm delete --purge ${{ parameters.chartReleaseName }}
-    continueOnError: true
-    condition: always()
-    displayName: "Delete Test Chart"
