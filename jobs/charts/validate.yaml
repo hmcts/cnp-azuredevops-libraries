@@ -5,13 +5,14 @@ parameters:
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
+  helmVersion: "2.11.0"
 
 jobs:
   - job: ValidateChart
     pool:
       vmImage: "Ubuntu 16.04"
     steps:
-      - template: ../../steps/chart-validate.yaml
+      - template: ../../steps/chart/validate.yaml
         parameters:
           serviceConnection: ${{ parameters.serviceConnection }}
           aksResourceGroup: ${{ parameters.aksResourceGroup }}
@@ -19,3 +20,4 @@ jobs:
           chartName: ${{ parameters.chartName }}
           chartReleaseName: ${{ parameters.chartReleaseName }}
           chartNamespace: ${{ parameters.chartNamespace }}
+          helmVersion: ${{ parameters.helmVersion }}
