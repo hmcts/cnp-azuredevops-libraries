@@ -31,3 +31,6 @@ steps:
 
   - script: helm test ${{ parameters.chartReleaseName }} --cleanup
     displayName: "Helm Test"
+
+  - script: helm delete --purge ${{ parameters.chartReleaseName }}
+    displayName: "Delete test Chart"
