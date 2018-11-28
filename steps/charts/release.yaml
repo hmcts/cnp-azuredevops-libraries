@@ -32,8 +32,3 @@ steps:
       inlineScript: |
         CHART_FILE=$(ls ${{ parameters.chartName }}-*)
         az acr helm push --name ${{ parameters.acrName }} $CHART_FILE
-
-  - script: helm delete --purge ${{ parameters.chartReleaseName }}
-    continueOnError: true
-    condition: always()
-    displayName: "Delete Test Chart"
