@@ -1,0 +1,36 @@
+parameters:
+  serviceConnection: "azurerm-nonprod"
+  aksResourceGroup: "cnp-aks-rg"
+  aksCluster: "cnp-aks-cluster"
+  chartName: ""
+  chartReleaseName: ""
+  chartNamespace: ""
+  helmVersion: "2.11.0"
+
+steps:
+  - task: HelmInstaller@0
+    inputs:
+      helmVersion: ${{ parameters.helmVersion }}
+      installKubectl: false
+
+  - task: AzureCLI@1
+    displayName: "AKS Authenticate"
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptLocation: "inlineScript"
+      inlineScript: az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksCluster }}
+
+  - script: helm delete --purge ${{ parameters.chartReleaseName }} || true
+    displayName: "Delete Previous Test Chart"
+
+  - script: helm lint ${{ parameters.chartName }}
+    displayName: "Helm Lint"
+
+  - script: helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} -f ci-values.yaml --wait --timeout 120
+    displayName: "Helm Install"
+
+  - script: helm test ${{ parameters.chartReleaseName }} --cleanup
+    displayName: "Helm Test"
+
+  - script: helm delete --purge ${{ parameters.chartReleaseName }}
+    displayName: "Delete test Chart"

@@ -1,0 +1,34 @@
+parameters:
+  serviceConnection: "azurerm-nonprod"
+  aksResourceGroup: "cnp-aks-rg"
+  aksCluster: "cnp-aks-cluster"
+  acrName: "hmcts"
+  chartName: ""
+  chartReleaseName: ""
+  chartNamespace: ""
+  helmVersion: "2.11.0"
+
+steps:
+  - task: HelmInstaller@0
+    inputs:
+      helmVersion: ${{ parameters.helmVersion }}
+      installKubectl: false
+
+  - task: AzureCLI@1
+    displayName: "AKS Authenticate"
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptLocation: "inlineScript"
+      inlineScript: az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksCluster }}
+
+  - script: helm package ${{ parameters.chartName }}
+    displayName: "Helm Package"
+
+  - task: AzureCLI@1
+    displayName: "Helm Publish"
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptLocation: "inlineScript"
+      inlineScript: |
+        CHART_FILE=$(ls ${{ parameters.chartName }}-*)
+        az acr helm push --name ${{ parameters.acrName }} $CHART_FILE
