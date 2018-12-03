@@ -7,6 +7,7 @@ parameters:
   chartReleaseName: ""
   chartNamespace: ""
   helmVersion: "2.11.0"
+  helmInstallTimeout: "120"
 
 steps:
   - task: HelmInstaller@0
@@ -37,7 +38,7 @@ steps:
   - script: helm lint ${{ parameters.chartName }}
     displayName: "Helm Lint"
 
-  - script: helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} -f ci-values.yaml --wait --timeout 120
+  - script: helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} -f ci-values.yaml --wait --timeout ${{ parameters.helmInstallTimeout }}
     displayName: "Helm Install"
 
   - script: helm test ${{ parameters.chartReleaseName }} --cleanup
