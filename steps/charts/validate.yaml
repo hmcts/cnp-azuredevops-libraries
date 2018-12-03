@@ -2,10 +2,12 @@ parameters:
   serviceConnection: "azurerm-nonprod"
   aksResourceGroup: "cnp-aks-rg"
   aksCluster: "cnp-aks-cluster"
+  acrName: "hmcts"
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
   helmVersion: "2.11.0"
+  helmInstallTimeout: "120"
 
 steps:
   - task: HelmInstaller@0
@@ -20,13 +22,23 @@ steps:
       scriptLocation: "inlineScript"
       inlineScript: az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksCluster }}
 
+  - task: AzureCLI@1
+    displayName: "Add custom charts repo"
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptLocation: "inlineScript"
+      inlineScript: az acr helm repo add --name ${{ parameters.acrName }}
+
+  - script: helm dependency update ${{ parameters.chartName }}
+    displayName: "Retrieve helm dependencies (if any)"
+
   - script: helm delete --purge ${{ parameters.chartReleaseName }} || true
     displayName: "Delete Previous Test Chart"
 
   - script: helm lint ${{ parameters.chartName }}
     displayName: "Helm Lint"
 
-  - script: helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} -f ci-values.yaml --wait --timeout 120
+  - script: helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} -f ci-values.yaml --wait --timeout ${{ parameters.helmInstallTimeout }}
     displayName: "Helm Install"
 
   - script: helm test ${{ parameters.chartReleaseName }} --cleanup
