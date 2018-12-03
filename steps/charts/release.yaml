@@ -21,6 +21,16 @@ steps:
       scriptLocation: "inlineScript"
       inlineScript: az aks get-credentials --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksCluster }}
 
+  - task: AzureCLI@1
+    displayName: "Add custom charts repo"
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptLocation: "inlineScript"
+      inlineScript: az acr helm repo add --name ${{ parameters.acrName }}
+
+  - script: helm dependency update ${{ parameters.chartName }}
+    displayName: "Retrieve helm dependencies (if any)"
+
   - script: helm package ${{ parameters.chartName }}
     displayName: "Helm Package"
 
