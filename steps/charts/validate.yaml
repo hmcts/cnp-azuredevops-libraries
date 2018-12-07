@@ -13,6 +13,7 @@ steps:
   - task: HelmInstaller@0
     inputs:
       helmVersion: ${{ parameters.helmVersion }}
+      checkLatestHelmVersion: false
       installKubectl: false
 
   - task: AzureCLI@1
