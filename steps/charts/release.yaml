@@ -41,5 +41,5 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        CHART_FILE=$(ls ${{ parameters.chartName }}-*)
+        CHART_FILE=$(ls ${{ parameters.chartName }}*)
         az acr helm push --name ${{ parameters.acrName }} $CHART_FILE
