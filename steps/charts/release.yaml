@@ -41,5 +41,11 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        CHART_FILE=$(ls ${{ parameters.chartName }}-*)
+        PACKAGE_NAME="${{ parameters.packageName }}"
+        CHART_FILE=""
+        if [[ -z "$PACKAGE_NAME" ]]; then
+          CHART_FILE=$(ls ${{ parameters.chartName }}-*)
+        else
+          CHART_FILE="$(ls ${PACKAGE_NAME}-*)"
+        fi
         az acr helm push --name ${{ parameters.acrName }} $CHART_FILE
