@@ -8,6 +8,7 @@ parameters:
   chartNamespace: ""
   helmVersion: "2.11.0"
   helmInstallTimeout: "120"
+  helmDeleteWait: "0"
 
 steps:
   - task: HelmInstaller@0
@@ -35,6 +36,9 @@ steps:
 
   - script: helm delete --purge ${{ parameters.chartReleaseName }} || true
     displayName: "Delete Previous Test Chart"
+
+  - script: sleep ${{ parameters.helmDeleteWait }}
+    displayName: "Wait for previous chart resources to be deprovisioned"
 
   - script: helm lint ${{ parameters.chartName }}
     displayName: "Helm Lint"
