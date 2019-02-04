@@ -48,7 +48,7 @@ steps:
     displayName: "Helm Install"
 
   - script: sleep ${{ parameters.helmInstallWait }}
-    displayName: "Wait for previous chart resources to be provisioned"
+    displayName: "Wait for chart resources to be provisioned"
 
   - script: helm test ${{ parameters.chartReleaseName }} --cleanup
     displayName: "Helm Test"
