@@ -10,6 +10,7 @@ parameters:
   helmInstallTimeout: "120"
   helmDeleteWait: "0"
   helmInstallWait: "0"
+  valuesFile: "ci-values.yaml"
 
 steps:
   - task: HelmInstaller@0
@@ -44,7 +45,7 @@ steps:
   - script: helm lint ${{ parameters.chartName }}
     displayName: "Helm Lint"
 
-  - script: helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} -f ci-values.yaml --wait --timeout ${{ parameters.helmInstallTimeout }}
+  - script: helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}
     displayName: "Helm Install"
 
   - script: sleep ${{ parameters.helmInstallWait }}
