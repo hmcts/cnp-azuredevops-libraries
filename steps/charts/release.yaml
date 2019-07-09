@@ -1,8 +1,9 @@
 parameters:
   serviceConnection: "azurerm-nonprod"
+  registryServiceConnection: "azurerm-prod"
   aksResourceGroup: "cnp-aks-rg"
   aksCluster: "cnp-aks-cluster"
-  acrName: "hmcts"
+  acrName: "hmctspublic"
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
@@ -25,7 +26,7 @@ steps:
   - task: AzureCLI@1
     displayName: "Add custom charts repo"
     inputs:
-      azureSubscription: ${{ parameters.serviceConnection }}
+      azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: az acr helm repo add --name ${{ parameters.acrName }}
 
@@ -38,7 +39,7 @@ steps:
   - task: AzureCLI@1
     displayName: "Helm Publish"
     inputs:
-      azureSubscription: ${{ parameters.serviceConnection }}
+      azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
         CHART_FILE=$(ls ${{ parameters.chartName }}-*)
