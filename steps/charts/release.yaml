@@ -42,5 +42,5 @@ steps:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        CHART_FILE=$(ls ${{ parameters.chartName }}-*)
+        CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*)
         az acr helm push --name ${{ parameters.acrName }} $CHART_FILE
