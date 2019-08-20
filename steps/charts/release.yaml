@@ -33,8 +33,14 @@ steps:
   - script: helm dependency update ${{ parameters.chartName }}
     displayName: "Retrieve helm dependencies (if any)"
 
-  - script: helm package ${{ parameters.chartName }}
+  - task: AzureCLI@1
     displayName: "Helm Package"
+    inputs:
+      azureSubscription: ${{ parameters.registryServiceConnection }}
+      scriptLocation: "inlineScript"
+      inlineScript: |
+        rm -f $(ls ${{ parameters.chartName }}-[0-9]*)
+        helm package ${{ parameters.chartName }}
 
   - task: AzureCLI@1
     displayName: "Helm Publish"
@@ -42,6 +48,5 @@ steps:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        set -x
         CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*)
         az acr helm push --name ${{ parameters.acrName }} $CHART_FILE
