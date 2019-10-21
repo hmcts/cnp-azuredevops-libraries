@@ -9,6 +9,7 @@ parameters:
   chartNamespace: ""
   helmVersion: "2.14.0"
   helmInstallTimeout: "120"
+  helmTestTimeout: "300"
   helmDeleteWait: "0"
   helmInstallWait: "0"
   valuesFile: "ci-values.yaml"
@@ -52,7 +53,7 @@ steps:
   - script: sleep ${{ parameters.helmInstallWait }}
     displayName: "Wait for chart resources to be provisioned"
 
-  - script: helm test ${{ parameters.chartReleaseName }} --cleanup
+  - script: helm test ${{ parameters.chartReleaseName }} --cleanup --timeout ${{ parameters.helmTestTimeout }}
     displayName: "Helm Test"
 
   - script: helm delete --purge ${{ parameters.chartReleaseName }}
