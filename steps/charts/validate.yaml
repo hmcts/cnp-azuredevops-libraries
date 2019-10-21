@@ -53,7 +53,7 @@ steps:
   - script: sleep ${{ parameters.helmInstallWait }}
     displayName: "Wait for chart resources to be provisioned"
 
-  - script: helm test ${{ parameters.chartReleaseName }} --cleanup --timeout ${{ parameters.helmTestTimeout }}
+  - script: helm test ${{ parameters.chartReleaseName }} --cleanup --timeout ${{ parameters.helmTestTimeout }} --parallel
     displayName: "Helm Test"
 
   - script: helm delete --purge ${{ parameters.chartReleaseName }}
