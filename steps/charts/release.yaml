@@ -7,7 +7,7 @@ parameters:
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
-  helmVersion: "2.11.0"
+  helmVersion: "2.15.2"
 
 steps:
   - task: HelmInstaller@0
