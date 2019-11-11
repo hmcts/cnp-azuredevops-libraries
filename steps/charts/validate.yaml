@@ -7,7 +7,7 @@ parameters:
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
-  helmVersion: "2.14.0"
+  helmVersion: "2.15.2"
   helmInstallTimeout: "120"
   helmTestTimeout: "300"
   helmDeleteWait: "0"
