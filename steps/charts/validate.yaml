@@ -7,7 +7,7 @@ parameters:
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
-  helmVersion: "2.15.2"
+  helmVersion: "2.16.1"
   helmInstallTimeout: "120"
   helmTestTimeout: "300"
   helmDeleteWait: "0"
@@ -15,11 +15,10 @@ parameters:
   valuesFile: "ci-values.yaml"
 
 steps:
-  - task: HelmInstaller@0
+  - task: HelmInstaller@1
+    displayName: 'Install Helm ${{parameters.helmVersion}}'
     inputs:
-      helmVersion: ${{ parameters.helmVersion }}
-      checkLatestHelmVersion: false
-      installKubectl: false
+      helmVersionToInstall: ${{parameters.helmVersion}}
 
   - task: AzureCLI@1
     displayName: "AKS Authenticate"
