@@ -7,15 +7,13 @@ parameters:
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
-  helmVersion: "2.15.2"
+  helmVersion: "2.16.1"
 
 steps:
-  - task: HelmInstaller@0
+  - task: HelmInstaller@1
+    displayName: 'Install Helm ${{parameters.helmVersion}}'
     inputs:
-      helmVersion: ${{ parameters.helmVersion }}
-      checkLatestHelmVersion: false
-      installKubectl: false
-
+      helmVersionToInstall: ${{parameters.helmVersion}}
   - task: AzureCLI@1
     displayName: "AKS Authenticate"
     inputs:
