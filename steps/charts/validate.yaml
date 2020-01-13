@@ -57,5 +57,5 @@ steps:
   - script: helm test --namespace chart-tests ${{ parameters.chartReleaseName }} --logs --timeout ${{ parameters.helmTestTimeout }}s
     displayName: "Helm Test"
 
-  - script: helm delete --purge ${{ parameters.chartReleaseName }}
+  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }}
     displayName: "Delete test Chart"
