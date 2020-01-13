@@ -32,7 +32,9 @@ steps:
     inputs:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
-      inlineScript: az acr helm repo add --name ${{ parameters.acrName }}
+      inlineScript: |
+        helm repo add stable https://kubernetes-charts.storage.googleapis.com
+        az acr helm repo add --name ${{ parameters.acrName }}
 
   - script: helm dependency update ${{ parameters.chartName }}
     displayName: "Retrieve helm dependencies (if any)"
