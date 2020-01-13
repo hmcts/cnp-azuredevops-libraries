@@ -39,7 +39,7 @@ steps:
   - script: helm dependency update ${{ parameters.chartName }}
     displayName: "Retrieve helm dependencies (if any)"
 
-  - script: helm delete --purge ${{ parameters.chartReleaseName }} || true
+  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
     displayName: "Delete Previous Test Chart"
 
   - script: sleep ${{ parameters.helmDeleteWait }}
@@ -54,8 +54,8 @@ steps:
   - script: sleep ${{ parameters.helmInstallWait }}
     displayName: "Wait for chart resources to be provisioned"
 
-  - script: helm test ${{ parameters.chartReleaseName }} --logs --timeout ${{ parameters.helmTestTimeout }}s
+  - script: helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --logs --timeout ${{ parameters.helmTestTimeout }}s
     displayName: "Helm Test"
 
-  - script: helm delete --purge ${{ parameters.chartReleaseName }}
+  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }}
     displayName: "Delete test Chart"
