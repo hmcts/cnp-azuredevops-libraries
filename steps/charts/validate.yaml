@@ -7,7 +7,7 @@ parameters:
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
-  helmVersion: "2.16.1"
+  helmVersion: "3.0.2"
   helmInstallTimeout: "120"
   helmTestTimeout: "300"
   helmDeleteWait: "0"
@@ -46,13 +46,13 @@ steps:
   - script: helm lint ${{ parameters.chartName }}
     displayName: "Helm Lint"
 
-  - script: helm install ${{ parameters.chartName }} --name ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}
+  - script: helm install ${{ parameters.chartReleaseName }} ${{ parameters.chartName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s
     displayName: "Helm Install"
 
   - script: sleep ${{ parameters.helmInstallWait }}
     displayName: "Wait for chart resources to be provisioned"
 
-  - script: helm test ${{ parameters.chartReleaseName }} --cleanup --timeout ${{ parameters.helmTestTimeout }} --parallel
+  - script: helm test ${{ parameters.chartReleaseName }} --logs --timeout ${{ parameters.helmTestTimeout }}s
     displayName: "Helm Test"
 
   - script: helm delete --purge ${{ parameters.chartReleaseName }}
