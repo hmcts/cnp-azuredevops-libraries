@@ -42,6 +42,7 @@ steps:
         rm -f $(ls ${{ parameters.chartName }}-[0-9]*)
         echo $(Build.SourceBranch)
         tag=$(Build.SourceBranch) | cut -d'/' -f 3
+        echo $tag
         helm package ${{ parameters.chartName }} --version ${tag} --app-version ${tag}
 
   - task: AzureCLI@1
