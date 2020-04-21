@@ -40,6 +40,7 @@ steps:
       scriptLocation: "inlineScript"
       inlineScript: |
         rm -f $(ls ${{ parameters.chartName }}-[0-9]*)
+        echo $(Build.SourceBranch)
         tag=$(Build.SourceBranch) | cut -d'/' -f 4
         helm package ${{ parameters.chartName }} --version ${tag} --app-version ${tag}
 
