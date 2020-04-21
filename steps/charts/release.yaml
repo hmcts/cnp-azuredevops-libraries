@@ -40,7 +40,8 @@ steps:
       scriptLocation: "inlineScript"
       inlineScript: |
         rm -f $(ls ${{ parameters.chartName }}-[0-9]*)
-        helm package ${{ parameters.chartName }}
+        tag=${Build.SourceBranch} | cut -d'/' -f 4
+        helm package ${{ parameters.chartName }} --version ${tag} --app-version ${tag}
 
   - task: AzureCLI@1
     displayName: "Helm Publish"
