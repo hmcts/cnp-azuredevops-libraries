@@ -41,7 +41,7 @@ steps:
       inlineScript: |
         rm -f $(ls ${{ parameters.chartName }}-[0-9]*)
         echo "Building branch $(Build.SourceBranch)"
-        tag=$(echo $(Build.SourceBranch) | cut -d'/' -f 3)
+        tag=$(echo $(Build.SourceBranch) | cut -d'/' -f 3 | sed 's/v//')
         echo "publishing chart version $tag"
         helm package ${{ parameters.chartName }} --version ${tag} --app-version ${tag}
 
