@@ -27,6 +27,7 @@ steps:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
+        helm repo add bitnami https://charts.bitnami.com/bitnami
         helm repo add stable https://kubernetes-charts.storage.googleapis.com
         az acr helm repo add --name ${{ parameters.acrName }}
 
