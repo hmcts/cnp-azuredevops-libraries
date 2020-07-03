@@ -1,13 +1,13 @@
 parameters:
-  serviceConnection: "azurerm-nonprod"
+  serviceConnection: "DCD-CFTAPPS-DEV"
   registryServiceConnection: "azurerm-prod"
-  aksResourceGroup: "cnp-aks-rg"
-  aksCluster: "cnp-aks-cluster"
+  aksResourceGroup: "preview-00-rg"
+  aksCluster: "preview-00-aks"
   acrName: "hmctspublic"
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
-  helmVersion: "3.0.2"
+  helmVersion: "3.2.4"
 
 steps:
   - task: HelmInstaller@1

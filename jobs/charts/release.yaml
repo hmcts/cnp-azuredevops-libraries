@@ -1,12 +1,12 @@
 parameters:
-  serviceConnection: "azurerm-nonprod"
-  aksResourceGroup: "cnp-aks-rg"
-  aksCluster: "cnp-aks-cluster"
+  serviceConnection: "DCD-CFTAPPS-DEV"
+  aksResourceGroup: "preview-00-rg"
+  aksCluster: "preview-00-aks"
   acrName: "hmcts"
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
-  helmVersion: "3.0.2"
+  helmVersion: "3.2.4"
 
 jobs:
   - job: ValidateChart
