@@ -7,6 +7,7 @@ parameters:
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
+  chartPath: "./"
   helmVersion: "3.2.4"
 
 steps:
@@ -31,7 +32,7 @@ steps:
         helm repo add stable https://kubernetes-charts.storage.googleapis.com
         az acr helm repo add --name ${{ parameters.acrName }}
 
-  - script: helm dependency update ${{ parameters.chartName }}
+  - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Retrieve helm dependencies (if any)"
 
   - task: AzureCLI@1
@@ -40,11 +41,11 @@ steps:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        rm -f $(ls ${{ parameters.chartName }}-[0-9]*)
+        rm -f $(ls ${{ parameters.chartPath }}${{ parameters.chartName }}-[0-9]*)
         echo "Building branch $(Build.SourceBranch)"
         tag=$(echo $(Build.SourceBranch) | cut -d'/' -f 3 | sed 's/v//')
         echo "publishing chart version $tag"
-        helm package ${{ parameters.chartName }} --version ${tag} --app-version ${tag}
+        helm package ${{ parameters.chartPath }}${{ parameters.chartName }} --version ${tag} --app-version ${tag}
 
   - task: AzureCLI@1
     displayName: "Helm Publish"

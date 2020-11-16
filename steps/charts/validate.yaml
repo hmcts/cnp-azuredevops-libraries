@@ -7,6 +7,7 @@ parameters:
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
+  chartPath: "./"
   helmVersion: "3.2.4"
   helmInstallTimeout: "120"
   helmTestTimeout: "300"
@@ -36,7 +37,7 @@ steps:
         helm repo add stable https://kubernetes-charts.storage.googleapis.com
         az acr helm repo add --name ${{ parameters.acrName }}
 
-  - script: helm dependency update ${{ parameters.chartName }}
+  - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Retrieve helm dependencies (if any)"
 
   - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
@@ -45,10 +46,10 @@ steps:
   - script: sleep ${{ parameters.helmDeleteWait }}
     displayName: "Wait for previous chart resources to be deprovisioned"
 
-  - script: helm lint ${{ parameters.chartName }}
+  - script: helm lint ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Helm Lint"
 
-  - script: helm install ${{ parameters.chartReleaseName }} ${{ parameters.chartName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s
+  - script: helm install ${{ parameters.chartReleaseName }} ${{ parameters.chartPath }}${{ parameters.chartName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s
     displayName: "Helm Install"
 
   - script: sleep ${{ parameters.helmInstallWait }}
