@@ -46,7 +46,9 @@ steps:
   - script: sleep ${{ parameters.helmDeleteWait }}
     displayName: "Wait for previous chart resources to be deprovisioned"
 
-  - script: helm lint ${{ parameters.chartPath }}${{ parameters.chartName }}
+  - script: |
+      ls -Rla ${{ parameters.chartPath }}${{ parameters.chartName }}
+      helm lint ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Helm Lint"
 
   - script: helm install ${{ parameters.chartReleaseName }} ${{ parameters.chartPath }}${{ parameters.chartName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s
