@@ -29,6 +29,7 @@ steps:
       scriptLocation: "inlineScript"
       inlineScript: |
         helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm repo list
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo
 
   - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
