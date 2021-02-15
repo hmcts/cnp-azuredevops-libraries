@@ -34,7 +34,7 @@ steps:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        az acr helm repo add --name ${{ parameters.acrName }}
+        helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo 
 
   - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Retrieve helm dependencies (if any)"
