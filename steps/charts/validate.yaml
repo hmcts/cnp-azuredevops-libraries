@@ -1,8 +1,8 @@
 parameters:
   serviceConnection: "DCD-CFTAPPS-DEV"
   registryServiceConnection: "azurerm-prod"
-  aksResourceGroup: "preview-01-rg"
-  aksCluster: "preview-01-aks"
+  aksResourceGroup: "preview-00-rg"
+  aksCluster: "preview-00-aks"
   acrName: "hmctspublic"
   chartName: ""
   chartReleaseName: ""
