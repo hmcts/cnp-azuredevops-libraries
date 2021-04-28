@@ -1,0 +1,96 @@
+parameters:
+  environment: ''
+  location: ''
+  stack: ''
+  project: ''
+  tfversion: ''
+  serviceConnection: ''
+  tfInitSub: ''
+  action: ''
+
+
+steps:
+  - bash: echo ${{ parameters.environment }}
+
+  - template: keyvault-read.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
+      environment: ${{ parameters.environment }}
+      
+  - task: TerraformInstaller@0
+    displayName: Terraform install
+    inputs:
+      terraformVersion: ${{ parameters.tfversion }}
+
+  - task: TerraformCLI@0
+    # displayName: terraform init
+    displayName: Init - ${{ parameters.environment }} - ${{ parameters.component }}
+    inputs:
+      command: init
+      terraformVersion: ${{ parameters.tfversion }}
+      workingDirectory: '$(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}'
+      backendType: azurerm
+      backendServiceArm: ${{ parameters.serviceConnection }}
+      backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
+      backendAzureRmResourceGroupLocation: ${{ parameters.location }}
+      backendAzureRmStorageAccountName: $(controlStorageAccount)
+      backendAzureRmStorageAccountSku: Standard_LRS
+      backendAzureRmContainerName: subscription-tfstate
+      backendAzureRmKey: '${{ parameters.location }}/${{ parameters.project }}/${{ parameters.environment }}/${{ parameters.stack }}/terraform.tfstate'
+
+  - task: TerraformCLI@0
+    displayName: terraform plan
+    condition: and(succeeded(), in(parameters.action, 'plan', 'apply'))
+    inputs:
+      command: plan
+      terraformVersion: ${{ parameters.tfversion }}
+      workingDirectory: $(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}
+      environmentServiceName: ${{ parameters.serviceConnection }}
+      commandOptions: '-out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}  -var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars -lock=false'
+
+  - task: Bash@3
+    condition: and(succeeded(), eq(variables.isMaster, true))
+    name: "CheckFileChanges"
+    displayName: "CheckFileChanges"
+    env:
+      files_list: 'components/${{ parameters.stack }} environments/${{ parameters.environment }} environments/variable.tf'
+    inputs:
+      filePath: pipeline-scripts/file-check-changes.sh
+
+  - task: TerraformCLI@0
+    displayName: Apply-${{ parameters.stack }}
+    condition: and(succeeded(), eq(variables.isMaster, true), eq(variables['CheckFileChanges.SOURCE_CODE_CHANGED'], 'true'), eq(parameters.action, 'apply'))
+    inputs:
+      command: apply
+      terraformVersion: ${{ parameters.tfversion }}
+      workingDirectory: $(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}
+      environmentServiceName: ${{ parameters.serviceConnection }}
+      commandOptions: '--auto-approve tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}'
+
+  - task: Bash@3
+    displayName: "Remove local tfstate"
+    inputs:
+      targetType: 'inline'
+      workingDirectory: '$(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}'
+      script: |
+        rm -f terraform.tfstate* && rm -rf .terraform/
+
+  - task: AzureCLI@2
+    displayName: 'Unlock TF state if required'
+    condition: always()
+    inputs:
+      scriptType: bash
+      scriptLocation: scriptPath
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptPath: $(System.DefaultWorkingDirectory)/pipeline-scripts/unlock-tf-state.sh
+      arguments: ${{ parameters.location }} ${{ parameters.storage_account_name }}
+
+#  - ${{ if eq(parameters.action, destroy) }}:
+#      - task: TerraformCLI@0
+#        displayName: terraform destroy
+#        condition: and(succeeded(), eq(variables.isMaster, true), eq(variables['CheckFileChanges.SOURCE_CODE_CHANGED'], 'true'), eq(parameters.action, destroy))    
+#        inputs:
+#          command: destroy
+#          workingDirectory: $(System.DefaultWorkingDirectory)/terraform/aks/${{ parameters.stack }}
+#          environmentServiceName: $(serviceconnection)
+#          commandOptions: '-var control_vault=$(controlKeyVault) -var environment=$(env) -var project=$(project) -var-file $(System.DefaultWorkingDirectory)/config/terraform/${{ parameters.project }}/vars/${{ parameters.stack }}/$(env).tfvars'
