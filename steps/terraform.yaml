@@ -8,6 +8,9 @@ parameters:
   tfInitSub: ''
   overrideAction: ''
 
+varibles:
+  isMain: $[in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/head/master')]
+
 
 steps:
 - bash: echo ${{ parameters.environment }}
@@ -50,7 +53,7 @@ steps:
     commandOptions: '-out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}  -var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars -lock=false'
 
 #- task: Bash@3
-#  condition: and(succeeded(), eq(variables.isMaster, true))
+#  condition: and(succeeded(), eq(variables.isMain, true))
 #  name: "CheckFileChanges"
 #  displayName: "CheckFileChanges"
 #  env:
@@ -60,8 +63,8 @@ steps:
 
 - task: TerraformCLI@0
   displayName: Apply-${{ parameters.stack }}
-  #condition: and(succeeded(), eq(variables.isMaster, true), eq(variables['CheckFileChanges.SOURCE_CODE_CHANGED'], 'true'), eq(parameters.overrideAction, 'apply'))
-  condition: and(succeeded(), eq(variables.isMaster, true), eq(parameters.overrrideAction, 'apply'))
+  #condition: and(succeeded(), eq(variables.isMain, true), eq(variables['CheckFileChanges.SOURCE_CODE_CHANGED'], 'true'), eq(parameters.overrideAction, 'apply'))
+  condition: and(succeeded(), eq(variables.isMain, true), eq(parameters.overrrideAction, 'apply'))
   inputs:
     command: apply
     terraformVersion: ${{ parameters.tfversion }}
@@ -90,8 +93,8 @@ steps:
 #  - ${{ if eq(parameters.overrideAction, destroy) }}:
 #      - task: TerraformCLI@0
 #        displayName: terraform destroy
-#        condition: and(succeeded(), eq(variables.isMaster, true), eq(variables['CheckFileChanges.SOURCE_CODE_CHANGED'], 'true'), eq(parameters.overrideAction, destroy))
-#        condition: and(succeeded(), eq(variables.isMaster, true), eq(parameters.overrideAction, destroy))
+#        condition: and(succeeded(), eq(variables.isMain, true), eq(variables['CheckFileChanges.SOURCE_CODE_CHANGED'], 'true'), eq(parameters.overrideAction, destroy))
+#        condition: and(succeeded(), eq(variables.isMain, true), eq(parameters.overrideAction, destroy))
 #        inputs:
 #          command: destroy
 #          workingDirectory: $(System.DefaultWorkingDirectory)/terraform/aks/${{ parameters.stack }}
