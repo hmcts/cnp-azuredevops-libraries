@@ -12,7 +12,7 @@ parameters:
 steps:
 - bash: echo ${{ parameters.environment }}
 
-- template: keyvault-read.yaml
+- template: ./keyvault-read.yaml
   parameters:
     serviceConnection: ${{ parameters.serviceConnection }}
     environment: ${{ parameters.environment }}
