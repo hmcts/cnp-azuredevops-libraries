@@ -62,7 +62,6 @@ steps:
     and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'apply'),
     and(succeeded(), eq(variables['isMain'], true), eq(variables['isTriggered'], true))
     )
-
   inputs:
     command: apply
     terraformVersion: ${{ parameters.tfversion }}
