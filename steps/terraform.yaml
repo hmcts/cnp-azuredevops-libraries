@@ -46,7 +46,7 @@ steps:
 
 - task: TerraformCLI@0
   displayName: Terraform plan ${{ parameters.stack }}
-  condition: and(succeeded(), in(parameters.overrideAction, 'plan', 'apply'))
+  condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
   inputs:
     command: plan
     terraformVersion: ${{ parameters.tfversion }}
