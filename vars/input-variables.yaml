@@ -1,0 +1,2 @@
+variables:
+  isMain: $[in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/master')]
