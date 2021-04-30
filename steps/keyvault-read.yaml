@@ -1,7 +1,7 @@
 parameters:
-  serviceConnection: ''
-  keyvaultName: ''
   environment: ''
+  keyvaultName: ''
+  serviceConnection: ''
 
 steps:
 
