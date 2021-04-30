@@ -30,6 +30,7 @@ steps:
     terraformVersion: ${{ parameters.tfversion }}
     workingDirectory: '$(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}'
     backendType: azurerm
+    ensureBackend: true
     backendServiceArm: ${{ parameters.serviceConnection }}
     backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
     backendAzureRmResourceGroupLocation: ${{ parameters.location }}
