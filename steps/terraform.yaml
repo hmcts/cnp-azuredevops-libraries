@@ -3,6 +3,7 @@ parameters:
   location: ''
   overrideAction: ''
   project: ''
+  product: ''
   stack: ''
   serviceConnection: ''
   tfversion: ''
