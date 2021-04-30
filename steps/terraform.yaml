@@ -27,7 +27,7 @@ steps:
   inputs:
     command: init
     terraformVersion: ${{ parameters.tfversion }}
-    workingDirectory: '$(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}'
     backendType: azurerm
     backendServiceArm: ${{ parameters.serviceConnection }}
     backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
@@ -42,7 +42,7 @@ steps:
   displayName: Terraform validate
   inputs:
     command: validate
-    workingDirectory: '$(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}'
 
 - task: TerraformCLI@0
   displayName: Terraform plan ${{ parameters.stack }}
@@ -50,7 +50,7 @@ steps:
   inputs:
     command: plan
     terraformVersion: ${{ parameters.tfversion }}
-    workingDirectory: $(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}
+    workingDirectory: $(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}
     environmentServiceName: ${{ parameters.serviceConnection }}
     commandOptions: '-out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}  -var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars -lock=false'
 
@@ -60,7 +60,7 @@ steps:
   inputs:
     command: apply
     terraformVersion: ${{ parameters.tfversion }}
-    workingDirectory: $(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}
+    workingDirectory: $(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}
     environmentServiceName: ${{ parameters.serviceConnection }}
     commandOptions: '--auto-approve tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}'
 
@@ -71,7 +71,7 @@ steps:
       inputs:
         command: destroy
         terraformVersion: ${{ parameters.tfversion }}
-        workingDirectory: $(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}
+        workingDirectory: $(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}
         environmentServiceName: ${{ parameters.serviceConnection }}
         commandOptions: '-var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars'
 
@@ -79,7 +79,7 @@ steps:
   displayName: "Remove local tfstate"
   inputs:
     targetType: 'inline'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}'
     script: |
       rm -f terraform.tfstate* && rm -rf .terraform/
 
