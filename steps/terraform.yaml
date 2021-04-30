@@ -64,7 +64,7 @@ steps:
     environmentServiceName: ${{ parameters.serviceConnection }}
     commandOptions: '--auto-approve tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}'
 
-- ${{ eq(parameters.overrideAction, 'destroy') }}:
+- ${{ if eq(parameters.overrideAction, 'destroy') }}:
     - task: TerraformCLI@0
       displayName: Terraform destroy ${{ parameters.stack }}
       condition: and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'destroy'))
