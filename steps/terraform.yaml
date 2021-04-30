@@ -57,7 +57,12 @@ steps:
 
 - task: TerraformCLI@0
   displayName: Terraform apply ${{ parameters.stack }}
-  condition: or(and(succeeded(), eq(variables['isMain'], true), ne('${{ parameters.overrideAction }}', 'destroy'), ne(variables['Build.Reason'], 'PullRequest')), eq('${{ parameters.overrideAction }}', 'apply'))
+  condition: |
+    or(
+    and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'apply'),
+    and(succeeded(), eq(variables['isMain'], true), eq(variables['isTriggered'], true))
+    )
+
   inputs:
     command: apply
     terraformVersion: ${{ parameters.tfversion }}
