@@ -2,6 +2,12 @@ parameters:
   - name: environment
     default: sandbox
 
+  - name: keyvaultName
+    default: ''
+
+  - name: keyvaultSecret
+    default: ''
+
   - name: location
     default: 'UK South'
     values:
@@ -35,9 +41,9 @@ jobs:
       - task: AzureKeyVault@1
         displayName: Retrieve keyvault secret for ADO token
         inputs:
-          ConnectedServiceName: DCD-CFT-Sandbox
-          keyVaultName: infra-vault-sandbox
-          secretsFilter: 'azure-devops-token'
+          ConnectedServiceName: ${{ parameters.serviceConnection }}
+          keyVaultName: ${{ parameters.keyvaultName }}
+          secretsFilter: ${{ parameters.keyvaultSecret }}
           runAsPreJob: false
 
       - task: Bash@3
