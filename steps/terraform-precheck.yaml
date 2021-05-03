@@ -1,0 +1,64 @@
+parameters:
+  - name: environment
+    default: sandbox
+
+  - name: location
+    default: 'UK South'
+    values:
+      - 'UK South'
+      - 'UK West'
+
+  - name: serviceConnection
+    default: ''
+
+  - name: timeoutInMinutes
+    default: 60
+
+  - name: tfversion
+    default: ''
+
+jobs:
+  - job: Validate
+    timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+    pool:
+      vmImage: ${{ parameters.agentPool }}
+    steps:
+      - checkout: self
+      - checkout: cnp-azuredevops-libraries
+      - bash: echo ${{ parameters.environment }}
+
+      - task: TerraformInstaller@0
+        displayName: Terraform install
+        inputs:
+          terraformVersion: ${{ parameters.tfversion }}
+
+      - task: AzureKeyVault@1
+        displayName: Retrieve keyvault secret for ADO token
+        inputs:
+          ConnectedServiceName: DCD-CFT-Sandbox
+          keyVaultName: infra-vault-sandbox
+          secretsFilter: 'azure-devops-token'
+          runAsPreJob: false
+
+      - task: Bash@3
+        displayName: Prevent parallel run
+        env:
+          thisbuild: $(Build.BuildId)
+          pipelinedefinition: $(System.DefinitionId)
+          azuredevopstoken: $(azure-devops-token)
+        inputs:
+          filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/builds-check.sh
+
+      - task: PowerShell@2
+        displayName: Run tests
+        inputs:
+          targetType: 'filePath'
+          filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/pester-tests.ps1
+          pwsh: true
+
+      - task: PublishTestResults@2
+        displayName: 'Publish Test Results **/TEST-*.xml'
+        inputs:
+          testResultsFormat: NUnit
+          failTaskOnFailedTests: true
+        condition: always()
