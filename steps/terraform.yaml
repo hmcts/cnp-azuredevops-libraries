@@ -85,7 +85,7 @@ jobs:
           backendAzureRmStorageAccountName: $(controlStorageAccount)
           backendAzureRmStorageAccountSku: Standard_LRS
           backendAzureRmContainerName: subscription-tfstate
-          backendAzureRmKey: '${{ parameters.location }}/${{ parameters.project }}/${{ parameters.product }}/${{ parameters.environment }}/${{ parameters.stack }}/terraform.tfstate'
+          backendAzureRmKey: '${{ parameters.location }}/${{ parameters.project }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.stack }}/terraform.tfstate'
           commandOptions: '-backend-config=subscription_id=${{ parameters.tfInitSub }}'
 
       - task: TerraformInstaller@0
