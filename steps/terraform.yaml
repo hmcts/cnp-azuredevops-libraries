@@ -78,7 +78,7 @@ jobs:
           terraformVersion: ${{ parameters.tfversion }}
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
           backendType: azurerm
-          ensureBackend: true
+          ensureBackend: false
           backendServiceArm: ${{ parameters.serviceConnection }}
           backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
           backendAzureRmResourceGroupLocation: ${{ parameters.location }}
