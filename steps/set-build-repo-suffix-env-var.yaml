@@ -3,5 +3,5 @@ steps:
       BUILD_REPO_NAME=$(echo $BUILD_REPOSITORY_NAME | cut -d '/' -f2)
       echo "Build repository name: $BUILD_REPOSITORY_NAME"
       echo "Build repository short name: $BUILD_REPOSITORY_SHORTNAME"
-      echo "##vso[task.setvariable variable=buildRepoSuffix]$BUILD_REPOSITORY_SHORTNAME
+      echo "##vso[task.setvariable variable=buildRepoSuffix]$BUILD_REPOSITORY_SHORTNAME"
     displayName: Set build repository name suffix env variable
