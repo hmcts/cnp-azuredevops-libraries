@@ -2,6 +2,9 @@ parameters:
   - name: adolibrary
     default: cnp-azuredevops-libraries
 
+  - name: agentPool
+    default: ubuntu-18.04
+
   - name: environment
     default: sandbox
 
