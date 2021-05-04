@@ -23,6 +23,9 @@ parameters:
 
   - name: project
     default: ''
+    values:
+      - cft
+      - ss
 
   - name: product
     default: ''
@@ -68,7 +71,7 @@ jobs:
         inputs:
           command: init
           terraformVersion: ${{ parameters.tfversion }}
-          workingDirectory: '$(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}'
           backendType: azurerm
           ensureBackend: true
           backendServiceArm: ${{ parameters.serviceConnection }}
@@ -77,14 +80,14 @@ jobs:
           backendAzureRmStorageAccountName: $(controlStorageAccount)
           backendAzureRmStorageAccountSku: Standard_LRS
           backendAzureRmContainerName: subscription-tfstate
-          backendAzureRmKey: '${{ parameters.location }}/${{ parameters.project }}/${{ parameters.environment }}/${{ parameters.stack }}/terraform.tfstate'
+          backendAzureRmKey: '${{ parameters.location }}/${{ parameters.project }}/${{ parameters.product }}/${{ parameters.environment }}/${{ parameters.stack }}/terraform.tfstate'
           commandOptions: '-backend-config=subscription_id=${{ parameters.tfInitSub }}'
 
       - task: TerraformInstaller@0
         displayName: Terraform validate
         inputs:
           command: validate
-          workingDirectory: '$(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}'
 
       - task: TerraformCLI@0
         displayName: Terraform plan ${{ parameters.stack }}
@@ -92,7 +95,7 @@ jobs:
         inputs:
           command: plan
           terraformVersion: ${{ parameters.tfversion }}
-          workingDirectory: $(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}
+          workingDirectory: $(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}
           environmentServiceName: ${{ parameters.serviceConnection }}
           commandOptions: '-out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}  -var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars -lock=false'
 
@@ -106,7 +109,7 @@ jobs:
         inputs:
           command: apply
           terraformVersion: ${{ parameters.tfversion }}
-          workingDirectory: $(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}
+          workingDirectory: $(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}
           environmentServiceName: ${{ parameters.serviceConnection }}
           commandOptions: '--auto-approve tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}'
 
@@ -117,7 +120,7 @@ jobs:
             inputs:
               command: destroy
               terraformVersion: ${{ parameters.tfversion }}
-              workingDirectory: $(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}
+              workingDirectory: $(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}
               environmentServiceName: ${{ parameters.serviceConnection }}
               commandOptions: '-var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars'
 
@@ -125,7 +128,7 @@ jobs:
         displayName: "Remove local tfstate"
         inputs:
           targetType: 'inline'
-          workingDirectory: '$(System.DefaultWorkingDirectory)/components/${{ parameters.stack }}'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}'
           script: |
             rm -f terraform.tfstate* && rm -rf .terraform/
 
