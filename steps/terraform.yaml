@@ -69,7 +69,7 @@ jobs:
       - bash: |
           echo "repo short name - $(buildRepoSuffix)"
           echo "working dir - $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}"
-          echo tree "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}"
+          tree "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}"
 
       - task: TerraformCLI@0
         displayName: Terraform init ${{ parameters.stack }}
