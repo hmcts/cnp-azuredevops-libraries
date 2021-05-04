@@ -80,7 +80,7 @@ jobs:
           backendType: azurerm
           ensureBackend: false
           backendServiceArm: ${{ parameters.serviceConnection }}
-          ${{ if eq(parameters['env'], 'ptl') }}:
+          ${{ if eq(parameters['environment'], 'ptl') }}:
             backendAzureRmResourceGroupName: "azure-control-prod-rg"
           ${{ if ne(parameters['environment'], 'ptl') }}:
             value: 'azure-control-${{ parameters.environment }}-rg'
