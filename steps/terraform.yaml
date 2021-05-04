@@ -1,4 +1,7 @@
 parameters:
+  - name: adolibrary
+    default: cnp-azuredevops-libraries
+
   - name: agentPool
     default: ubuntu-18.04
 
@@ -46,7 +49,7 @@ jobs:
       vmImage: ${{ parameters.agentPool }}
     steps:
       - checkout: self
-      - checkout: cnp-azuredevops-libraries
+      - checkout: ${{ parameters.adoLibrary }}
       - bash: echo ${{ parameters.environment }}
 
       - template: ./set-build-repo-suffix-env-var.yaml
@@ -133,5 +136,5 @@ jobs:
           scriptType: bash
           scriptLocation: scriptPath
           azureSubscription: ${{ parameters.serviceConnection }}
-          scriptPath: $(System.DefaultWorkingDirectory)/cnp-libraries/scripts/unlock-tf-state.sh
+          scriptPath: $(System.DefaultWorkingDirectory)/${{ parameters.adoLibrary }}/scripts/unlock-tf-state.sh
           arguments: ${{ parameters.location }} $(controlStorageAccount)

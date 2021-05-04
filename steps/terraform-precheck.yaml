@@ -1,4 +1,7 @@
 parameters:
+  - name: adolibrary
+    default: cnp-azuredevops-libraries
+
   - name: environment
     default: sandbox
 
@@ -30,7 +33,7 @@ jobs:
       vmImage: ${{ parameters.agentPool }}
     steps:
       - checkout: self
-      - checkout: cnp-azuredevops-libraries
+      - checkout: ${{ parameters.adoLibrary }}
       - bash: echo ${{ parameters.environment }}
 
       - task: TerraformInstaller@0
@@ -53,13 +56,13 @@ jobs:
           pipelinedefinition: $(System.DefinitionId)
           azuredevopstoken: $(azure-devops-token)
         inputs:
-          filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/builds-check.sh
+          filePath: $(System.DefaultWorkingDirectory)/${{ parameters.adoLibrary }}/scripts/builds-check.sh
 
       - task: PowerShell@2
         displayName: Run tests
         inputs:
           targetType: 'filePath'
-          filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/pester-tests.ps1
+          filePath: $(System.DefaultWorkingDirectory)/${{ parameters.adoLibrary }}/scripts/pester-tests.ps1
           pwsh: true
 
       - task: PublishTestResults@2
