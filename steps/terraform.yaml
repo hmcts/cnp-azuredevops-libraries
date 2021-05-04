@@ -102,7 +102,7 @@ jobs:
           terraformVersion: ${{ parameters.tfversion }}
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
           environmentServiceName: ${{ parameters.serviceConnection }}
-          commandOptions: '-out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}  -var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars -lock=false'
+          commandOptions: '-out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}  -var env=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars -lock=false'
 
       - task: TerraformCLI@0
         displayName: Terraform apply ${{ parameters.stack }}
