@@ -100,7 +100,7 @@ jobs:
         displayName: Terraform apply ${{ parameters.stack }}
         condition: |
           or(
-          and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'apply'),
+          and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'apply')),
           and(succeeded(), eq(variables['isMain'], true), eq(variables['isTriggered'], true))
           )
         inputs:
