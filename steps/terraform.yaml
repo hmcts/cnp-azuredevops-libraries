@@ -71,7 +71,7 @@ jobs:
         inputs:
           command: init
           terraformVersion: ${{ parameters.tfversion }}
-          workingDirectory: '$(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
           backendType: azurerm
           ensureBackend: true
           backendServiceArm: ${{ parameters.serviceConnection }}
@@ -87,7 +87,7 @@ jobs:
         displayName: Terraform validate
         inputs:
           command: validate
-          workingDirectory: '$(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
 
       - task: TerraformCLI@0
         displayName: Terraform plan ${{ parameters.stack }}
@@ -95,9 +95,9 @@ jobs:
         inputs:
           command: plan
           terraformVersion: ${{ parameters.tfversion }}
-          workingDirectory: $(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}
+          workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
           environmentServiceName: ${{ parameters.serviceConnection }}
-          commandOptions: '-out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}  -var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars -lock=false'
+          commandOptions: '-out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}  -var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars -lock=false'
 
       - task: TerraformCLI@0
         displayName: Terraform apply ${{ parameters.stack }}
@@ -109,7 +109,7 @@ jobs:
         inputs:
           command: apply
           terraformVersion: ${{ parameters.tfversion }}
-          workingDirectory: $(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}
+          workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
           environmentServiceName: ${{ parameters.serviceConnection }}
           commandOptions: '--auto-approve tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}'
 
@@ -120,7 +120,7 @@ jobs:
             inputs:
               command: destroy
               terraformVersion: ${{ parameters.tfversion }}
-              workingDirectory: $(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}
+              workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
               environmentServiceName: ${{ parameters.serviceConnection }}
               commandOptions: '-var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars'
 
@@ -128,7 +128,7 @@ jobs:
         displayName: "Remove local tfstate"
         inputs:
           targetType: 'inline'
-          workingDirectory: '$(System.DefaultWorkingDirectory)/stack/${{ parameters.stack }}'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
           script: |
             rm -f terraform.tfstate* && rm -rf .terraform/
 
