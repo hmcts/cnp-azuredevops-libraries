@@ -5,6 +5,18 @@ parameters:
   - name: agentPool
     default: ubuntu-18.04
 
+  - name: initCommandOptions
+    default: ''
+
+  - name: planCommandOptions
+    default: ''
+
+  - name: applyCommandOptions
+    default: ''
+
+  - name: destroyCommandOptions
+    default: ''
+
   - name: environment
     default: sandbox
 
@@ -89,7 +101,7 @@ jobs:
           backendAzureRmStorageAccountSku: Standard_LRS
           backendAzureRmContainerName: subscription-tfstate
           backendAzureRmKey: '${{ parameters.location }}/${{ parameters.project }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.stack }}/terraform.tfstate'
-          commandOptions: '-backend-config=subscription_id=${{ parameters.tfInitSub }}'
+          commandOptions: '-backend-config=subscription_id=${{ parameters.tfInitSub }} ${{ parameters.initCommandOptions }}'
 
       - task: TerraformInstaller@0
         displayName: Terraform validate
@@ -105,7 +117,7 @@ jobs:
           terraformVersion: ${{ parameters.tfversion }}
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
           environmentServiceName: ${{ parameters.serviceConnection }}
-          commandOptions: '-out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}  -var env=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars -lock=false'
+          commandOptions: '-out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}  -var env=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }} -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars -lock=false'
 
       - task: TerraformCLI@0
         displayName: Terraform apply ${{ parameters.stack }}
@@ -119,7 +131,7 @@ jobs:
           terraformVersion: ${{ parameters.tfversion }}
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
           environmentServiceName: ${{ parameters.serviceConnection }}
-          commandOptions: '--auto-approve tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}'
+          commandOptions: '--auto-approve tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }} ${{ parameters.applyCommandOptions }}'
 
       - ${{ if eq(parameters.overrideAction, 'destroy') }}:
           - task: TerraformCLI@0
@@ -130,7 +142,7 @@ jobs:
               terraformVersion: ${{ parameters.tfversion }}
               workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
               environmentServiceName: ${{ parameters.serviceConnection }}
-              commandOptions: '-var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars'
+              commandOptions: '-var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }} -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars'
 
       - task: Bash@3
         displayName: "Remove local tfstate"
