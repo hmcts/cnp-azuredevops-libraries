@@ -2,9 +2,6 @@ parameters:
   - name: adolibrary
     default: cnp-azuredevops-libraries
 
-  - name: agentPool
-    default: ubuntu-18.04
-
   - name: environment
     default: sandbox
 
@@ -29,48 +26,43 @@ parameters:
   - name: tfversion
     default: ''
 
-jobs:
-  - job: Validate
-    timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
-    pool:
-      vmImage: ${{ parameters.agentPool }}
-    steps:
-      - checkout: self
-      - checkout: ${{ parameters.adoLibrary }}
-      - bash: echo ${{ parameters.environment }}
+steps:
+  - checkout: self
+  - checkout: ${{ parameters.adoLibrary }}
+  - bash: echo ${{ parameters.environment }}
 
-      - task: TerraformInstaller@0
-        displayName: Terraform install
-        inputs:
-          terraformVersion: ${{ parameters.tfversion }}
+  - task: TerraformInstaller@0
+    displayName: Terraform install
+    inputs:
+      terraformVersion: ${{ parameters.tfversion }}
 
-      - task: AzureKeyVault@1
-        displayName: Retrieve keyvault secret for ADO token
-        inputs:
-          ConnectedServiceName: ${{ parameters.serviceConnection }}
-          keyVaultName: ${{ parameters.keyvaultName }}
-          secretsFilter: ${{ parameters.keyvaultSecret }}
-          runAsPreJob: false
+  - task: AzureKeyVault@1
+    displayName: Retrieve keyvault secret for ADO token
+    inputs:
+      ConnectedServiceName: ${{ parameters.serviceConnection }}
+      keyVaultName: ${{ parameters.keyvaultName }}
+      secretsFilter: ${{ parameters.keyvaultSecret }}
+      runAsPreJob: false
 
-      - task: Bash@3
-        displayName: Prevent parallel run
-        env:
-          thisbuild: $(Build.BuildId)
-          pipelinedefinition: $(System.DefinitionId)
-          azuredevopstoken: $(azure-devops-token)
-        inputs:
-          filePath: $(System.DefaultWorkingDirectory)/${{ parameters.adoLibrary }}/scripts/builds-check.sh
+  - task: Bash@3
+    displayName: Prevent parallel run
+    env:
+      thisbuild: $(Build.BuildId)
+      pipelinedefinition: $(System.DefinitionId)
+      azuredevopstoken: $(azure-devops-token)
+    inputs:
+      filePath: $(System.DefaultWorkingDirectory)/${{ parameters.adoLibrary }}/scripts/builds-check.sh
 
-      - task: PowerShell@2
-        displayName: Run tests
-        inputs:
-          targetType: 'filePath'
-          filePath: $(System.DefaultWorkingDirectory)/${{ parameters.adoLibrary }}/scripts/pester-tests.ps1
-          pwsh: true
+  - task: PowerShell@2
+    displayName: Run tests
+    inputs:
+      targetType: 'filePath'
+      filePath: $(System.DefaultWorkingDirectory)/${{ parameters.adoLibrary }}/scripts/pester-tests.ps1
+      pwsh: true
 
-      - task: PublishTestResults@2
-        displayName: 'Publish Test Results **/TEST-*.xml'
-        inputs:
-          testResultsFormat: NUnit
-          failTaskOnFailedTests: true
-        condition: always()
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results **/TEST-*.xml'
+    inputs:
+      testResultsFormat: NUnit
+      failTaskOnFailedTests: true
+    condition: always()

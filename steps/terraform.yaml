@@ -2,9 +2,6 @@ parameters:
   - name: adolibrary
     default: cnp-azuredevops-libraries
 
-  - name: agentPool
-    default: ubuntu-18.04
-
   - name: initCommandOptions
     default: ''
 
@@ -48,116 +45,108 @@ parameters:
   - name: serviceConnection
     default: ''
 
-  - name: timeoutInMinutes
-    default: 60
-
   - name: tfversion
     default: ''
 
   - name: tfInitSub
     default: ''
 
-jobs:
-  - job: TerraformPlanApply
-    timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
-    pool:
-      vmImage: ${{ parameters.agentPool }}
-    steps:
-      - checkout: self
-      - checkout: ${{ parameters.adoLibrary }}
-      - bash: echo ${{ parameters.environment }}
+steps:
+  - checkout: self
+  - checkout: ${{ parameters.adoLibrary }}
+  - bash: echo ${{ parameters.environment }}
 
-      - template: ./set-build-repo-suffix-env-var.yaml
-      - template: ./keyvault-read.yaml
-        parameters:
-          serviceConnection: ${{ parameters.serviceConnection }}
-          environment: ${{ parameters.environment }}
+  - template: ./set-build-repo-suffix-env-var.yaml
+  - template: ./keyvault-read.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
+      environment: ${{ parameters.environment }}
 
-      - task: TerraformInstaller@0
-        displayName: Terraform install
-        inputs:
-          terraformVersion: ${{ parameters.tfversion }}
+  - task: TerraformInstaller@0
+    displayName: Terraform install
+    inputs:
+      terraformVersion: ${{ parameters.tfversion }}
 
-      - bash: |
-          echo "repo short name - $(buildRepoSuffix)"
-          echo "working dir - $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}"
-          tree "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}"
+  - bash: |
+      echo "repo short name - $(buildRepoSuffix)"
+      echo "working dir - $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}"
+      tree "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}"
 
+  - task: TerraformCLI@0
+    displayName: Terraform init ${{ parameters.stack }}
+    inputs:
+      command: init
+      terraformVersion: ${{ parameters.tfversion }}
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
+      backendType: azurerm
+      ensureBackend: false
+      backendServiceArm: ${{ parameters.serviceConnection }}
+      ${{ if eq(parameters['environment'], 'ptl') }}:
+        backendAzureRmResourceGroupName: "azure-control-prod-rg"
+      ${{ if ne(parameters['environment'], 'ptl') }}:
+        backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
+      backendAzureRmResourceGroupLocation: ${{ parameters.location }}
+      backendAzureRmStorageAccountName: $(controlStorageAccount)
+      backendAzureRmStorageAccountSku: Standard_LRS
+      backendAzureRmContainerName: subscription-tfstate
+      backendAzureRmKey: '${{ parameters.location }}/${{ parameters.project }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.stack }}/terraform.tfstate'
+      commandOptions: '-backend-config=subscription_id=${{ parameters.tfInitSub }} ${{ parameters.initCommandOptions }}'
+
+  - task: TerraformInstaller@0
+    displayName: Terraform validate
+    inputs:
+      command: validate
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
+
+  - task: TerraformCLI@0
+    displayName: Terraform plan ${{ parameters.stack }}
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+    inputs:
+      command: plan
+      terraformVersion: ${{ parameters.tfversion }}
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
+      environmentServiceName: ${{ parameters.serviceConnection }}
+      commandOptions: '-out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}  -var env=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }} -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars -lock=false'
+
+  - task: TerraformCLI@0
+    displayName: Terraform apply ${{ parameters.stack }}
+    condition: |
+      or(
+      and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'apply')),
+      and(succeeded(), eq(variables['isMain'], true), eq(variables['isTriggered'], true))
+      )
+    inputs:
+      command: apply
+      terraformVersion: ${{ parameters.tfversion }}
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
+      environmentServiceName: ${{ parameters.serviceConnection }}
+      commandOptions: '--auto-approve tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }} ${{ parameters.applyCommandOptions }}'
+
+  - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: TerraformCLI@0
-        displayName: Terraform init ${{ parameters.stack }}
+        displayName: Terraform destroy ${{ parameters.stack }}
+        condition: and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'destroy'))
         inputs:
-          command: init
-          terraformVersion: ${{ parameters.tfversion }}
-          workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
-          backendType: azurerm
-          ensureBackend: false
-          backendServiceArm: ${{ parameters.serviceConnection }}
-          ${{ if eq(parameters['environment'], 'ptl') }}:
-            backendAzureRmResourceGroupName: "azure-control-prod-rg"
-          ${{ if ne(parameters['environment'], 'ptl') }}:
-            backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
-          backendAzureRmResourceGroupLocation: ${{ parameters.location }}
-          backendAzureRmStorageAccountName: $(controlStorageAccount)
-          backendAzureRmStorageAccountSku: Standard_LRS
-          backendAzureRmContainerName: subscription-tfstate
-          backendAzureRmKey: '${{ parameters.location }}/${{ parameters.project }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.stack }}/terraform.tfstate'
-          commandOptions: '-backend-config=subscription_id=${{ parameters.tfInitSub }} ${{ parameters.initCommandOptions }}'
-
-      - task: TerraformInstaller@0
-        displayName: Terraform validate
-        inputs:
-          command: validate
-          workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
-
-      - task: TerraformCLI@0
-        displayName: Terraform plan ${{ parameters.stack }}
-        condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
-        inputs:
-          command: plan
+          command: destroy
           terraformVersion: ${{ parameters.tfversion }}
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
           environmentServiceName: ${{ parameters.serviceConnection }}
-          commandOptions: '-out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}  -var env=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }} -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars -lock=false'
+          commandOptions: '-var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }} -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars'
 
-      - task: TerraformCLI@0
-        displayName: Terraform apply ${{ parameters.stack }}
-        condition: |
-          or(
-          and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'apply')),
-          and(succeeded(), eq(variables['isMain'], true), eq(variables['isTriggered'], true))
-          )
-        inputs:
-          command: apply
-          terraformVersion: ${{ parameters.tfversion }}
-          workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
-          environmentServiceName: ${{ parameters.serviceConnection }}
-          commandOptions: '--auto-approve tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }} ${{ parameters.applyCommandOptions }}'
+  - task: Bash@3
+    displayName: "Remove local tfstate"
+    inputs:
+      targetType: 'inline'
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
+      script: |
+        rm -f terraform.tfstate* && rm -rf .terraform/
 
-      - ${{ if eq(parameters.overrideAction, 'destroy') }}:
-          - task: TerraformCLI@0
-            displayName: Terraform destroy ${{ parameters.stack }}
-            condition: and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'destroy'))
-            inputs:
-              command: destroy
-              terraformVersion: ${{ parameters.tfversion }}
-              workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
-              environmentServiceName: ${{ parameters.serviceConnection }}
-              commandOptions: '-var environment=${{ parameters.environment }} -var project=${{ parameters.project }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }} -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars'
-
-      - task: Bash@3
-        displayName: "Remove local tfstate"
-        inputs:
-          targetType: 'inline'
-          workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
-          script: |
-            rm -f terraform.tfstate* && rm -rf .terraform/
-
-      - task: AzureCLI@2
-        displayName: 'Unlock TF state if required'
-        condition: always()
-        inputs:
-          scriptType: bash
-          scriptLocation: scriptPath
-          azureSubscription: ${{ parameters.serviceConnection }}
-          scriptPath: $(System.DefaultWorkingDirectory)/${{ parameters.adoLibrary }}/scripts/unlock-tf-state.sh
-          arguments: ${{ parameters.location }} $(controlStorageAccount)
+  - task: AzureCLI@2
+    displayName: 'Unlock TF state if required'
+    condition: always()
+    inputs:
+      scriptType: bash
+      scriptLocation: scriptPath
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptPath: $(System.DefaultWorkingDirectory)/${{ parameters.adoLibrary }}/scripts/unlock-tf-state.sh
+      arguments: ${{ parameters.location }} $(controlStorageAccount)
