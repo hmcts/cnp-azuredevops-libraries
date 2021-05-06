@@ -20,9 +20,6 @@ parameters:
   - name: serviceConnection
     default: ''
 
-  - name: timeoutInMinutes
-    default: 60
-
   - name: tfversion
     default: ''
 
