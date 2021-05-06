@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 organization="hmcts"
-project="$(System.TeamProject)"
+project="$SYSTEM_TEAMPROJECT"
 
 echo "This is build $thisbuild"
 IFS=$'\n'
