@@ -92,6 +92,7 @@ steps:
     inputs:
       command: validate
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
+      terraformVersion: ${{ parameters.tfversion }}
 
   - task: TerraformCLI@0
     displayName: Terraform plan ${{ parameters.stack }}
