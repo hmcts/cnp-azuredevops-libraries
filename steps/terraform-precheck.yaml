@@ -41,15 +41,6 @@ steps:
       secretsFilter: ${{ parameters.keyvaultSecret }}
       runAsPreJob: false
 
-  - task: Bash@3
-    displayName: Prevent parallel run
-    env:
-      thisbuild: $(Build.BuildId)
-      pipelinedefinition: $(System.DefinitionId)
-      azuredevopstoken: $(azure-devops-token)
-    inputs:
-      filePath: $(System.DefaultWorkingDirectory)/${{ parameters.adoLibrary }}/scripts/builds-check.sh
-
   - task: PowerShell@2
     displayName: Run tests
     inputs:
@@ -63,3 +54,12 @@ steps:
       testResultsFormat: NUnit
       failTaskOnFailedTests: true
     condition: always()
+
+  - task: Bash@3
+    displayName: Prevent parallel run
+    env:
+      thisbuild: $(Build.BuildId)
+      pipelinedefinition: $(System.DefinitionId)
+      azuredevopstoken: $(azure-devops-token)
+    inputs:
+      filePath: $(System.DefaultWorkingDirectory)/${{ parameters.adoLibrary }}/scripts/builds-check.sh
