@@ -109,7 +109,7 @@ steps:
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
-        -lock=false'
+        -lock=false
 
   - task: TerraformCLI@0
     displayName: Terraform apply ${{ parameters.stack }}
@@ -139,7 +139,7 @@ steps:
             -var project=${{ parameters.project }}
             -var builtFrom=$(Build.Repository.Name)
             -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-            -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars'
+            -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
 
   - task: Bash@3
     displayName: "Remove local tfstate"
