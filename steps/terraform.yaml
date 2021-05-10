@@ -39,7 +39,7 @@ parameters:
   - name: terraformVersion
     default: ''
 
-  - name: tfInitSub
+  - name: terraformInitSubscription
     default: ''
 
 steps:
@@ -76,7 +76,7 @@ steps:
       backendAzureRmStorageAccountSku: Standard_LRS
       backendAzureRmContainerName: subscription-tfstate
       backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.stack }}/terraform.tfstate'
-      commandOptions: '-backend-config=subscription_id=${{ parameters.tfInitSub }} ${{ parameters.initCommandOptions }}'
+      commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }} ${{ parameters.initCommandOptions }}'
 
   - task: TerraformInstaller@0
     displayName: Terraform validate
