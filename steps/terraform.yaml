@@ -113,7 +113,7 @@ steps:
     condition: |
       or(
       and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'apply')),
-      and(succeeded(), eq(variables['isMain'], true), eq(variables['isTriggered'], true))
+      and(succeeded(), eq(variables['isMain'], true), eq(variables['isAutoTriggered'], true))
       )
     inputs:
       command: apply
