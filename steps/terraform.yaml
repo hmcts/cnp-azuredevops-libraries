@@ -27,12 +27,6 @@ parameters:
       - apply
       - destroy
 
-  - name: project
-    default: ''
-    values:
-      - cft
-      - ss
-
   - name: product
     default: ''
 
@@ -81,7 +75,7 @@ steps:
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmStorageAccountSku: Standard_LRS
       backendAzureRmContainerName: subscription-tfstate
-      backendAzureRmKey: '${{ parameters.location }}/${{ parameters.project }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.stack }}/terraform.tfstate'
+      backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.stack }}/terraform.tfstate'
       commandOptions: '-backend-config=subscription_id=${{ parameters.tfInitSub }} ${{ parameters.initCommandOptions }}'
 
   - task: TerraformInstaller@0
@@ -100,9 +94,8 @@ steps:
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
       commandOptions: >
-        -out tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }}
+        -out tfplan-${{ parameters.environment }}-${{ parameters.stack }}
         -var env=${{ parameters.environment }}
-        -var project=${{ parameters.project }}
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
@@ -120,7 +113,7 @@ steps:
       terraformVersion: ${{ parameters.tfversion }}
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
-      commandOptions: '--auto-approve tfplan-${{ parameters.project }}-${{ parameters.environment }}-${{ parameters.stack }} ${{ parameters.applyCommandOptions }}'
+      commandOptions: '--auto-approve tfplan-${{ parameters.environment }}-${{ parameters.stack }} ${{ parameters.applyCommandOptions }}'
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: TerraformCLI@0
@@ -133,7 +126,6 @@ steps:
           environmentServiceName: ${{ parameters.serviceConnection }}
           commandOptions: >
             -var environment=${{ parameters.environment }}
-            -var project=${{ parameters.project }}
             -var builtFrom=$(Build.Repository.Name)
             -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
             -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
