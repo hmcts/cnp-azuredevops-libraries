@@ -36,7 +36,7 @@ parameters:
   - name: serviceConnection
     default: ''
 
-  - name: tfversion
+  - name: terraformVersion
     default: ''
 
   - name: tfInitSub
@@ -56,13 +56,13 @@ steps:
   - task: TerraformInstaller@0
     displayName: Terraform install
     inputs:
-      terraformVersion: ${{ parameters.tfversion }}
+      terraformVersion: ${{ parameters.terraformVersion }}
 
   - task: TerraformCLI@0
     displayName: Terraform init ${{ parameters.stack }}
     inputs:
       command: init
-      terraformVersion: ${{ parameters.tfversion }}
+      terraformVersion: ${{ parameters.terraformVersion }}
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
       backendType: azurerm
       ensureBackend: false
@@ -83,14 +83,14 @@ steps:
     inputs:
       command: validate
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
-      terraformVersion: ${{ parameters.tfversion }}
+      terraformVersion: ${{ parameters.terraformVersion }}
 
   - task: TerraformCLI@0
     displayName: Terraform plan ${{ parameters.stack }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     inputs:
       command: plan
-      terraformVersion: ${{ parameters.tfversion }}
+      terraformVersion: ${{ parameters.terraformVersion }}
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
       commandOptions: >
@@ -109,7 +109,7 @@ steps:
       )
     inputs:
       command: apply
-      terraformVersion: ${{ parameters.tfversion }}
+      terraformVersion: ${{ parameters.terraformVersion }}
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
       commandOptions: '--auto-approve tfplan-${{ parameters.environment }}-${{ parameters.stack }} ${{ parameters.applyCommandOptions }}'
@@ -120,7 +120,7 @@ steps:
         condition: and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'destroy'))
         inputs:
           command: destroy
-          terraformVersion: ${{ parameters.tfversion }}
+          terraformVersion: ${{ parameters.terraformVersion }}
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.stack }}'
           environmentServiceName: ${{ parameters.serviceConnection }}
           commandOptions: >

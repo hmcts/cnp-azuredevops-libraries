@@ -14,7 +14,7 @@ parameters:
   - name: serviceConnection
     default: ''
 
-  - name: tfversion
+  - name: terraformVersion
     default: ''
 
 steps:
@@ -24,7 +24,7 @@ steps:
   - task: TerraformInstaller@0
     displayName: Terraform install
     inputs:
-      terraformVersion: ${{ parameters.tfversion }}
+      terraformVersion: ${{ parameters.terraformVersion }}
 
   - task: AzureKeyVault@1
     displayName: Retrieve keyvault secret for ADO token
