@@ -1,7 +1,4 @@
 parameters:
-  - name: environment
-    default: ''
-
   - name: keyvaultName
     default: ''
 
@@ -23,7 +20,6 @@ parameters:
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
-  - bash: echo ${{ parameters.environment }}
 
   - task: TerraformInstaller@0
     displayName: Terraform install
