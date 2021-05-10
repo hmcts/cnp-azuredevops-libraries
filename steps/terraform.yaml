@@ -1,7 +1,4 @@
 parameters:
-  - name: adolibrary
-    default: cnp-azuredevops-libraries
-
   - name: initCommandOptions
     default: ''
 
@@ -53,7 +50,7 @@ parameters:
 
 steps:
   - checkout: self
-  - checkout: ${{ parameters.adoLibrary }}
+  - checkout: cnp-azuredevops-libraries
   - bash: echo ${{ parameters.environment }}
 
   - template: ./set-build-repo-suffix-env-var.yaml
@@ -156,5 +153,5 @@ steps:
       scriptType: bash
       scriptLocation: scriptPath
       azureSubscription: ${{ parameters.serviceConnection }}
-      scriptPath: $(System.DefaultWorkingDirectory)/${{ parameters.adoLibrary }}/scripts/unlock-tf-state.sh
+      scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/unlock-tf-state.sh
       arguments: ${{ parameters.location }} $(controlStorageAccount)
