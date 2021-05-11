@@ -21,10 +21,15 @@ steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
 
-  - task: TerraformInstaller@0
-    displayName: Terraform install
+  #- task: TerraformInstaller@0
+  #  displayName: Terraform install
+  #  inputs:
+  #    terraformVersion: ${{ parameters.terraformVersion }}
+
+  - task: Bash@3
+    displayName: Terraform install (tfenv)
     inputs:
-      terraformVersion: ${{ parameters.terraformVersion }}
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
 
   - task: AzureKeyVault@1
     displayName: Retrieve keyvault secret for ADO token
