@@ -3,6 +3,7 @@ set -e
 
 git clone https://github.com/tfutils/tfenv.git ~/.tfenv
 
+sudo rm /usr/local/bin/terraform
 sudo ln -s ~/.tfenv/bin/* /usr/local/bin
 
 # run 'tfenv use version' as tfenv version > 1.0.2 currently does not auto switch to use installed version
