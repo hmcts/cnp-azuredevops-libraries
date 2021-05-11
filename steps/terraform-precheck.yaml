@@ -14,18 +14,10 @@ parameters:
   - name: serviceConnection
     default: ''
 
-  - name: terraformVersion
-    default: ''
-
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
   - template: ./set-build-repo-suffix-env-var.yaml
-
-  #- task: TerraformInstaller@0
-  #  displayName: Terraform install
-  #  inputs:
-  #    terraformVersion: ${{ parameters.terraformVersion }}
 
   - task: Bash@3
     displayName: Terraform install (tfenv)
