@@ -30,6 +30,7 @@ steps:
     displayName: Terraform install (tfenv)
     inputs:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
+      workingDirectory: $(System.DefaultWorkingDirectory)/
 
   - task: AzureKeyVault@1
     displayName: Retrieve keyvault secret for ADO token
