@@ -13,7 +13,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
     ├── scripts                                  
     ├── steps
     │   └── terraform-precheck.yaml             # Precheck stage tasks
-    │   └── terraform.yaml                      # Terraform PlanApply stage tasks
+    │   └── terraform.yaml                      # Terraform plan and apply stage tasks
     ├── tasks   
     ├── vars   
   
