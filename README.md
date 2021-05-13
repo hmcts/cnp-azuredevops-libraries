@@ -25,7 +25,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
 4. Add the terraform.yaml template to a 'TerraformPlanApply' stage
    > see [Example refactored pipeline](https://github.com/hmcts/azure-platform-terraform/blob/DTSPO-1188/use-cnp-ado-libraries/azure_pipeline.yaml#L267)
 5. First time pipeline run:  
-   Run build with the Terraform plan option. State file will be created in new location 
+   Run build with the Terraform plan option. State file will be created in new location   
    Copy state file from old location to overwrite new state file  
    Run build with Terraform plan to confirm plan reflects migrated state file  
 6. Run pipeline with plan/apply option as required   
@@ -44,7 +44,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
 
   
     
-#### Required folder structure  
+#### Required folder structure:  
 Template requires the below folder structure for the build repository.  
 
     Repo
@@ -53,7 +53,7 @@ Template requires the below folder structure for the build repository.
     │   │       └── .terraform-version
     │   │       └── *.tf
     │   └── <n> 
-    ├── environments                                       # Environment specific settings - .tfvars
+    ├── environments                                       # Environment specific .tfvars files
     │   └── <env>
     │   │    └── *.tfvars
     ├── azure_pipeline.yaml
