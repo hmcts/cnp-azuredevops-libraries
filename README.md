@@ -6,7 +6,7 @@ Reusable pipeline components for CNP Azure DevOps pipelines
   
   
 
-###Terraform Workflow Templates
+### Terraform Workflow Templates
 
 The template files below contain steps to add Terraform Init/Plan/Apply/Destroy tasks to a pipeline.
     
@@ -18,7 +18,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
     ├── vars   
   
   
-####Reusing templates:
+#### Reusing templates:
 1. Create the repo required folder structure
 2. Add the cnp-azure-devops-libraries repository resource
 3. Add the terraform-precheck.yaml template to a 'Precheck' stage
@@ -32,7 +32,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
 
   
   
-####State file:  
+#### State file:  
 * In a storage account in the HMCTS-CONTROL subscription  
 * Storage account name derived from the resources subscription id as below:  
   >'c' + '1st-8th character of subscription id' + '25th-36th character of subscription id' + 'sa'  
@@ -44,7 +44,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
 
   
     
-####Required folder structure  
+#### Required folder structure  
 Template requires the below folder structure for the build repository.
 
     Repo
