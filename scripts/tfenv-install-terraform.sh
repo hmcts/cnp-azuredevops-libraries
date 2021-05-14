@@ -3,8 +3,12 @@ set -e
 
 git clone https://github.com/tfutils/tfenv.git ~/.tfenv
 
-sudo rm /usr/local/bin/terraform
-sudo ln -s ~/.tfenv/bin/* /usr/local/bin
+
+if [ -f "/usr/local/bin/terraform" ]; then
+  rm /usr/local/bin/terraform
+fi
+
+ln -s ~/.tfenv/bin/* /usr/local/bin
 
 # Install and invoke use
 echo "Installing Terraform based on version detected in .terraform-version file"
