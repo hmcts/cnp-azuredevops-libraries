@@ -6,6 +6,7 @@ git clone -b v2.2.2 --single-branch https://github.com/tfutils/tfenv.git ~/.tfen
 mkdir -p ~/.local/bin
 . ~/.profile
 ln -s ~/.tfenv/bin/* ~/.local/bin
+PATH="$HOME/.local/bin:$PATH"
 which tfenv
 
 # Install and invoke use
