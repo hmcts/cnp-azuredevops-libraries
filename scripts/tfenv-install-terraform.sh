@@ -7,14 +7,12 @@ fi
 
 git clone -b v2.2.2 --single-branch https://github.com/tfutils/tfenv.git ~/.tfenv
 
-if [ -d "$HOME/.local/bin" ]; then
-  mkdir -p ~/.local/bin
-fi
-
+mkdir -p ~/.local/bin
 ln -s ~/.tfenv/bin/* ~/.local/bin
 echo 'export PATH="$HOME/.tfenv/bin:$PATH"' >> ~/.bashrc
 . ~/.bashrc
 
+whoami
 echo $PATH
 which tfenv
 
