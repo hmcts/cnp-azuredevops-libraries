@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e
 
-git clone https://github.com/tfutils/tfenv.git ~/.tfenv
 
+if [ -f "~/.tfenv" ]; then
+  rm -rf ~/.tfenv
+fi
+
+git clone https://github.com/tfutils/tfenv.git ~/.tfenv
 
 if [ ! -f "/usr/bin/sudo" ]; then
   apt install -y sudo
