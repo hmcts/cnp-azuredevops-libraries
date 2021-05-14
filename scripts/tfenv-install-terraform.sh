@@ -4,11 +4,15 @@ set -e
 git clone https://github.com/tfutils/tfenv.git ~/.tfenv
 
 
+if [ ! -f "/usr/bin/sudo" ]; then
+  apt install -y sudo
+fi
+
 if [ -f "/usr/local/bin/terraform" ]; then
   sudo rm /usr/local/bin/terraform
 fi
 
-ln -s ~/.tfenv/bin/* /usr/local/bin
+sudo ln -s ~/.tfenv/bin/* /usr/local/bin
 
 # Install and invoke use
 echo "Installing Terraform based on version detected in .terraform-version file"
