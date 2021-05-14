@@ -6,6 +6,7 @@ git clone -b v2.2.2 --single-branch https://github.com/tfutils/tfenv.git ~/.tfen
 mkdir -p ~/.local/bin
 . ~/.profile
 ln -s ~/.tfenv/bin/* ~/.local/bin
+which tfenv
 
 # Install and invoke use
 echo "Installing Terraform based on version detected in .terraform-version file"
