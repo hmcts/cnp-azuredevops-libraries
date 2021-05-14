@@ -5,7 +5,7 @@ git clone https://github.com/tfutils/tfenv.git ~/.tfenv
 
 
 if [ -f "/usr/local/bin/terraform" ]; then
-  rm /usr/local/bin/terraform
+  sudo rm /usr/local/bin/terraform
 fi
 
 ln -s ~/.tfenv/bin/* /usr/local/bin
