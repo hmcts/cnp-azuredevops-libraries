@@ -1,16 +1,21 @@
 #!/bin/bash
 set -e
 
-if [ -d "~/.tfenv" ]; then
-  rm -rf ~/.tfenv/
+if [ -d "$HOME/.tfenv" ]; then
+  rm -rf ~/.tfenv
 fi
 
 git clone -b v2.2.2 --single-branch https://github.com/tfutils/tfenv.git ~/.tfenv
 
-mkdir -p ~/.local/bin
+if [ -d "$HOME/.local/bin" ]; then
+  mkdir -p ~/.local/bin
+fi
+
 ln -s ~/.tfenv/bin/* ~/.local/bin
 echo 'export PATH="$HOME/.tfenv/bin:$PATH"' >> ~/.bashrc
 . ~/.bashrc
+
+echo $PATH
 which tfenv
 
 # Install and invoke use
