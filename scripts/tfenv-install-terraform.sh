@@ -1,25 +1,21 @@
 #!/bin/bash
 set -e
 
-if [ -d "$HOME/.tfenv" ]; then
-  rm -rf ~/.tfenv
-fi
-
+rm -rf ~/.tfenv
 git clone -b v2.2.2 --single-branch https://github.com/tfutils/tfenv.git ~/.tfenv
 
-mkdir -p ~/.local/bin
-ln -s ~/.tfenv/bin/* ~/.local/bin
-echo 'export PATH="$HOME/.tfenv/bin:$PATH"' >> ~/.bash_profile
-echo 'export PATH="$HOME/.tfenv/bin:$PATH"' >> ~/.bashrc
-. ~/.bash_profile
+if [ $(whoami) == "root" ]; then
+  ln -s -f ~/.tfenv/bin/* /usr/local/bin
+else
+  mkdir -p ~/.local/bin
+  ln -s -f ~/.tfenv/bin/* ~/.local/bin
+fi
 
-whoami
-echo $PATH
-which tfenv
+. ~/.profile
 
 # Install and invoke use
 echo "Installing Terraform based on version detected in .terraform-version file"
-tfenv install | tee -a tfenv_install.log
+tfenv install | tee tfenv_install.log
 cat tfenv_install.log | grep -i 'tfenv use' | cut -d "'" -f 2 > tfenv_use.sh
 chmod a+x tfenv_use.sh
 ./tfenv_use.sh
