@@ -1,5 +1,5 @@
 $RootPath = Split-Path -Parent $MyInvocation.MyCommand.Path | Split-Path
-$TfFiles = @(@((Get-ChildItem $RootPath -filter '*.tf' -Recurse)))
+$TfFiles = @(@((Get-ChildItem (Get-Item $RootPath).parent -filter '*.tf' -Recurse)))
 
 if ($TfFiles.Count -eq 0)
 {
