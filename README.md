@@ -12,7 +12,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
     ├── tasks   
     ├── vars   
 
-###Reusing templates:
+### Reusing templates:
 1. Create the [required folder structure](#required-terraform-folder-structure) in your repository
 2. Add the cnp-azure-devops-libraries repository resource as below  
    ```yaml
@@ -35,7 +35,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
    * Run build with Terraform plan to confirm plan reflects migrated state file  
 6. Run pipeline with plan/apply option as required   
 
-###State file:  
+### State file:  
 * In storage accounts in the `HMCTS-CONTROL` subscription  
 * Storage account name derived from the resources subscription id as below:  
   >'c' + '1st-8th character of subscription id' + '25th-36th character of subscription id' + 'sa'  
@@ -44,13 +44,13 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
   >'location/product/build repo name/environment/component name/terraform.tfstate'  
   _e.g. 'UK South/cft-platform/azure-platform-terraform/sbox/shutter/terraform.tfstate'_  
 
-###Required terraform folder structure:  
+### Required terraform folder structure:  
 Template requires the below folder structure for the build repository.  
 
     Repo
     ├── components                                         
     │   └── <a> (e.g. network)                             # group of .tf files
-    │   │       └── .terraform-version (symlink)           # linked to .terraform-version file at the root level (for local testing)
+    │   │       └── .terraform-version (symlink)           # linked to .terraform-version file at root level (for local testing)
     │   │       └── *.tf
     │   └── <n> 
     ├── environments                                       # Environment specific .tfvars files
