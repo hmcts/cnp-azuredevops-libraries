@@ -1,11 +1,6 @@
 # cnp-azuredevops-libraries
 Reusable pipeline components for CNP Azure DevOps pipelines
 
- 
- 
-  
-  
-
 ## Terraform workflow templates
 
 The template files below contain steps to add Terraform Init/Plan/Apply/Destroy tasks to a pipeline.
@@ -30,7 +25,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
 6. Run pipeline with plan/apply option as required   
 
 ### State file:  
-* In storage accounts in the HMCTS-CONTROL subscription  
+* In storage accounts in the `HMCTS-CONTROL` subscription  
 * Storage account name derived from the resources subscription id as below:  
   >'c' + '1st-8th character of subscription id' + '25th-36th character of subscription id' + 'sa'  
   _e.g. 'cb72ab7b703b0f2c6a1bbsa'_  
