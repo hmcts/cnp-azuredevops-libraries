@@ -15,6 +15,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
 ### Reusing templates:
 1. Create the [required folder structure](#required-terraform-folder-structure) in your repository
 2. Add the cnp-azure-devops-libraries repository resource as below  
+   
    ```yaml
    
    resources:  
@@ -50,7 +51,7 @@ Template requires the below folder structure for the build repository.
     Repo
     ├── components                                         
     │   └── <a> (e.g. network)                             # group of .tf files
-    │   │       └── .terraform-version (symlink)           # linked to .terraform-version file at root level (for local testing)
+    │   │       └── .terraform-version (symlink)           # to .terraform-version file at root level (for local testing)
     │   │       └── *.tf
     │   └── <n> 
     ├── environments                                       # Environment specific .tfvars files
