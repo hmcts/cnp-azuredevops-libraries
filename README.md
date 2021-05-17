@@ -50,7 +50,7 @@ Template requires the below folder structure for the build repository.
     Repo
     ├── components                                         
     │   └── <a> (e.g. network)                             # group of .tf files
-    │   │       └── .terraform-version                     # symlink to .terraform-version file at the root level (for local testing)
+    │   │       └── .terraform-version (symlink)           # linked to .terraform-version file at the root level (for local testing)
     │   │       └── *.tf
     │   └── <n> 
     ├── environments                                       # Environment specific .tfvars files
