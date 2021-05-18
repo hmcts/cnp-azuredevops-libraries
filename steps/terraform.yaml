@@ -1,0 +1,133 @@
+parameters:
+  - name: initCommandOptions
+    default: ''
+
+  - name: planCommandOptions
+    default: ''
+
+  - name: applyCommandOptions
+    default: ''
+
+  - name: destroyCommandOptions
+    default: ''
+
+  - name: environment
+    default: sandbox
+
+  - name: location
+    default: 'UK South'
+    values:
+      - 'UK South'
+      - 'UK West'
+
+  - name: overrideAction
+    default: plan
+    values:
+      - plan
+      - apply
+      - destroy
+
+  - name: product
+    default: ''
+
+  - name: component
+    default: ''
+
+  - name: serviceConnection
+    default: ''
+
+  - name: terraformInitSubscription
+    default: ''
+
+steps:
+  - checkout: self
+  - checkout: cnp-azuredevops-libraries
+  - bash: echo ${{ parameters.environment }}
+
+  - template: ./set-build-repo-suffix-env-var.yaml
+  - template: ./keyvault-read.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
+      environment: ${{ parameters.environment }}
+
+  - task: Bash@3
+    displayName: Terraform install (tfenv)
+    inputs:
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+
+  - task: TerraformCLI@0
+    displayName: Terraform init ${{ parameters.component }}
+    inputs:
+      command: init
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      backendType: azurerm
+      ensureBackend: false
+      backendServiceArm: ${{ parameters.serviceConnection }}
+      ${{ if eq(parameters['environment'], 'ptl') }}:
+        backendAzureRmResourceGroupName: "azure-control-prod-rg"
+      ${{ if ne(parameters['environment'], 'ptl') }}:
+        backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
+      backendAzureRmResourceGroupLocation: ${{ parameters.location }}
+      backendAzureRmStorageAccountName: $(controlStorageAccount)
+      backendAzureRmStorageAccountSku: Standard_LRS
+      backendAzureRmContainerName: subscription-tfstate
+      backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
+      commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }} ${{ parameters.initCommandOptions }}'
+
+  - task: TerraformCLI@0
+    displayName: Terraform validate
+    inputs:
+      command: validate
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+
+  - task: TerraformCLI@0
+    displayName: Terraform plan ${{ parameters.component }}
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+    inputs:
+      command: plan
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      environmentServiceName: ${{ parameters.serviceConnection }}
+      commandOptions: >
+        -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
+        -var env=${{ parameters.environment }}
+        -var builtFrom=$(Build.Repository.Name)
+        -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
+        -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
+
+  - task: TerraformCLI@0
+    displayName: Terraform apply ${{ parameters.component }}
+    condition: |
+      or(
+      and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'apply')),
+      and(succeeded(), eq(variables['isMain'], true), eq(variables['isAutoTriggered'], true))
+      )
+    inputs:
+      command: apply
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      environmentServiceName: ${{ parameters.serviceConnection }}
+      commandOptions: '--auto-approve tfplan-${{ parameters.environment }}-${{ parameters.component }} ${{ parameters.applyCommandOptions }}'
+
+  - ${{ if eq(parameters.overrideAction, 'destroy') }}:
+      - task: TerraformCLI@0
+        displayName: Terraform destroy ${{ parameters.component }}
+        condition: and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'destroy'))
+        inputs:
+          command: destroy
+          workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+          environmentServiceName: ${{ parameters.serviceConnection }}
+          commandOptions: >
+            -var environment=${{ parameters.environment }}
+            -var builtFrom=$(Build.Repository.Name)
+            -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
+            -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
+
+  - task: AzureCLI@2
+    displayName: 'Unlock TF state if required'
+    condition: always()
+    inputs:
+      scriptType: bash
+      scriptLocation: scriptPath
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/unlock-tf-state.sh
+      arguments: ${{ parameters.location }} $(controlStorageAccount)
