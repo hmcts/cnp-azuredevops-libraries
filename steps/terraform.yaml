@@ -99,8 +99,8 @@ steps:
     displayName: Terraform apply ${{ parameters.component }}
     condition: |
       or(
-      and(succeeded(), eq(variables.isMain, true), eq('${{ parameters.overrideAction }}', 'apply')),
-      and(succeeded(), eq(variables.isMain, true), eq(variables.isAutoTriggered, true))
+      and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'apply')),
+      and(succeeded(), eq(variables['isMain'], true), eq(variables['isAutoTriggered'], true))
       )
     inputs:
       command: apply
@@ -111,7 +111,7 @@ steps:
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: TerraformCLI@0
         displayName: Terraform destroy ${{ parameters.component }}
-        condition: and(succeeded(), eq( variables.isMain, true), eq('${{ parameters.overrideAction }}', 'destroy'))
+        condition: and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'destroy'))
         inputs:
           command: destroy
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
