@@ -58,7 +58,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
      - template: vars/input-variables.yaml@cnp-azuredevops-libraries
    ```
   
-  [More information on the correct syntax when using regular variables, variables groups and templates.](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch#specify-variables)
+   [More information on the correct syntax when using regular variables, variables groups and templates.](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch#specify-variables)
  
 4. Add the terraform-precheck.yaml template to a `Precheck` stage
 5. Add the terraform.yaml template to a `TerraformPlanApply` stage
