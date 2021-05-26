@@ -31,6 +31,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
    
    Make sure you use the correct syntax when declaring a mixture of regular variables and templates, like below.
 
+   Syntax example
    ```yaml
    variables:
      # a regular variable
@@ -41,7 +42,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
      # a reference to a variable template
      - template: myvariabletemplate.yml
    ```
-   
+   Full example
    ```yaml
    variables:
      - name: timeoutInMinutes
@@ -55,7 +56,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
      - name: terraformInitSubscription
        value: b8d29n39-8007-49m0-95b8-3c8691e90kb
      - template: vars/input-variables.yaml@cnp-azuredevops-libraries
-  ```
+   ```
   
   [More information on the correct syntax when using regular variables, variables groups and templates.](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch#specify-variables)
  
