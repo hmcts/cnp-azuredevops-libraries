@@ -27,14 +27,47 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
        endpoint: 'hmcts'  
     
    ```
-3. Add the terraform-precheck.yaml template to a `Precheck` stage
-4. Add the terraform.yaml template to a `TerraformPlanApply` stage
+3. Use the vars/input-variables.yaml template to add the common variables to your pipeline.
+   
+   Make sure you use the correct syntax when declaring a mixture of regular variables and templates, like below.
+
+   Syntax example
+   ```yaml
+   variables:
+     # a regular variable
+     - name: myvariable
+       value: myvalue
+     # a variable group
+     - group: myvariablegroup
+     # a reference to a variable template
+     - template: myvariabletemplate.yml
+   ```
+   Full example
+   ```yaml
+   variables:
+     - name: timeoutInMinutes
+       value: 60
+     - name: agentPool
+       value: ubuntu-18.04
+     - name: build
+       value: $(Build.BuildNumber)
+     - name: product
+       value: cft-platform
+     - name: terraformInitSubscription
+       value: b8d29n39-8007-49m0-95b8-3c8691e90kb
+     - template: vars/input-variables.yaml@cnp-azuredevops-libraries
+   ```
+  
+   [More information on the correct syntax when using regular variables, variables groups and templates.](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch#specify-variables)
+ 
+4. Add the terraform-precheck.yaml template to a `Precheck` stage
+5. Add the terraform.yaml template to a `TerraformPlanApply` stage
    > see [Example refactored pipeline](https://github.com/hmcts/azure-platform-terraform/blob/master/azure_pipeline.yaml)
-5. First time pipeline run:  
+6. First time pipeline run:  
    * Run build with the Terraform plan option. State file will be created in new location   
    * Copy state file from old location to overwrite new state file  
    * Run build with Terraform plan to confirm plan reflects migrated state file  
-6. Run pipeline with plan/apply option as required   
+7. Run pipeline with plan/apply option as required   
 
 ### State file:  
 * In storage accounts in the `HMCTS-CONTROL` subscription  
