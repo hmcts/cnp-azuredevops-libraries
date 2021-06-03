@@ -61,8 +61,8 @@ steps:
 
   - bash: |
       STATE_FILE=`${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate`
-      echo $STATE_FILE
-      echo "##vso[task.setvariable variable=terraformStatefile]$STATE_FILE"
+      echo "$STATE_FILE"
+      echo "##vso[task.setvariable variable=terraformStatefile]`$STATE_FILE`"
     displayName: Build terraform state file ${{ parameters.location }}
 
   - task: TerraformCLI@0
