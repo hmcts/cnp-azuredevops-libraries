@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-terraform_state_file=$1
+terraform_state_file="$1"
 state_file_container_name=$2
 storage_account_name=$3
 
