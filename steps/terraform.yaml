@@ -39,6 +39,9 @@ parameters:
   - name: terraformInitSubscription
     default: ''
 
+  - name: statefileContainerName
+    default: subscription-tfstate
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -56,6 +59,10 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
+  - bash: |
+      echo '##vso[task.setvariable variable=terraformStatefile]$(parameters.location)/$(parameters.product)/$(buildRepoSuffix)/$(parameters.environment)/$(parameters.component)/terraform.tfstate
+    displayName: 'Build terraform state file'
+
   - task: TerraformCLI@0
     displayName: Terraform init ${{ parameters.component }}
     inputs:
@@ -71,8 +78,8 @@ steps:
       backendAzureRmResourceGroupLocation: ${{ parameters.location }}
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmStorageAccountSku: Standard_LRS
-      backendAzureRmContainerName: subscription-tfstate
-      backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
+      backendAzureRmContainerName: ${{ parameters.statefileContainerName }}
+      backendAzureRmKey: $(terraformStatefile)
       commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }} ${{ parameters.initCommandOptions }}'
 
   - task: TerraformCLI@0
@@ -130,4 +137,4 @@ steps:
       scriptLocation: scriptPath
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/unlock-tf-state.sh
-      arguments: ${{ parameters.location }} $(controlStorageAccount)
+      arguments: $(terraformStatefile) ${{ parameters.statefileContainerName }} $(controlStorageAccount)
