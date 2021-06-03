@@ -5,6 +5,8 @@ terraform_state_file="$1"
 state_file_container_name=$2
 storage_account_name=$3
 
+echo "State file: $terraformStatefile"
+
 leaseExist=$(az storage blob show --container-name $state_file_container_name --name $terraform_state_file --account-name $storage_account_name | jq -r '.properties.lease.state')
 
 echo "Current lease state: $leaseExist"
