@@ -8,7 +8,7 @@ storage_account_name=$2
 # The state file key has a space e.g. UK South, using it as the --name parameter without
 # escaping the white space makes the process see two inputs and treats every thing
 # after the space e.g. South/... as another argument
-state_file=$(echo TERRAFORMSTATEFILE | sed -e 's/ /\\ /')
+state_file=$(echo $TERRAFORMSTATEFILE | sed -e 's/ /\\ /')
 
 echo "Checking lease state on: $state_file"
 leaseExist=$(az storage blob show --container-name $state_file_container_name --name $state_file --account-name $storage_account_name | jq -r '.properties.lease.state')
