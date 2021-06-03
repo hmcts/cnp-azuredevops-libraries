@@ -4,6 +4,9 @@ set -e
 component=$1
 storage_account_name=$2
 
+echo "component is: $component"
+echo "storage_account_name is: $storage_account_name"
+
 leaseExist=`az storage blob show --container-name tfstate --name $component.tfstate --account-name $storage_account_name | jq -r '.properties.lease.state'`
 
 if [ ${leaseExist} = "leased" ]; then
