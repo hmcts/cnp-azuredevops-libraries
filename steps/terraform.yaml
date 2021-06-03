@@ -139,4 +139,4 @@ steps:
       scriptLocation: scriptPath
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/unlock-tf-state.sh
-      arguments: '$(terraformStatefile)' ${{ parameters.statefileContainerName }} $(controlStorageAccount)
+      arguments: $(terraformStatefile) ${{ parameters.statefileContainerName }} $(controlStorageAccount)
