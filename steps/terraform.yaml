@@ -62,7 +62,7 @@ steps:
   # Build state file key, replace spaces with dashes for blob name
   - bash: |
       STATE_FILE="${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate"
-      STATE_FILE = $(echo $STATE_FILE | sed 's/ /-/g')
+      STATE_FILE=$(echo $STATE_FILE | sed 's/ /-/g')
       echo "tfstate file key path: $STATE_FILE"
       echo "##vso[task.setvariable variable=terraformStatefile]$STATE_FILE"
     displayName: 'Build Terraform tfstate key path'
