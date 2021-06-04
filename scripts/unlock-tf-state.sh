@@ -6,6 +6,8 @@ stateFilePath=$2
 
 az account set --subscription HMCTS-CONTROL
 
+export AZURE_STORAGE_KEY=$(az storage account keys list  -n $storage_account_name --query [0].value -o tsv)
+
 leaseExist=`az storage blob show --container-name subscription-tfstate --name "${stateFilePath}" --account-name $storage_account_name | jq -r '.properties.lease.state'`
 
 if [ ${leaseExist} = "leased" ]; then
