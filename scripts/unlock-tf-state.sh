@@ -11,6 +11,6 @@ if [ ${leaseExist} = "leased" ]; then
   echo "Releasing lock on state file"
   az storage blob lease break --blob-name $TERRAFORMSTATEFILE --container-name $state_file_container_name --account-name $storage_account_name
 else
-  echo "No exiting lock on state file"
+  echo "No existing lock on state file"
   exit 0
 fi
