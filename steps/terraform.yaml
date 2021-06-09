@@ -88,6 +88,7 @@ steps:
       command: plan
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
+      runAzLogin: true
       commandOptions: >
         -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
         -var env=${{ parameters.environment }}
