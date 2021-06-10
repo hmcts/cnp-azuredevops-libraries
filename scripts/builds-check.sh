@@ -6,7 +6,7 @@ project="$SYSTEM_TEAMPROJECT"
 echo "This is build $thisbuild"
 echo "project is $SYSTEM_TEAMPROJECT"
 link="https://dev.azure.com/$organization/$project/_apis/build/builds?api-version=5.1&definitions=$pipelinedefinition"
-tt=str_replace ( ' ', '%20', $link)
+tt="str_replace ( ' ', '%20', $link)"
 echo $tt
 IFS=$'\n'
 JSON_DATA=($(curl -s -u :"$azuredevopstoken" --request GET "https://dev.azure.com/hmcts/Shared Services/_apis/build/builds?api-version=5.1&definitions=$pipelinedefinition" -H "Content-Type: application/json" | jq  '.value[] | .status + (.id|tostring)' | sort -u | grep inProgress))
