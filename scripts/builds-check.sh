@@ -1,9 +1,10 @@
 #!/bin/bash
-set -e
+set -ex
 organization="hmcts"
 project="$SYSTEM_TEAMPROJECT"
 
 echo "This is build $thisbuild"
+echo "project is $SYSTEM_TEAMPROJECT"
 IFS=$'\n'
 JSON_DATA=($(curl -s -u :"$azuredevopstoken" --request GET "https://dev.azure.com/$organization/$project/_apis/build/builds?api-version=5.1&definitions=$pipelinedefinition" -H "Content-Type: application/json" | jq  '.value[] | .status + (.id|tostring)' | sort -u | grep inProgress))
 buildnumber=(${JSON_DATA//[!0-9]/})
