@@ -121,7 +121,7 @@ steps:
             -var environment=${{ parameters.environment }}
             -var builtFrom=$(Build.Repository.Name)
             -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-            -var-file $(System.DefaultWorkingDirectory)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
+            -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
 
   - task: AzureCLI@2
     displayName: 'Unlock TF state if required'
