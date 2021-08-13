@@ -1,7 +1,7 @@
 parameters:
   serviceConnection: "DCD-CFTAPPS-DEV"
-  aksResourceGroup: "preview-00-rg"
-  aksCluster: "preview-00-aks"
+  aksResourceGroup: "preview-01-rg"
+  aksCluster: "preview-01-aks"
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
