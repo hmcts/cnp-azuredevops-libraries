@@ -8,7 +8,7 @@ parameters:
   chartReleaseName: ""
   chartNamespace: ""
   chartPath: "./"
-  helmVersion: "3.5.2"
+  helmVersion: "3.8.0"
 
 steps:
   - checkout: self
