@@ -24,8 +24,8 @@ steps:
   inputs:
     azureSubscription: ${{ parameters.serviceConnection }}
     scriptLocation: 'inlineScript'
-#     ${{ if ne(variables['ACRBuildPath'], '') }}:
-#       workingDirectory: $(ACRBuildPath)
+    ${{ if ne(variables['buildPath'], '') }}:
+      workingDirectory: $(buildPath)
 #     workingDirectory: test-image
     inlineScript: |
       echo "acrbuild: $(ACRBuildPath)"
