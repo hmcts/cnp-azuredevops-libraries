@@ -12,7 +12,7 @@ parameters:
 
 steps:
   - checkout: self
-    clean: true
+    clean: false
 
   - task: HelmInstaller@1
     displayName: 'Install Helm ${{parameters.helmVersion}}'
