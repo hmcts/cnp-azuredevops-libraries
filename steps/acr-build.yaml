@@ -29,4 +29,6 @@ steps:
     workingDirectory: test-image
     inlineScript: |
       echo "acrbuild: $(ACRBuildPath)"
+      echo "pwd: `pwd`"
+      echo "ls: `ls`"
       az acr build -r $(acrName) -t $(Build.Repository.Name):$(imageTag) -g $(acrResourceGroup) .
