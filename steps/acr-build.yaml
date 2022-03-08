@@ -26,7 +26,7 @@ steps:
     scriptLocation: 'inlineScript'
 #     ${{ if ne(variables['ACRBuildPath'], '') }}:
 #       workingDirectory: $(ACRBuildPath)
-    workingDirectory: test-image
+#     workingDirectory: test-image
     inlineScript: |
       echo "acrbuild: $(ACRBuildPath)"
       echo "pwd: `pwd`"
