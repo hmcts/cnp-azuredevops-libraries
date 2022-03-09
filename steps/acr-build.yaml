@@ -24,7 +24,7 @@ steps:
   inputs:
     azureSubscription: ${{ parameters.serviceConnection }}
     scriptLocation: 'inlineScript'
-    ${{ if ne(variables['buildPath'], '') }}:
+    ${{ if ne(variables.buildPath, '') }}:
       workingDirectory: $(buildPath)
 #     workingDirectory: $(buildPath)
     inlineScript: |
