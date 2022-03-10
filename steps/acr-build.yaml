@@ -26,6 +26,8 @@ steps:
     azureSubscription: ${{ parameters.serviceConnection }}
     scriptLocation: 'inlineScript'
     ${{ if ne('${{ parameters.buildPath }}', '') }}:
-      workingDirectory: $(buildPath)
+      workingDirectory: ${{ parameters.buildPath }}
     inlineScript: |
+      echo "param: ${{ parameters.buildPath }}"
+      echo "var: $(buildPath)"
       az acr build -r $(acrName) -t $(Build.Repository.Name):$(imageTag) -g $(acrResourceGroup) .
