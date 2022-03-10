@@ -1,5 +1,6 @@
 parameters:
   serviceConnection: ''
+  buildPath: ''
 
 steps:
 
@@ -24,4 +25,7 @@ steps:
   inputs:
     azureSubscription: ${{ parameters.serviceConnection }}
     scriptLocation: 'inlineScript'
-    inlineScript: az acr build -r $(acrName) -t $(Build.Repository.Name):$(imageTag) -g $(acrResourceGroup) .
+    ${{ if ne('${{ parameters.buildPath }}', '') }}:
+      workingDirectory: ${{ parameters.buildPath }}
+    inlineScript: |
+      az acr build -r $(acrName) -t $(Build.Repository.Name):$(imageTag) -g $(acrResourceGroup) .
