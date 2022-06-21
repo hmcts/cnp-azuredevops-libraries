@@ -3,6 +3,7 @@ set -e
 
 storage_account_name=$1
 stateFilePath=$2
+subscription=${3:-HMCTS-CONTROL}
 
 az account set --subscription HMCTS-CONTROL
 
