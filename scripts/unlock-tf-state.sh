@@ -5,7 +5,7 @@ storage_account_name=$1
 stateFilePath=$2
 subscription=${3:-HMCTS-CONTROL}
 
-az account set --subscription HMCTS-CONTROL
+az account set --subscription $subscription
 
 export AZURE_STORAGE_KEY=$(az storage account keys list  -n $storage_account_name --query [0].value -o tsv)
 
