@@ -95,6 +95,7 @@ steps:
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
+      publishPlanResults: '${{ parameters.component }}'
 
   - task: TerraformCLI@0
     displayName: Terraform apply ${{ parameters.component }}
