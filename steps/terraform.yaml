@@ -64,10 +64,7 @@ steps:
       backendType: azurerm
       ensureBackend: false
       backendServiceArm: ${{ parameters.serviceConnection }}
-      ${{ if eq(parameters['environment'], 'ptl') }}:
-        backendAzureRmResourceGroupName: "azure-control-prod-rg"
-      ${{ if ne(parameters['environment'], 'ptl') }}:
-        backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
+      backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
       backendAzureRmResourceGroupLocation: ${{ parameters.location }}
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmStorageAccountSku: Standard_LRS
