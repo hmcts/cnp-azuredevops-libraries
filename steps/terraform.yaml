@@ -101,7 +101,7 @@ steps:
 
   - task: PowerShell@2
     displayName: Post Plan to Github
-    condition: and(succeeded(), eq(variables['Build.Reason'],'PullRequest'), not(eq(variables['applyOnPr'], 'true')))
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     env:
       PAT : ${{ parameters.githubPAT}}
     inputs:
