@@ -108,8 +108,8 @@ steps:
       targetType: filePath
       filePath: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/scripts/add-pr-comment.ps1
       pwsh: true
-      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:PAT -inputFile ${{ parameters.backendAzureRmKey }} -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environmen}} -isPlan"
-      workingDirectory: ${{ System.DefaultWorkingDirectory }}
+      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:PAT -inputFile '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate' -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environmen}} -isPlan"
+      workingDirectory: $(System.DefaultWorkingDirectory)
 
   - task: TerraformCLI@0
     displayName: Terraform apply ${{ parameters.component }}
