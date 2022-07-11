@@ -39,6 +39,8 @@ parameters:
   - name: terraformInitSubscription
     default: ''
 
+  - name: githubPAT
+    default: ''
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -96,6 +98,18 @@ steps:
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
+
+  - task: PowerShell@2
+    displayName: Post Plan to Github
+    condition: and(succeeded(), eq(variables['Build.Reason'],'PullRequest'), not(eq(variables['applyOnPr'], 'true')))
+    env:
+      PAT : ${{ parameters.githubPAT}}
+    inputs:
+      targetType: filePath
+      filePath: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/scripts/add-pr-comment.ps1
+      pwsh: true
+      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:PAT -inputFile ${{ parameters.backendAzureRmKey }} -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environmen}} -isPlan"
+      workingDirectory: ${{ System.DefaultWorkingDirectory }}
 
   - task: TerraformCLI@0
     displayName: Terraform apply ${{ parameters.component }}
