@@ -98,6 +98,11 @@ steps:
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
+        -refresh=false
+        -out=${{ parameters.backendAzureRmKey }}
+        -input=false
+        -no-color
+        -detailed-exitcode
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
   - task: AzureKeyVault@1
@@ -117,20 +122,9 @@ steps:
       targetType: filePath
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/add-pr-comment.ps1
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      backendType: azurerm
-      ensureBackend: false
-      backendServiceArm: ${{ parameters.serviceConnection }}
-      ${{ if eq(parameters['environment'], 'ptl') }}:
-        backendAzureRmResourceGroupName: "azure-control-prod-rg"
-      ${{ if ne(parameters['environment'], 'ptl') }}:
-        backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
-      backendAzureRmResourceGroupLocation: ${{ parameters.location }}
-      backendAzureRmStorageAccountName: $(controlStorageAccount)
-      backendAzureRmStorageAccountSku: Standard_LRS
-      backendAzureRmContainerName: subscription-tfstate
       backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
       pwsh: true
-      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile $env:backendAzureRmKey -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
+      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile ${{ parameters.backendAzureRmKey }} -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
   
 
   - task: Bash@3
