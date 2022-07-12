@@ -39,8 +39,9 @@ parameters:
   - name: terraformInitSubscription
     default: ''
 
-  - name: keyvaultSecret
-    default: ''
+  - name: backendAzureRmKey
+    default: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -112,14 +113,54 @@ steps:
     condition:  and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     env:
       GITHUB_OAUTH: $(github-api-token)
-      PAT : ${{ parameters.keyvaultSecret}}
-      thisbuild: $(Build.BuildId)
-      backendAzureRmStorageAccountName: $(controlStorageAccount)
-      backendAzureRmContainerName: subscription-tfstate
-      backendAzureRmKey: "${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate"
+      backendAzureRmKey: ${{ parameters.backendAzureRmKey }}
     inputs:
       targetType: filePath
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/add-pr-comment.ps1
+      pwsh: true
+      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile $env:backendAzureRmKey -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
+      workingDirectory: $(System.DefaultWorkingDirectory)
+
+  - task: Bash@3
+    displayName: Checkov Scan
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+    inputs:
+      workingDirectory: $(System.DefaultWorkingDirectory)
+      targetType: inline
+      script: |
+        #This the recommendation from the checkov gang for user friendly output. Alas it doesn't quite seem to work, so displaying the plan for reference in the task below not sure how useful this will be
+        terraform show -json ${{parameters.backendAzureRmKey}} -no-color | jq '.' > tf.json
+        docker run --tty --volume `pwd`:/tf bridgecrew/checkov -f /tf/tf.json -o junitxml > $SYSTEM_STAGENAME.xml
+        #There are some trailing ascii colour codes that the sed script gets rid of
+        sed -i 's/\x1b\[[0-9;]*m//g' $SYSTEM_STAGENAME.xml
+
+  - task: Bash@3
+    displayName: Checkov Scan - Display Plan
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+    inputs:
+      workingDirectory: $(System.DefaultWorkingDirectory)
+      targetType: inline
+      script: |
+        #checkov should provide more info about what is actually going on but it seems that I can only get it to show the lines of the plan so displaying it here for reference.
+        cat -n tf.json
+
+  - task: PublishTestResults@2
+    displayName: Publish Checkov Scan Results
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+    inputs:
+        testResultsFormat: 'JUnit'
+        searchFolder: $(System.DefaultWorkingDirectory)
+        testResultsFiles: '*.xml'
+        failTaskOnFailedTests: false
+
+  - task: PowerShell@2
+    displayName: Post Scan Results to Github
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+    env:
+      PAT : ${{ parameters.githubPAT}}
+    inputs:
+      targetType: filePath
+      filePath: $(System.DefaultWorkingDirectory)/staff-infrastructure-alz-templates/scripts/AddGitHubPrComment.ps1
       pwsh: true
       arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile $env:backendAzureRmKey -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
       workingDirectory: $(System.DefaultWorkingDirectory)
