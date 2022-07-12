@@ -103,10 +103,10 @@ steps:
     displayName: 'Get GitHub API token from Keyvault'
     inputs:
       runAsPreJob: false
-      ConnectedServiceName: ${{ parameters.serviceConnection }}
+      ConnectedServiceName: 'azurerm-sandbox'
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'github-api-token'
-      
+
   - task: PowerShell@2
     displayName: Post Plan to Github
     condition:  and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
