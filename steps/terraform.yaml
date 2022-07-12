@@ -99,6 +99,14 @@ steps:
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
+  - task: AzureKeyVault@1
+    displayName: 'Get GitHub API token from Keyvault'
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: '${{ variables.service_connection }}'
+      keyVaultName: 'cftptl-intsvc'
+      secretsFilter: 'github-management-api-token'
+      
   - task: PowerShell@2
     displayName: Post Plan to Github
     condition:  and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
