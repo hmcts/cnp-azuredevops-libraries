@@ -114,7 +114,7 @@ steps:
       GITHUB_OAUTH: $(github-api-token)
       PAT : ${{ parameters.keyvaultSecret}}
       thisbuild: $(Build.BuildId)
-      backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
+      backendAzureRmKey: 'subscription-tfstate/${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
     inputs:
       targetType: filePath
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/add-pr-comment.ps1
