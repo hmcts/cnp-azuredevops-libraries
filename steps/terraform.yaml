@@ -130,7 +130,7 @@ steps:
       backendAzureRmContainerName: subscription-tfstate
       backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
       pwsh: true
-      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile $(backendAzureRmKey) -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
+      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile $env:backendAzureRmKey -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
   
 
   - task: Bash@3
