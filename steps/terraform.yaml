@@ -111,7 +111,7 @@ steps:
     displayName: Post Plan to Github
     condition:  and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     env:
-      GITHUB_OAUTH: $(github-management-api-token)
+      GITHUB_OAUTH: $(github-api-token)
       PAT : ${{ parameters.keyvaultSecret}}
       thisbuild: $(Build.BuildId)
     inputs:
