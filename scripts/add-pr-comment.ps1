@@ -183,7 +183,7 @@ if ($token.Length -eq 0) {
 Write-Host "
 repo: $repo,
 pr: $pr,
-token: $($token.Substring(0,6)),
+token: $token,
 inputFile: $inputFile,
 buildId: $buildId,
 stageName: $stageName,
