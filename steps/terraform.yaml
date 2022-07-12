@@ -103,7 +103,7 @@ steps:
     displayName: 'Get GitHub API token from Keyvault'
     inputs:
       runAsPreJob: false
-      ConnectedServiceName: '${{ variables.service_connection }}'
+      ConnectedServiceName: ${{ parameters.serviceConnection }}
       keyVaultName: 'cftptl-intsvc'
       secretsFilter: 'github-management-api-token'
       
