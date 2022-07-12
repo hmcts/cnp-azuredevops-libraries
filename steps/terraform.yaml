@@ -116,7 +116,7 @@ steps:
       thisbuild: $(Build.BuildId)
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmContainerName: subscription-tfstate
-      backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
+      backendAzureRmKey: "${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate"
     inputs:
       targetType: filePath
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/add-pr-comment.ps1
