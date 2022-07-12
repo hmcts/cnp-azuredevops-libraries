@@ -104,8 +104,8 @@ steps:
     inputs:
       runAsPreJob: false
       ConnectedServiceName: ${{ parameters.serviceConnection }}
-      keyVaultName: 'cftptl-intsvc'
-      secretsFilter: 'github-management-api-token'
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'github-api-token'
       
   - task: PowerShell@2
     displayName: Post Plan to Github
