@@ -14,8 +14,6 @@ param (
     $buildId,
     [string]
     $stageName,
-    [string]
-    $spokeName,
     $exitCode,
     $environment,
     [switch]$isPlan,
@@ -43,7 +41,7 @@ Number of comments to retrieve from api, this is hardcode to 50, hopefully we do
 .PARAMETER environment
 Name of the environment where this is running. This is used to match old comments
 .PARAMETER $author
-Who is making the comments, this is hard coded to "staff-infrastructure-moj", the headless account.
+Who is making the comments, this is hard coded to "hmcts-platform-operations", the headless account.
 .EXAMPLE
 An example
 .NOTES
@@ -64,7 +62,7 @@ function Minimize-Comment {
         [string]
         $environment,
         [string]
-        $author = "platops",
+        $author = "hmcts-platform-operations",
         [string]
         $matchingString
     )
@@ -75,7 +73,7 @@ function Minimize-Comment {
 
     $uri = "https://api.github.com/graphql"
 
-    Write-Host "Post to GraphQL API for Spoke: $spokeName, Environment: $environment and stageName: $stageName."
+    Write-Host "Post to GraphQL API: Environment: $environment and stageName: $stageName."
 
     #TODO:Note that I tried to get the formatting a bit better for the graphql queries but I gave up after a few attempts, I'm sure it can be improved.
     $body = "{`"query`":`"{`\n  repository(name: `\`"$repo`\`", owner: `\`"hmcts`\`") {`\n    pullRequest(number: $pr) {`\n      comments(last: $pageSize) {`\n        edges {`\n          node {`\n            id`\n            isMinimized   `\n            body         `\n            author{`\n              login`\n            }`\n          }`\n        }`\n      }`\n    }`\n  }`\n}`",`"variables`":{}}"
@@ -159,7 +157,7 @@ function Add-GithubComment {
         $uri,
         $body,
         $environment,
-        $matchingString = "Spoke: $spokeName, Environment: $environment and Pipeline Stage: $stageName"
+        $matchingString = "Environment: $environment and Pipeline Stage: $stageName"
     )
 
     try {
@@ -191,7 +189,6 @@ buildId: $buildId,
 stageName: $stageName,
 exitCode: $exitCode,
 environment: $environment,
-spokeName: $spokeName,
 isPlan: $isPlan,
 isScan: $isScan
 "
@@ -206,7 +203,7 @@ $uri = "https://api.github.com/repos/{0}/issues/{1}/comments" -f $repo, $pr
 
 if ($isPlan) {
 
-    $planCommentPrefix = "Spoke: $spokeName, Environment: $environment and Pipeline Stage: $stageName"
+    $planCommentPrefix = "Environment: $environment and Pipeline Stage: $stageName"
 
     if ($exitCode -eq 2) {
         Write-Host "Will Post Plan to $uri."
@@ -222,7 +219,7 @@ if ($isPlan) {
 elseif ($isScan) {
     Write-Host "Will Post Scan Results to $uri."
     $scan = Test-ScanErrors $inputFile
-    $scanCommentPrefix = "Spoke: $spokeName, Environment: $environment and Security Scan of Stage: $stageName has" -f $spokeName, $environment, $stageName
+    $scanCommentPrefix = "Environment: $environment and Security Scan of Stage: $stageName has" -f $environment, $stageName
 
     if ($scan.Result) {
         $body = @{"body" = $("$scanCommentPrefix failed a IaC security scan, Please look at https://dev.azure.com/MoJ-OFFICIAL/Velocity-Landing-Zone/_build/results?buildId={0}&view=ms.vss-test-web.build-test-results-tab" -f $buildId) }
