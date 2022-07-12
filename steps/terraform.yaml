@@ -39,7 +39,7 @@ parameters:
   - name: terraformInitSubscription
     default: ''
 
-  - name: githubPAT
+  - name: keyvaultSecret
     default: ''
 steps:
   - checkout: self
@@ -103,15 +103,13 @@ steps:
     displayName: Post Plan to Github
     condition:  and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     env:
-      PAT : ${{ parameters.githubPAT}}
+      PAT : ${{ parameters.keyvaultSecret}}
       thisbuild: $(Build.BuildId)
-      pipelinedefinition: $(System.DefinitionId)
-      azuredevopstoken: $(azure-devops-token)
     inputs:
       targetType: filePath
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/add-pr-comment.ps1
       pwsh: true
-      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:$(Build.BuildId) -token $env:$(azure-devops-token) -inputFile '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate' -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
+      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:PAT -inputFile '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate' -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
       workingDirectory: $(System.DefaultWorkingDirectory)
 
   - task: TerraformCLI@0
