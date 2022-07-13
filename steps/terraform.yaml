@@ -163,12 +163,11 @@ steps:
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     env:
       GITHUB_OAUTH: $(github-api-token)
-      backendAzureRmKey: ${{ parameters.backendAzureRmKey }}
     inputs:
       targetType: filePath
       filePath: $(System.DefaultWorkingDirectory)/staff-infrastructure-alz-templates/scripts/AddGitHubPrComment.ps1
       pwsh: true
-      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile e $env:backendAzureRmKey -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
+      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile ${{ parameters.backendAzureRmKey }} -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
       workingDirectory: $(System.DefaultWorkingDirectory)
 
   - task: TerraformCLI@0
