@@ -93,7 +93,8 @@ steps:
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       commandOptions: >
-        -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
+        -out=${{ parameters.backendAzureRmKey }}
+        # -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
         -var env=${{ parameters.environment }}
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
@@ -122,7 +123,7 @@ steps:
   #     filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/add-pr-comment.ps1
   #     workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
   #     pwsh: true
-  #     arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile tfplan-${{ parameters.environment }}-${{ parameters.component }} -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
+  #     arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile ${{ parameters.backendAzureRmKey }} -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
   
 
   - task: Bash@3
@@ -133,7 +134,7 @@ steps:
       targetType: inline
       script: |
         #This the recommendation from the checkov gang for user friendly output. Alas it doesn't quite seem to work, so displaying the plan for reference in the task below not sure how useful this will be
-        terraform show -json tfplan-${{ parameters.environment }}-${{ parameters.component }} -no-color | jq '.' > tf.json
+        terraform show -json ${{parameters.backendAzureRmKey}} -no-color | jq '.' > tf.json
         docker run --tty --volume `pwd`:/tf bridgecrew/checkov -f /tf/tf.json -o junitxml > $SYSTEM_STAGENAME.xml
         #There are some trailing ascii colour codes that the sed script gets rid of
         sed -i 's/\x1b\[[0-9;]*m//g' $SYSTEM_STAGENAME.xml
