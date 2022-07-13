@@ -123,6 +123,7 @@ steps:
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       script: |
         terraform show -json tfplan-${{ parameters.environment }}-${{ parameters.component }} -no-color | sc tf.json
+        cat -n tf.json
       pwsh: true
       arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile tf.json -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
 

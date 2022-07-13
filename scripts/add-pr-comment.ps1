@@ -3,7 +3,9 @@
 [CmdletBinding()]
 param (
     [string]
-    $repo = "hmcts/azure-platform-terraform",
+    $owner = "hmcts",
+    [string]
+    $repo = "azure-platform-terraform",
     [int]
     $pr,
     [string]
@@ -150,6 +152,7 @@ function Test-ScanErrors {
 
 function Add-GithubComment {
     param (
+        $owner,
         $repo,
         $pr,
         $token,
@@ -181,6 +184,7 @@ if ($token.Length -eq 0) {
 }
 
 Write-Host "
+owner: $owner,
 repo: $repo,
 pr: $pr,
 token: $token,
@@ -199,7 +203,7 @@ if ($isScan -and [io.path]::GetExtension($inputFile) -ne '.xml' ) { $inputFile +
 $headers = @{"Authorization" = "token $token" }
 $headers.Add("Accept", "application/vnd.github.v4+json")
 
-$uri = "https://api.github.com/repos/{0}/issues/{1}/comments" -f $repo, $pr
+$uri = "https://api.github.com/repos/{0}/{1}/issues/{2}/comments" -f $owner, $repo, $pr
 
 if ($isPlan) {
 
