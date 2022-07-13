@@ -112,7 +112,7 @@ steps:
       targetType: inline
       script: |
         #This the recommendation from the checkov gang for user friendly output. Alas it doesn't quite seem to work, so displaying the plan for reference in the task below not sure how useful this will be
-        terraform show -json tfplan-${{ parameters.environment }}-${{ parameters.component }} -no-color | jq '.' | sc tf.json
+        terraform show -no-color -json tfplan-${{ parameters.environment }}-${{ parameters.component }} > tf.json
         docker run --tty --volume `pwd`:/tf bridgecrew/checkov -f /tf/tf.json -o junitxml > $SYSTEM_STAGENAME.xml
         #There are some trailing ascii colour codes that the sed script gets rid of
         sed -i 's/\x1b\[[0-9;]*m//g' $SYSTEM_STAGENAME.xml
