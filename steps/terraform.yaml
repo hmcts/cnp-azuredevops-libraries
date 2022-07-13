@@ -97,7 +97,7 @@ steps:
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
-        -out=${{ parameters.backendAzureRmKey }}
+        -out ${{ parameters.backendAzureRmKey }}
         -refresh=false
         -input=false
         -no-color
