@@ -52,7 +52,9 @@ General notes
 function Minimize-Comment {
     param (
         [string]
-        $repo = "hmcts/azure-platform-terraform",
+        $owner = "hmcts",
+        [string]
+        $repo = "azure-platform-terraform",
         [int]
         $pr,
         [string]
