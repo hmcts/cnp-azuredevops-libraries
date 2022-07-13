@@ -203,7 +203,7 @@ if ($isScan -and [io.path]::GetExtension($inputFile) -ne '.xml' ) { $inputFile +
 $headers = @{"Authorization" = "token $token" }
 $headers.Add("Accept", "application/vnd.github.v4+json")
 
-$uri = "https://api.github.com/repos/{0}/{1}/issues/{2}/comments" -f $owner, $repo, $pr
+$uri = "https://api.github.com/repos/hmcts/azure-platform-terraform/issues/1191/comments" # -f $owner, $repo, $pr
 
 if ($isPlan) {
 
