@@ -40,7 +40,7 @@ parameters:
     default: ''
 
   - name: backendAzureRmKey
-    default: ''
+    default: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
 
 steps:
   - checkout: self
