@@ -94,7 +94,6 @@ steps:
       runAzLogin: true
       commandOptions: >
         -out=${{ parameters.backendAzureRmKey }}
-        # -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
         -var env=${{ parameters.environment }}
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
