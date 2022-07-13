@@ -102,15 +102,7 @@ steps:
         -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
         -no-color
         -detailed-exitcode
-      publishPlanResults: 'tfplan-${{ parameters.environment }}-${{ parameters.component }}'
-
-  - task: AzureKeyVault@1
-    displayName: 'Get GitHub API token from Keyvault'
-    inputs:
-      runAsPreJob: false
-      ConnectedServiceName: 'azurerm-sandbox'
-      keyVaultName: 'infra-vault-nonprod'
-      secretsFilter: 'github-api-token'
+      publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
   - task: Bash@3
     displayName: Checkov Scan
@@ -143,6 +135,14 @@ steps:
         searchFolder: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
         testResultsFiles: '*.xml'
         failTaskOnFailedTests: false
+
+  - task: AzureKeyVault@1
+    displayName: 'Get GitHub API token from Keyvault'
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: 'azurerm-sandbox'
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'github-api-token'
 
   - task: PowerShell@2
     displayName: Post Plan to Github
