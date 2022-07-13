@@ -104,8 +104,6 @@ function Get-PlanBody {
 
     if (Test-Path $inputFile) {
 
-        $commentBody = $(terraform show $inputFile -no-color | Join-String -separator "`n")
-
         if ($commentBody.Length -gt 65536) {
             Write-Host "Plan is longer than github's comment limit, so it has been truncated."
             $body = @{"body" = "$planCommentPrefix`nPlan has been truncated:`n``````$($commentBody.Substring(0, 65400))" }
