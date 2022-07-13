@@ -114,6 +114,7 @@ steps:
         #This the recommendation from the checkov gang for user friendly output. Alas it doesn't quite seem to work, so displaying the plan for reference in the task below not sure how useful this will be
         terraform show -no-color -json tfplan-${{ parameters.environment }}-${{ parameters.component }} | jq '.' > tf.json
         sed 's/\x1b\[[0-9;]*m//g' tf.json
+        systemctl start docker
         docker run --tty --volume `pwd`:/tf bridgecrew/checkov -f /tf/tf.json -o junitxml > $SYSTEM_STAGENAME.xml
         #There are some trailing ascii colour codes that the sed script gets rid of
         sed -i 's/\x1b\[[0-9;]*m//g' $SYSTEM_STAGENAME.xml
@@ -164,7 +165,7 @@ steps:
       GITHUB_OAUTH: $(github-api-token)
     inputs:
       targetType: filePath
-      filePath: $(System.DefaultWorkingDirectory)/staff-infrastructure-alz-templates/scripts/AddGitHubPrComment.ps1
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/add-pr-comment.ps1
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       pwsh: true
       arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile $env:SYSTEM_STAGENAME -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
