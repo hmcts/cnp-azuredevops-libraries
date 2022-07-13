@@ -112,18 +112,17 @@ steps:
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'github-api-token'
 
-  - task: PowerShell@2
-    displayName: Post Plan to Github
-    condition:  and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
-    env:
-      GITHUB_OAUTH: $(github-api-token)
-    inputs:
-      targetType: filePath
-      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/add-pr-comment.ps1
-      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      pwsh: true
-      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile tfplan-${{ parameters.environment }}-${{ parameters.component }} -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
-  
+  # - task: PowerShell@2
+  #   displayName: Post Plan to Github
+  #   condition:  and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+  #   env:
+  #     GITHUB_OAUTH: $(github-api-token)
+  #   inputs:
+  #     targetType: filePath
+  #     filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/add-pr-comment.ps1
+  #     workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+  #     pwsh: true
+  #     arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile tfplan-${{ parameters.environment }}-${{ parameters.component }} -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
 
   - task: Bash@3
     displayName: Checkov Scan
