@@ -113,7 +113,6 @@ steps:
       script: |
         #This the recommendation from the checkov gang for user friendly output. Alas it doesn't quite seem to work, so displaying the plan for reference in the task below not sure how useful this will be
         terraform show -no-color -json ${{ parameters.environment }}-${{ parameters.component }} | jq '.' > tf.json
-        sed 's/\x1b\[[0-9;]*m//g' tf.json
         docker run --tty --volume `pwd`:/tf bridgecrew/checkov -f /tf/tf.json -o junitxml > $SYSTEM_STAGENAME.xml
         #There are some trailing ascii colour codes that the sed script gets rid of
         sed -i 's/\x1b\[[0-9;]*m//g' $SYSTEM_STAGENAME.xml
