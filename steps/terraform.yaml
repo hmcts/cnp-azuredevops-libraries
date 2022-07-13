@@ -93,24 +93,24 @@ steps:
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       commandOptions: >
-        -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
         -var env=${{ parameters.environment }}
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
         -refresh=false
         -input=false
+        -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
         -no-color
         -detailed-exitcode
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
-  - task: AzureKeyVault@1
-    displayName: 'Get GitHub API token from Keyvault'
-    inputs:
-      runAsPreJob: false
-      ConnectedServiceName: 'azurerm-sandbox'
-      keyVaultName: 'infra-vault-nonprod'
-      secretsFilter: 'github-api-token'
+  # - task: AzureKeyVault@1
+  #   displayName: 'Get GitHub API token from Keyvault'
+  #   inputs:
+  #     runAsPreJob: false
+  #     ConnectedServiceName: 'azurerm-sandbox'
+  #     keyVaultName: 'infra-vault-nonprod'
+  #     secretsFilter: 'github-api-token'
 
   # - task: PowerShell@2
   #   displayName: Post Plan to Github
@@ -128,7 +128,7 @@ steps:
     displayName: Checkov Scan
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     inputs:
-      workingDirectory: $(System.DefaultWorkingDirectory)
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       targetType: inline
       script: |
         #This the recommendation from the checkov gang for user friendly output. Alas it doesn't quite seem to work, so displaying the plan for reference in the task below not sure how useful this will be
@@ -141,7 +141,7 @@ steps:
     displayName: Checkov Scan - Display Plan
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     inputs:
-      workingDirectory: $(System.DefaultWorkingDirectory)
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       targetType: inline
       script: |
         #checkov should provide more info about what is actually going on but it seems that I can only get it to show the lines of the plan so displaying it here for reference.
