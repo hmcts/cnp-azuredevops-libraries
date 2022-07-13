@@ -152,7 +152,7 @@ steps:
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     inputs:
         testResultsFormat: 'JUnit'
-        searchFolder: $(System.DefaultWorkingDirectory)
+        searchFolder: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
         testResultsFiles: '*.xml'
         failTaskOnFailedTests: false
 
