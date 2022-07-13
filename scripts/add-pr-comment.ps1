@@ -3,7 +3,7 @@
 [CmdletBinding()]
 param (
     [string]
-    $repo = "ministryofjustice/staff-infrastructure-azure-landing-zone",
+    $repo = "hmcts/azure-platform-terraform",
     [int]
     $pr,
     [string]
@@ -50,7 +50,7 @@ General notes
 function Minimize-Comment {
     param (
         [string]
-        $repo = "hmcts/cnp-azuredevops-libraries",
+        $repo = "hmcts/azure-platform-terraform",
         [int]
         $pr,
         [string]
