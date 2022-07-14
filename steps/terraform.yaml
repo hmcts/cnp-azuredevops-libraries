@@ -149,7 +149,7 @@ steps:
       GITHUB_OAUTH: $(github-api-token)
     inputs:
       targetType: filePath
-      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/add-pr-comment.ps1
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/add-summary.ps1
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       pwsh: true
       arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile tf.json -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
