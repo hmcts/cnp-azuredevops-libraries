@@ -168,7 +168,7 @@ function Add-GithubComment {
         #Minimize old comments before running so that the new ones don't get minimized.
         Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $matchingString
         Write-Host "Add New Comment."
-        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body ($body | ConvertTo-Json)
+        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body ($body)
     }
     catch {
         Write-Error "Oops something went horribly wrong."
