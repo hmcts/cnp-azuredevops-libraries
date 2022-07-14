@@ -39,9 +39,6 @@ parameters:
   - name: terraformInitSubscription
     default: ''
 
-  - name: planFile
-    default: ''
-
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -97,7 +94,7 @@ steps:
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
-        -out ${{ parameters.planFile }}
+        -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
         -no-color
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
@@ -155,7 +152,7 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/add-pr-comment.ps1
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       pwsh: true
-      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile ${{ parameters.planFile }} -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
+      arguments: "-repo $env:$(Build.Repository.Name) -pr $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER -buildId $env:BUILD_BUILDID -token $env:GITHUB_OAUTH -inputFile sbox-global -stageName $env:SYSTEM_STAGENAME -exitCode $(TERRAFORM_LAST_EXITCODE) -environment ${{ parameters.environment}} -isPlan"
 
   - task: PowerShell@2
     displayName: Post Scan Results to Github
