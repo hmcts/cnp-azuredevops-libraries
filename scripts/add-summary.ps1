@@ -117,6 +117,12 @@ environment: $environment,
 isPlan: $isPlan,
 isScan: $isScan
 "
+
+$headers = @{"Authorization" = "token $token" }
+$headers.Add("Accept", "application/vnd.github.v4+json")
+
+$uri = "https://api.github.com/repos/hmcts/azure-platform-terraform/issues/1191/comments" 
+
 #So this is a bit of hack that allows us to pass a variable from the pipeline and thus have unique file names per stage, see template-terraform-deploy-stage.yml for more details (Post Scan Results to Github)
 if ($isPlan) {
 
