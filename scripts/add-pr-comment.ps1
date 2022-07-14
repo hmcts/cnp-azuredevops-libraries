@@ -102,7 +102,7 @@ function Get-PlanBody {
         $buildId
     )
 
-    if (Test-Path $inputFile) {
+    if (Test-Path $inputFile == tf.json) {
 
         if ($commentBody.Length -gt 65536) {
             Write-Host "Plan is longer than github's comment limit, so it has been truncated."
@@ -125,7 +125,8 @@ function Get-PlanBody {
         }
     }
     else {
-        Write-Host "All good."
+        $body = @{"body" = $("$planCommentPrefix had no plan`nSomething has gone wrong see: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId) }
+        Write-Host "The inputfile is empty, i.e. no plan so linking to task."
     }
 
     return $body
