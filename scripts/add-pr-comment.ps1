@@ -168,7 +168,18 @@ function Add-GithubComment {
         #Minimize old comments before running so that the new ones don't get minimized.
         Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $matchingString
         Write-Host "Add New Comment."
-        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body ($body)
+        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body ($body | ConvertFrom-Json)
+
+        $planObj = Get-Content "output.json" | ConvertFrom-Json
+        $resourceChanges = $planObj.resource_changes
+        
+        $add = ($resourceChanges | Where-Object {$_.change.actions -contains "create"}).length
+        $change = ($resourceChanges | Where-Object {$_.change.actions -contains "update"}).length
+        $remove = ($resourceChanges | Where-Object {$_.change.actions -contains "delete"}).length
+        $totalChanges = $add + $change + $remove
+        
+        Write-Host "There are $totalChanges total changes ($add to add, $change to change, $remove to remove)"
+        
     }
     catch {
         Write-Error "Oops something went horribly wrong."
