@@ -125,8 +125,6 @@ function Get-PlanBody {
     return $body
 }
 
-#It seems that the approved verb is Test or at least that one that best matches
-#Note that this uses a similar construct to Either but hopefully by using Result and Error this is clearer than Left and Right.
 
 function Add-GithubComment {
     param (
@@ -143,7 +141,7 @@ function Add-GithubComment {
 
     try {
         Write-Host "Add New Comment."
-        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
+        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body ($body | ConvertTo-Json)
     }
     catch {
         Write-Error "Oops something went horribly wrong."
