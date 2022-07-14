@@ -85,7 +85,7 @@ steps:
     displayName: Terraform plan ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     inputs:
-      command: plan
+      command: plan > output.txt
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
@@ -94,7 +94,7 @@ steps:
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
-        -out tfplan-${{ parameters.environment }}-${{ parameters.component }} > output.txt
+        -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
         -no-color
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
