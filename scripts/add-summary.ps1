@@ -115,6 +115,8 @@ function Get-PlanBody {
     
     Write-Host "There are $totalChanges total changes ($add to add, $change to change, $remove to remove)"
 
+    $body = @{"body" = "There are $totalChanges total changes ($add to add, $change to change, $remove to remove)" }
+
     }
     else {
         $body = @{"body" = $("$planCommentPrefix had no plan`nSomething has gone wrong see: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId) }
@@ -179,17 +181,6 @@ $uri = "https://api.github.com/repos/hmcts/azure-platform-terraform/issues/1191/
 if ($isPlan) {
 
     $planCommentPrefix = "Environment: $environment and Pipeline Stage: $stageName. There are $totalChanges total changes ($add to add, $change to change, $remove to remove)"
-
-
-    $planObj = Get-Content "tf.json" | ConvertFrom-Json
-    $resourceChanges = $planObj.resource_changes
-    
-    $add = ($resourceChanges | Where-Object {$_.change.actions -contains "create"}).length
-    $change = ($resourceChanges | Where-Object {$_.change.actions -contains "update"}).length
-    $remove = ($resourceChanges | Where-Object {$_.change.actions -contains "delete"}).length
-    $totalChanges = $add + $change + $remove
-    
-    Write-Host "There are $totalChanges total changes ($add to add, $change to change, $remove to remove)"
 
     Write-Host "Will Post Plan to $uri."
     $body = Get-PlanBody -inputFile $inputFile -stageName $stageName -buildId $buildId -environment $environment
