@@ -49,7 +49,52 @@ An example
 General notes
 #>
 
+function Minimize-Comment {
+    param (
+        [string]
+        $owner = "hmcts",
+        [string]
+        $repo = "azure-platform-terraform",
+        [int]
+        $pr,
+        [string]
+        $token,
+        [string]
+        $stageName,
+        [int]
+        $pageSize = 50,
+        [string]
+        $environment,
+        [string]
+        $author = "hmcts-platform-operations",
+        [string]
+        $matchingString
+    )
+
+    $headers = @{"Authorization" = "token $token" }
+    $headers.Add("Content-Type", "application/json")
+    $headers.Add("Accept", "application/vnd.github.v4+json")
+
+    $uri = "https://api.github.com/graphql"
+
+    Write-Host "Post to GraphQL API: Environment: $environment and stageName: $stageName."
+
+    #TODO:Note that I tried to get the formatting a bit better for the graphql queries but I gave up after a few attempts, I'm sure it can be improved.
+    $body = "{`"query`":`"{`\n  repository(name: `\`"$repo`\`", owner: `\`"hmcts`\`") {`\n    pullRequest(number: $pr) {`\n      comments(last: $pageSize) {`\n        edges {`\n          node {`\n            id`\n            isMinimized   `\n            body         `\n            author{`\n              login`\n            }`\n          }`\n        }`\n      }`\n    }`\n  }`\n}`",`"variables`":{}}"
+
+    $comments = Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
+    #TODO: should really separate out the getting of data from the actual mimimization as it would allow easy unit testing.
+    $comments.data.repository.pullRequest.comments.edges.node | Where-Object { $_.isMinimized -eq $false -and $_.body -match $matchingString -and $_.author.login -eq $author } | ForEach-Object {
+        $body = "{`"query`":`"mutation (`$id: String)  {`\n  minimizeComment(input:{subjectId: `$id, clientMutationId:`\`"$((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})`\`",classifier:DUPLICATE}){`\nminimizedComment{isMinimized}`\n  }`\n  `\n}`",`"variables`":{`"id`":`"$($_.id)`"}}" ;
+        if ($_.body.Length -gt 75) { $shortComment = $_.body.Substring(0, 75) }else { $shortComment = $_.body }
+        Write-Host "Minimizing Comment: $($_.id) for StageName: $stageName with Body (75 first chars):$shortComment.";
+        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
+    }
+
+}
+
 #TODO: Could make this a bit more functional for ease of testing, so $commentBody should be a variable and same for planCommentPrefix
+
 function Get-PlanBody {
     param (
         $environment,
@@ -57,6 +102,8 @@ function Get-PlanBody {
         $stageName,
         $buildId
     )
+
+    if (Test-Path $inputFile) {
 
     Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
 
@@ -70,8 +117,15 @@ function Get-PlanBody {
     
     Write-Host "There are $totalChanges total changes ($add to add, $change to change, $remove to remove)"
 
+    }
+    else {
+        $body = @{"body" = $("$planCommentPrefix had no plan`nSomething has gone wrong see: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId) }
+        Write-Host "The inputfile is empty, i.e. no plan so linking to task."
+    }
+
     return $body
 }
+
 #It seems that the approved verb is Test or at least that one that best matches
 #Note that this uses a similar construct to Either but hopefully by using Result and Error this is clearer than Left and Right.
 
@@ -114,8 +168,7 @@ buildId: $buildId,
 stageName: $stageName,
 exitCode: $exitCode,
 environment: $environment,
-isPlan: $isPlan,
-isScan: $isScan
+isPlan: $isPlan
 "
 
 $headers = @{"Authorization" = "token $token" }
@@ -126,19 +179,27 @@ $uri = "https://api.github.com/repos/hmcts/azure-platform-terraform/issues/1191/
 #So this is a bit of hack that allows us to pass a variable from the pipeline and thus have unique file names per stage, see template-terraform-deploy-stage.yml for more details (Post Scan Results to Github)
 if ($isPlan) {
 
-    $planCommentPrefix = "Environment: $environment and Pipeline Stage: $stageName"
+    $planCommentPrefix = "Environment: $environment and Pipeline Stage: $stageName. There are $totalChanges total changes ($add to add, $change to change, $remove to remove)"
 
-    if ($exitCode -eq 2) {
-        Write-Host "Will Post Plan to $uri."
-        $body = Get-PlanBody -inputFile $inputFile -stageName $stageName -buildId $buildId -environment $environment
+    Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
 
-        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
+    $planObj = Get-Content "tf.json" | ConvertFrom-Json
+    $resourceChanges = $planObj.resource_changes
+    
+    $add = ($resourceChanges | Where-Object {$_.change.actions -contains "create"}).length
+    $change = ($resourceChanges | Where-Object {$_.change.actions -contains "update"}).length
+    $remove = ($resourceChanges | Where-Object {$_.change.actions -contains "delete"}).length
+    $totalChanges = $add + $change + $remove
+    
+    Write-Host "There are $totalChanges total changes ($add to add, $change to change, $remove to remove)"
 
-        #The matching string has case sensitivity off as well as multiline mode on, namely it will try to match on a per line basis
-        Add-GithubComment -repo $repo -pr $pr -token $token -stageName $stageName -uri $uri -body $body -environment $environment -matchingString $("(?im)^$planCommentPrefix")
-    }
-    else {
-        Write-Host "Plan has no changes, will try to minimize old comments"
-        Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $("(?im)^$planCommentPrefix")
-    }
+    Write-Host "Will Post Plan to $uri."
+    $body = Get-PlanBody -inputFile $inputFile -stageName $stageName -buildId $buildId -environment $environment
+
+    Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
+
+    #The matching string has case sensitivity off as well as multiline mode on, namely it will try to match on a per line basis
+    Add-GithubComment -repo $repo -pr $pr -token $token -stageName $stageName -uri $uri -body $body -environment $environment -matchingString $("(?im)^$planCommentPrefix")
 }
+
+    
