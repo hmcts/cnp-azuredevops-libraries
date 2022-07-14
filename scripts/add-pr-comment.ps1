@@ -49,49 +49,49 @@ An example
 .NOTES
 General notes
 #>
-# function Minimize-Comment {
-#     param (
-#         [string]
-#         $owner = "hmcts",
-#         [string]
-#         $repo = "azure-platform-terraform",
-#         [int]
-#         $pr,
-#         [string]
-#         $token,
-#         [string]
-#         $stageName,
-#         [int]
-#         $pageSize = 50,
-#         [string]
-#         $environment,
-#         [string]
-#         $author = "hmcts-platform-operations",
-#         [string]
-#         $matchingString
-#     )
+function Minimize-Comment {
+    param (
+        [string]
+        $owner = "hmcts",
+        [string]
+        $repo = "azure-platform-terraform",
+        [int]
+        $pr,
+        [string]
+        $token,
+        [string]
+        $stageName,
+        [int]
+        $pageSize = 50,
+        [string]
+        $environment,
+        [string]
+        $author = "hmcts-platform-operations",
+        [string]
+        $matchingString
+    )
 
-#     $headers = @{"Authorization" = "token $token" }
-#     $headers.Add("Content-Type", "application/json")
-#     $headers.Add("Accept", "application/vnd.github.v4+json")
+    $headers = @{"Authorization" = "token $token" }
+    $headers.Add("Content-Type", "application/json")
+    $headers.Add("Accept", "application/vnd.github.v4+json")
 
-#     $uri = "https://api.github.com/graphql"
+    $uri = "https://api.github.com/graphql"
 
-#     Write-Host "Post to GraphQL API: Environment: $environment and stageName: $stageName."
+    Write-Host "Post to GraphQL API: Environment: $environment and stageName: $stageName."
 
-#     #TODO:Note that I tried to get the formatting a bit better for the graphql queries but I gave up after a few attempts, I'm sure it can be improved.
-#     $body = "{`"query`":`"{`\n  repository(name: `\`"$repo`\`", owner: `\`"hmcts`\`") {`\n    pullRequest(number: $pr) {`\n      comments(last: $pageSize) {`\n        edges {`\n          node {`\n            id`\n            isMinimized   `\n            body         `\n            author{`\n              login`\n            }`\n          }`\n        }`\n      }`\n    }`\n  }`\n}`",`"variables`":{}}"
+    #TODO:Note that I tried to get the formatting a bit better for the graphql queries but I gave up after a few attempts, I'm sure it can be improved.
+    $body = "{`"query`":`"{`\n  repository(name: `\`"$repo`\`", owner: `\`"hmcts`\`") {`\n    pullRequest(number: $pr) {`\n      comments(last: $pageSize) {`\n        edges {`\n          node {`\n            id`\n            isMinimized   `\n            body         `\n            author{`\n              login`\n            }`\n          }`\n        }`\n      }`\n    }`\n  }`\n}`",`"variables`":{}}"
 
-#     $comments = Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
-#     #TODO: should really separate out the getting of data from the actual mimimization as it would allow easy unit testing.
-#     $comments.data.repository.pullRequest.comments.edges.node | Where-Object { $_.isMinimized -eq $false -and $_.body -match $matchingString -and $_.author.login -eq $author } | ForEach-Object {
-#         $body = "{`"query`":`"mutation (`$id: String)  {`\n  minimizeComment(input:{subjectId: `$id, clientMutationId:`\`"$((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})`\`",classifier:DUPLICATE}){`\nminimizedComment{isMinimized}`\n  }`\n  `\n}`",`"variables`":{`"id`":`"$($_.id)`"}}" ;
-#         if ($_.body.Length -gt 75) { $shortComment = $_.body.Substring(0, 75) }else { $shortComment = $_.body }
-#         Write-Host "Minimizing Comment: $($_.id) for StageName: $stageName with Body (75 first chars):$shortComment.";
-#         Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
-#     }
+    $comments = Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
+    #TODO: should really separate out the getting of data from the actual mimimization as it would allow easy unit testing.
+    $comments.data.repository.pullRequest.comments.edges.node | Where-Object { $_.isMinimized -eq $false -and $_.body -match $matchingString -and $_.author.login -eq $author } | ForEach-Object {
+        $body = "{`"query`":`"mutation (`$id: String)  {`\n  minimizeComment(input:{subjectId: `$id, clientMutationId:`\`"$((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})`\`",classifier:DUPLICATE}){`\nminimizedComment{isMinimized}`\n  }`\n  `\n}`",`"variables`":{`"id`":`"$($_.id)`"}}" ;
+        if ($_.body.Length -gt 75) { $shortComment = $_.body.Substring(0, 75) }else { $shortComment = $_.body }
+        Write-Host "Minimizing Comment: $($_.id) for StageName: $stageName with Body (75 first chars):$shortComment.";
+        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
+    }
 
-# }
+}
 
 #TODO: Could make this a bit more functional for ease of testing, so $commentBody should be a variable and same for planCommentPrefix
 function Get-PlanBody {
@@ -164,10 +164,11 @@ function Add-GithubComment {
     )
 
     try {
-        # Write-Host "Minimize Old Comments, if they exist."
-        # #Minimize old comments before running so that the new ones don't get minimized.
-        # Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $matchingString
+        Write-Host "Minimize Old Comments, if they exist."
+        #Minimize old comments before running so that the new ones don't get minimized.
+        Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $matchingString
         Write-Host "Add New Comment."
+        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body ($body | ConvertTo-Json)
     }
     catch {
         Write-Error "Oops something went horribly wrong."
@@ -211,19 +212,6 @@ if ($isPlan) {
     if ($exitCode -eq 2) {
         Write-Host "Will Post Plan to $uri."
         $body = Get-PlanBody -inputFile $inputFile -stageName $stageName -buildId $buildId -environment $environment
-
-        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
-
-        $planObj = Get-Content "output.json" | ConvertFrom-Json
-        $resourceChanges = $planObj.resource_changes
-        
-        $add = ($resourceChanges | Where-Object {$_.change.actions -contains "create"}).length
-        $change = ($resourceChanges | Where-Object {$_.change.actions -contains "update"}).length
-        $remove = ($resourceChanges | Where-Object {$_.change.actions -contains "delete"}).length
-        $totalChanges = $add + $change + $remove
-        
-        Write-Host "There are $totalChanges total changes ($add to add, $change to change, $remove to remove)"
-
         #The matching string has case sensitivity off as well as multiline mode on, namely it will try to match on a per line basis
         Add-GithubComment -repo $repo -pr $pr -token $token -stageName $stageName -uri $uri -body $body -environment $environment -matchingString $("(?im)^$planCommentPrefix")
     }
