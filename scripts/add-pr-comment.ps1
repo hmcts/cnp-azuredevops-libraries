@@ -102,7 +102,7 @@ function Get-PlanBody {
         $buildId
     )
 
-    if (Test-Path $inputFile == tf.json) {
+    if (Test-Path $inputFile -eq tf.json) {
 
         if ($commentBody.Length -gt 65536) {
             Write-Host "Plan is longer than github's comment limit, so it has been truncated."
