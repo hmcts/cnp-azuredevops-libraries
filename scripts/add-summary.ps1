@@ -113,7 +113,7 @@ function Get-PlanBody {
     $destroy = ($resourceChanges | Where-Object {$_.change.actions -contains "delete"}).length
     $totalChanges = $add + $change + $destroy
     
-    Write-Host "There are $totalChanges total changes ($add to add, $change to change, $destroy to destroy)"
+    Write-Host "$("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nsee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId)"
 
     $body = @{"body" = $("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nsee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId) }
 
@@ -182,7 +182,7 @@ if ($isPlan) {
     $planCommentPrefix = "Environment: $environment and Pipeline Stage: $stageName"
 
     if ($exitCode -eq 2) {
-        Write-Host "Will Post Plan to $uri."
+        Write-Host "Will Post Plan Summary to $uri."
         $body = Get-PlanBody -inputFile $inputFile -stageName $stageName -buildId $buildId -environment $environment
         #The matching string has case sensitivity off as well as multiline mode on, namely it will try to match on a per line basis
         Add-GithubComment -repo $repo -pr $pr -token $token -stageName $stageName -uri $uri -body $body -environment $environment -matchingString $("(?im)^$planCommentPrefix")
