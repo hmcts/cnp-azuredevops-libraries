@@ -109,7 +109,19 @@ function Get-PlanBody {
             $body = @{"body" = "$planCommentPrefix`nPlan has been truncated:`n``````$($commentBody.Substring(0, 65400))" }
         }
         else {
-            $body = @{"body" = "$planCommentPrefix`n``````$commentBody" }
+            
+        $planObj = Get-Content "tf.json" | ConvertFrom-Json
+        $resourceChanges = $planObj.resource_changes
+        
+        $add = ($resourceChanges | Where-Object {$_.change.actions -contains "create"}).length
+        $change = ($resourceChanges | Where-Object {$_.change.actions -contains "update"}).length
+        $destroy = ($resourceChanges | Where-Object {$_.change.actions -contains "delete"}).length
+        $totalChanges = $add + $change + $destroy
+        
+        Write-Host "$("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nsee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId)"
+
+        $body = @{"body" = $("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nsee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId) }
+
         }
     }
     else {
