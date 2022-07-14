@@ -179,13 +179,17 @@ $uri = "https://api.github.com/repos/hmcts/azure-platform-terraform/issues/1191/
 #So this is a bit of hack that allows us to pass a variable from the pipeline and thus have unique file names per stage, see template-terraform-deploy-stage.yml for more details (Post Scan Results to Github)
 if ($isPlan) {
 
-    $planCommentPrefix = "Environment: $environment and Pipeline Stage: $stageName. There are $totalChanges total changes ($add to add, $change to change, $destroy to destroy)"
+    $planCommentPrefix = "Environment: $environment and Pipeline Stage: $stageName"
 
-    Write-Host "Will Post Plan to $uri."
-    $body = Get-PlanBody -inputFile $inputFile -stageName $stageName -buildId $buildId -environment $environment
-
-    #The matching string has case sensitivity off as well as multiline mode on, namely it will try to match on a per line basis
-    Add-GithubComment -repo $repo -pr $pr -token $token -stageName $stageName -uri $uri -body $body -environment $environment -matchingString $("(?im)^$planCommentPrefix")
+    if ($exitCode -eq 2) {
+        Write-Host "Will Post Plan to $uri."
+        $body = Get-PlanBody -inputFile $inputFile -stageName $stageName -buildId $buildId -environment $environment
+        #The matching string has case sensitivity off as well as multiline mode on, namely it will try to match on a per line basis
+        Add-GithubComment -repo $repo -pr $pr -token $token -stageName $stageName -uri $uri -body $body -environment $environment -matchingString $("(?im)^$planCommentPrefix")
+    }
+    else {
+        Write-Host "Plan has no changes, will try to minimize old comments"
+        Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $("(?im)^$planCommentPrefix")
+    }
 }
-
     
