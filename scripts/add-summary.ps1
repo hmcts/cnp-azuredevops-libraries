@@ -105,8 +105,6 @@ function Get-PlanBody {
 
     if (Test-Path $inputFile) {
 
-    Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
-
     $planObj = Get-Content "tf.json" | ConvertFrom-Json
     $resourceChanges = $planObj.resource_changes
     
@@ -144,6 +142,7 @@ function Add-GithubComment {
 
     try {
         Write-Host "Add New Comment."
+        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body ($body | ConvertTo-Json)
     }
     catch {
         Write-Error "Oops something went horribly wrong."
@@ -181,7 +180,6 @@ if ($isPlan) {
 
     $planCommentPrefix = "Environment: $environment and Pipeline Stage: $stageName. There are $totalChanges total changes ($add to add, $change to change, $remove to remove)"
 
-    Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
 
     $planObj = Get-Content "tf.json" | ConvertFrom-Json
     $resourceChanges = $planObj.resource_changes
@@ -195,8 +193,6 @@ if ($isPlan) {
 
     Write-Host "Will Post Plan to $uri."
     $body = Get-PlanBody -inputFile $inputFile -stageName $stageName -buildId $buildId -environment $environment
-
-    Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
 
     #The matching string has case sensitivity off as well as multiline mode on, namely it will try to match on a per line basis
     Add-GithubComment -repo $repo -pr $pr -token $token -stageName $stageName -uri $uri -body $body -environment $environment -matchingString $("(?im)^$planCommentPrefix")
