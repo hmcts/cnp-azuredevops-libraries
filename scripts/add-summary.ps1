@@ -110,17 +110,16 @@ function Get-PlanBody {
     
     $add = ($resourceChanges | Where-Object {$_.change.actions -contains "create"}).length
     $change = ($resourceChanges | Where-Object {$_.change.actions -contains "update"}).length
-    $remove = ($resourceChanges | Where-Object {$_.change.actions -contains "delete"}).length
-    $totalChanges = $add + $change + $remove
+    $destroy = ($resourceChanges | Where-Object {$_.change.actions -contains "delete"}).length
+    $totalChanges = $add + $change + $destroy
     
-    Write-Host "There are $totalChanges total changes ($add to add, $change to change, $remove to remove)"
+    Write-Host "There are $totalChanges total changes ($add to add, $change to change, $destroy to destroy)"
 
-    $body = @{"body" = "There are $totalChanges total changes ($add to add, $change to change, $remove to remove)" }
+    $body = @{"body" = $("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nsee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId) }
 
     }
     else {
         $body = @{"body" = $("$planCommentPrefix had no plan`nSomething has gone wrong see: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId) }
-        Write-Host "The inputfile is empty, i.e. no plan so linking to task."
     }
 
     return $body
@@ -144,7 +143,7 @@ function Add-GithubComment {
 
     try {
         Write-Host "Add New Comment."
-        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body ($body | ConvertTo-Json)
+        Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
     }
     catch {
         Write-Error "Oops something went horribly wrong."
@@ -180,7 +179,7 @@ $uri = "https://api.github.com/repos/hmcts/azure-platform-terraform/issues/1191/
 #So this is a bit of hack that allows us to pass a variable from the pipeline and thus have unique file names per stage, see template-terraform-deploy-stage.yml for more details (Post Scan Results to Github)
 if ($isPlan) {
 
-    $planCommentPrefix = "Environment: $environment and Pipeline Stage: $stageName. There are $totalChanges total changes ($add to add, $change to change, $remove to remove)"
+    $planCommentPrefix = "Environment: $environment and Pipeline Stage: $stageName. There are $totalChanges total changes ($add to add, $change to change, $destroy to destroy)"
 
     Write-Host "Will Post Plan to $uri."
     $body = Get-PlanBody -inputFile $inputFile -stageName $stageName -buildId $buildId -environment $environment
