@@ -40,7 +40,7 @@ parameters:
     default: ''
 
   - name: planFile
-    default: 'tfplan-${{ parameters.environment }}-${{ parameters.component }}'
+    default: ''
 
 steps:
   - checkout: self
@@ -97,7 +97,7 @@ steps:
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
-        -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
+        -out ${{ parameters.planFile }}
         -no-color
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
