@@ -80,12 +80,12 @@ function Minimize-Comment {
     Write-Host "Post to GraphQL API: Environment: $environment and stageName: $stageName."
 
     #TODO:Note that I tried to get the formatting a bit better for the graphql queries but I gave up after a few attempts, I'm sure it can be improved.
-    $body = "{`"query`":`"{`\n  repository(name: `\`"azure-platform-terraform`\`", owner: `\`"hmcts`\`") {`\n    pullRequest(number: $pr) {`\n      comments(last: $pageSize) {`\n        edges {`\n          node {`\n            id`\n            isMinimized   `\n            body         `\n            author{`\n              login`\n            }`\n          }`\n        }`\n      }`\n    }`\n  }`\n}`",`"variables`":{}}"
+    $body = "{`"query`":`"{`\n  repository(name: `\`"azure-platform-terraform`\`", owner: `\`"hmcts`\`") {`\n    pullRequest(number: 1191) {`\n      comments(last: 50) {`\n        edges {`\n          node {`\n            id`\n            isMinimized   `\n            body         `\n            author{`\n              login`\n            }`\n          }`\n        }`\n      }`\n    }`\n  }`\n}`",`"variables`":{}}"
 
     $comments = Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
     #TODO: should really separate out the getting of data from the actual mimimization as it would allow easy unit testing.
     $comments.data.repository.pullRequest.comments.edges.node | Where-Object { $_.isMinimized -eq $false -and $_.body -match $matchingString -and $_.author.login -eq $author } | ForEach-Object {
-        $body = "{`"query`":`"mutation (`$id: String)  {`\n  minimizeComment(input:{subjectId: `$id, clientMutationId:`\`"$((53..80) + (87..110) | Get-Random -Count 5 | ForEach-Object {[char]$_})`\`",classifier:DUPLICATE}){`\nminimizedComment{isMinimized}`\n  }`\n  `\n}`",`"variables`":{`"id`":`"$($_.id)`"}}" ;
+        $body = "{`"query`":`"mutation (`$id: String)  {`\n  minimizeComment(input:{subjectId: `$id, clientMutationId:`\`"$((53..80) + (87..130) | Get-Random -Count 5 | ForEach-Object {[char]$_})`\`",classifier:DUPLICATE}){`\nminimizedComment{isMinimized}`\n  }`\n  `\n}`",`"variables`":{`"id`":`"$($_.id)`"}}" ;
         if ($_.body.Length -gt 2) { $shortComment = $_.body.Substring(0, 2) }else { $shortComment = $_.body }
         Write-Host "Minimizing Comment: $($_.id) for StageName: $stageName with Body (2 first chars):$shortComment.";
         Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
