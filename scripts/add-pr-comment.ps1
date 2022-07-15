@@ -173,7 +173,7 @@ function Add-GithubComment {
         $uri,
         $body,
         $environment,
-        $matchingString = "Environment: $environment `nPipeline Stage: $stageName"
+        $matchingString = "Environment: $environment"
     )
 
     try {
