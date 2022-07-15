@@ -49,7 +49,7 @@ An example
 .NOTES
 General notes
 #>
-function Remove-Comment {
+function Minimize-Comment {
     param (
         [string]
         $owner = "hmcts",
@@ -85,7 +85,7 @@ function Remove-Comment {
     $comments = Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
     #TODO: should really separate out the getting of data from the actual mimimization as it would allow easy unit testing.
     $comments.data.repository.pullRequest.comments.edges.node | Where-Object { $_.isMinimized -eq $false -and $_.body -match $matchingString -and $_.author.login -eq $author } | ForEach-Object {
-        $body = "{`"query`":`"mutation (`$id: String)  {`\n  minimizeComment(input:{subjectId: `$id, clientMutationId:`\`"$((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})`\`",classifier:DUPLICATE}){`\nminimizedComment{isMinimized}`\n  }`\n  `\n}`",`"variables`":{`"id`":`"$($_.id)`"}}" ;
+        $body = "{`"query`":`"mutation (`$id: String)  {`\n  minimizeComment(input:{subjectId: `$id, clientMutationId:`\`"$((53..80) + (87..110) | Get-Random -Count 5 | ForEach-Object {[char]$_})`\`",classifier:DUPLICATE}){`\nminimizedComment{isMinimized}`\n  }`\n  `\n}`",`"variables`":{`"id`":`"$($_.id)`"}}" ;
         if ($_.body.Length -gt 2) { $shortComment = $_.body.Substring(0, 2) }else { $shortComment = $_.body }
         Write-Host "Minimizing Comment: $($_.id) for StageName: $stageName with Body (2 first chars):$shortComment.";
         Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
@@ -177,7 +177,7 @@ function Add-GithubComment {
     try {
         Write-Host "Minimize Old Comments, if they exist."
         #Minimize old comments before running so that the new ones don't get minimized.
-        Remove-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $matchingString
+        Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $matchingString
         Write-Host "Add New Comment."
         Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body ($body | ConvertTo-Json)
     }
@@ -228,7 +228,7 @@ if ($isPlan) {
     }
     else {
         Write-Host "Plan has no changes, will try to minimize old comments"
-        Remove-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $("(?im)^$planCommentPrefix")
+        Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $("(?im)^$planCommentPrefix")
     }
 }
 elseif ($isScan) {
@@ -249,6 +249,6 @@ elseif ($isScan) {
     }
     else {
         Write-Host "Will try to minimize old comments as there don't appear to be any changes"
-        Remove-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $scanCommentPrefix
+        Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $scanCommentPrefix
     }
 }
