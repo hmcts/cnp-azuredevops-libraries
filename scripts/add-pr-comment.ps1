@@ -120,12 +120,12 @@ function Get-PlanBody {
         }
         else {
 
-        $body = @{"body" = $("$planCommentPrefix `nThere are **$totalChanges** total changes ($add to add, $change to change, **$destroy to destroy**) `n[See plan in Azure DevOps](https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan)" -f $buildId) }
+        $body = @{"body" = $("$planCommentPrefix `nThere are **$($totalChanges)** total changes ($add to add, $change to change, **$($destroy) to destroy**) `n[See plan in Azure DevOps](https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan)" -f $buildId) }
 
         }
     }
     else {
-        $body = @{"body" = $("$planCommentPrefix `nThere are **$totalChanges** total changes ($add to add, $change to change, **$destroy to destroy**) `n[See plan in Azure DevOps](https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan)" -f $buildId) }
+        $body = @{"body" = $("$planCommentPrefix `nThere are **$($totalChanges)** total changes ($add to add, $change to change, **$($destroy) to destroy**) `n[See plan in Azure DevOps](https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan)" -f $buildId) }
     }
 
     return $body
