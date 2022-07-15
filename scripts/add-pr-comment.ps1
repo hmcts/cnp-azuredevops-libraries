@@ -56,7 +56,7 @@ function Minimize-Comment {
         [string]
         $repo = "azure-platform-terraform",
         [int]
-        $pr,
+        $pr = 1191,
         [string]
         $token,
         [string]
@@ -80,7 +80,7 @@ function Minimize-Comment {
     Write-Host "Post to GraphQL API: Environment: $environment and stageName: $stageName."
 
     #TODO:Note that I tried to get the formatting a bit better for the graphql queries but I gave up after a few attempts, I'm sure it can be improved.
-    $body = "{`"query`":`"{`\n  repository(name: `\`"$repo`\`", owner: `\`"hmcts`\`") {`\n    pullRequest(number: $pr) {`\n      comments(last: $pageSize) {`\n        edges {`\n          node {`\n            id`\n            isMinimized   `\n            body         `\n            author{`\n              login`\n            }`\n          }`\n        }`\n      }`\n    }`\n  }`\n}`",`"variables`":{}}"
+    $body = "{`"query`":`"{`\n  repository(name: `\`"azure-platform-terraform`\`", owner: `\`"hmcts`\`") {`\n    pullRequest(number: $pr) {`\n      comments(last: $pageSize) {`\n        edges {`\n          node {`\n            id`\n            isMinimized   `\n            body         `\n            author{`\n              login`\n            }`\n          }`\n        }`\n      }`\n    }`\n  }`\n}`",`"variables`":{}}"
 
     $comments = Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
     #TODO: should really separate out the getting of data from the actual mimimization as it would allow easy unit testing.
