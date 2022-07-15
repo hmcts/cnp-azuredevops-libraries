@@ -49,7 +49,7 @@ An example
 .NOTES
 General notes
 #>
-function Minimize-Comment {
+function Remove-Comment {
     param (
         [string]
         $owner = "hmcts",
@@ -118,9 +118,9 @@ function Get-PlanBody {
         $destroy = ($resourceChanges | Where-Object {$_.change.actions -contains "delete"}).length
         $totalChanges = $add + $change + $destroy
         
-        Write-Host "$("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nsee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId)"
+        Write-Host "$("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nSee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId)"
 
-        $body = @{"body" = $("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nsee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId) }
+        $body = @{"body" = $("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nSee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId) }
 
         }
     }
@@ -171,13 +171,13 @@ function Add-GithubComment {
         $uri,
         $body,
         $environment,
-        $matchingString = "Environment: $environment and Pipeline Stage: $stageName"
+        $matchingString = "Environment: $environment `nPipeline Stage: $stageName"
     )
 
     try {
         Write-Host "Minimize Old Comments, if they exist."
         #Minimize old comments before running so that the new ones don't get minimized.
-        Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $matchingString
+        Remove-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $matchingString
         Write-Host "Add New Comment."
         Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body ($body | ConvertTo-Json)
     }
@@ -218,7 +218,7 @@ $uri = "https://api.github.com/repos/hmcts/azure-platform-terraform/issues/1191/
 
 if ($isPlan) {
 
-    $planCommentPrefix = "Environment: $environment and Pipeline Stage: $stageName"
+    $planCommentPrefix = "Environment: $environment `nPipeline Stage: $stageName"
 
     if ($exitCode -eq 2) {
         Write-Host "Will Post Plan to $uri."
@@ -228,7 +228,7 @@ if ($isPlan) {
     }
     else {
         Write-Host "Plan has no changes, will try to minimize old comments"
-        Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $("(?im)^$planCommentPrefix")
+        Remove-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $("(?im)^$planCommentPrefix")
     }
 }
 elseif ($isScan) {
@@ -249,6 +249,6 @@ elseif ($isScan) {
     }
     else {
         Write-Host "Will try to minimize old comments as there don't appear to be any changes"
-        Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $scanCommentPrefix
+        Remove-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $scanCommentPrefix
     }
 }
