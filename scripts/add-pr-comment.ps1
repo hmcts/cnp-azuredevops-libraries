@@ -85,7 +85,7 @@ function Minimize-Comment {
     $comments = Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
     #TODO: should really separate out the getting of data from the actual mimimization as it would allow easy unit testing.
     $comments.data.repository.pullRequest.comments.edges.node | Where-Object { $_.isMinimized -eq $false -and $_.body -match $matchingString -and $_.author.login -eq $author } | ForEach-Object {
-        $body = "{`"query`":`"mutation (`$id: String)  {`\n  minimizeComment(input:{subjectId: `$id, clientMutationId:`\`"$((53..79) + (86..126) | Get-Random -Count 5 | ForEach-Object {[char]$_})`\`",classifier:DUPLICATE}){`\nminimizedComment{isMinimized}`\n  }`\n  `\n}`",`"variables`":{`"id`":`"$($_.id)`"}}" ;
+        $body = "{`"query`":`"mutation (`$id: String)  {`\n  minimizeComment(input:{subjectId: `$id, clientMutationId:`\`"$((53..79) + (86..103) | Get-Random -Count 5 | ForEach-Object {[char]$_})`\`",classifier:DUPLICATE}){`\nminimizedComment{isMinimized}`\n  }`\n  `\n}`",`"variables`":{`"id`":`"$($_.id)`"}}" ;
         if ($_.body.Length -gt 50) { $shortComment = $_.body.Substring(0, 50) }else { $shortComment = $_.body }
         Write-Host "Minimizing Comment: $($_.id) for StageName: $stageName with Body (50 first chars):$shortComment.";
         Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
