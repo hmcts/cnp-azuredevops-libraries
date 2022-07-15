@@ -86,8 +86,8 @@ function Minimize-Comment {
     #TODO: should really separate out the getting of data from the actual mimimization as it would allow easy unit testing.
     $comments.data.repository.pullRequest.comments.edges.node | Where-Object { $_.isMinimized -eq $false -and $_.body -match $matchingString -and $_.author.login -eq $author } | ForEach-Object {
         $body = "{`"query`":`"mutation (`$id: String)  {`\n  minimizeComment(input:{subjectId: `$id, clientMutationId:`\`"$((53..79) + (86..126) | Get-Random -Count 5 | ForEach-Object {[char]$_})`\`",classifier:DUPLICATE}){`\nminimizedComment{isMinimized}`\n  }`\n  `\n}`",`"variables`":{`"id`":`"$($_.id)`"}}" ;
-        if ($_.body.Length -gt 40) { $shortComment = $_.body.Substring(0, 40) }else { $shortComment = $_.body }
-        Write-Host "Minimizing Comment: $($_.id) for StageName: $stageName with Body (40 first chars):$shortComment.";
+        if ($_.body.Length -gt 50) { $shortComment = $_.body.Substring(0, 50) }else { $shortComment = $_.body }
+        Write-Host "Minimizing Comment: $($_.id) for StageName: $stageName with Body (50 first chars):$shortComment.";
         Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
     }
 
@@ -175,7 +175,7 @@ function Add-GithubComment {
     )
 
     try {
-        Write-Host "Minimize Old Comments, if they exist."
+        Write-Host "Minimize old comments, if they exist."
         #Minimize old comments before running so that the new ones don't get minimized.
         Minimize-Comment -repo $repo -pr $pr -token $token -stageName $stageName -environment $environment -matchingString $matchingString
         Write-Host "Add New Comment."
@@ -221,7 +221,7 @@ if ($isPlan) {
     $planCommentPrefix = "Environment: $environment `nPipeline Stage: $stageName"
 
     if ($exitCode -eq 2) {
-        Write-Host "Will Post Plan to $uri."
+        Write-Host "Will Post Plan Summary to $uri."
         $body = Get-PlanBody -inputFile $inputFile -stageName $stageName -buildId $buildId -environment $environment
         #The matching string has case sensitivity off as well as multiline mode on, namely it will try to match on a per line basis
         Add-GithubComment -repo $repo -pr $pr -token $token -stageName $stageName -uri $uri -body $body -environment $environment -matchingString $("(?im)^$planCommentPrefix")
