@@ -98,42 +98,6 @@ steps:
         -no-color
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
-  - task: Bash@3
-    displayName: Checkov Scan
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
-    inputs:
-      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      targetType: inline
-      script: |
-        terraform show -no-color -json tfplan-${{ parameters.environment }}-${{ parameters.component }} | jq '.' > tf.json
-        sed 's/\x1b\[[0-9;]*m//g' tf.json
-        docker run \
-          --volume $(pwd):/tf bridgecrew/checkov \
-          --directory /tf/tf.json -o junitxml > $SYSTEM_STAGENAME.xml \
-          --output junitxml > $SYSTEM_STAGENAME.xml \
-          --soft-fail > $(pwd)/CheckovReport.xml  
-        #There are some trailing ascii colour codes that the sed script gets rid of
-        sed -i 's/\x1b\[[0-9;]*m//g' $SYSTEM_STAGENAME.xml
-
-  - task: Bash@3
-    displayName: Checkov Scan - Display Plan
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
-    inputs:
-      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      targetType: inline
-      script: |
-        #checkov should provide more info about what is actually going on but it seems that I can only get it to show the lines of the plan so displaying it here for reference.
-        cat -n tf.json
-
-  - task: PublishTestResults@2
-    displayName: Publish Checkov Scan Results
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
-    inputs:
-        testResultsFormat: 'JUnit'
-        searchFolder: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-        testResultsFiles: '*.xml'
-        failTaskOnFailedTests: false
-
   - task: AzureKeyVault@1
     displayName: 'Get GitHub API token from Keyvault'
     inputs:
