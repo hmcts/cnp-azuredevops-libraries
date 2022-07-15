@@ -86,8 +86,8 @@ function Minimize-Comment {
     #TODO: should really separate out the getting of data from the actual mimimization as it would allow easy unit testing.
     $comments.data.repository.pullRequest.comments.edges.node | Where-Object { $_.isMinimized -eq $false -and $_.body -match $matchingString -and $_.author.login -eq $author } | ForEach-Object {
         $body = "{`"query`":`"mutation (`$id: String)  {`\n  minimizeComment(input:{subjectId: `$id, clientMutationId:`\`"$((53..79) + (86..126) | Get-Random -Count 5 | ForEach-Object {[char]$_})`\`",classifier:DUPLICATE}){`\nminimizedComment{isMinimized}`\n  }`\n  `\n}`",`"variables`":{`"id`":`"$($_.id)`"}}" ;
-        if ($_.body.Length -gt 20) { $shortComment = $_.body.Substring(0, 20) }else { $shortComment = $_.body }
-        Write-Host "Minimizing Comment: $($_.id) for StageName: $stageName with Body (20 first chars):$shortComment.";
+        if ($_.body.Length -gt 40) { $shortComment = $_.body.Substring(0, 40) }else { $shortComment = $_.body }
+        Write-Host "Minimizing Comment: $($_.id) for StageName: $stageName with Body (40 first chars):$shortComment.";
         Invoke-RestMethod -Method Post -Uri $uri -Headers $headers -Body $body
     }
 
@@ -120,7 +120,7 @@ function Get-PlanBody {
         
         Write-Host "$("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nSee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId)"
 
-        $body = @{"body" = $("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nSee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId) }
+        $body = @{"body" = $("$planCommentPrefix `nThere are **$totalChanges** total changes ($add to add, $change to change, **$destroy to destroy**) `n[See plan in Azure DevOps](https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan)" -f $buildId) }
 
         }
     }
