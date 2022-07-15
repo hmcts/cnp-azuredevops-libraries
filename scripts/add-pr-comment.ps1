@@ -118,14 +118,14 @@ function Get-PlanBody {
         $destroy = ($resourceChanges | Where-Object {$_.change.actions -contains "delete"}).length
         $totalChanges = $add + $change + $destroy
 
-        $body = @{"body" = $("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nsee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId) }
+        $body = @{"body" = $("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `n[See plan in Azure DevOps](https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan)" -f $buildId) }
 
-        Write-Host "$("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nsee: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId)"
+        Write-Host "$("$planCommentPrefix `nThere are $totalChanges total changes ($add to add, $change to change, $destroy to destroy) `nSee https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId)"
 
         }
     }
     else {
-        $body = @{"body" = $("$planCommentPrefix had no plan`nSomething has gone wrong see: https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan" -f $buildId) }
+        $body = @{"body" = $("$planCommentPrefix had no plan`nSomething has gone wrong `n[See plan in Azure DevOps](https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan)" -f $buildId) }
         Write-Host "The inputfile is empty, i.e. no plan so linking to task."
     }
 
