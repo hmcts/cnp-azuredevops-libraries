@@ -54,13 +54,8 @@ steps:
     displayName: Install tfcmt
     inputs:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/install-tfcmt.sh
-      # script: |
-      #   curl -fL -o tfcmt.tar.gz https://github.com/suzuki-shunsuke/tfcmt/releases/download/$TERRAFORM_VERSION/tfcmt_linux_amd64.tar.gz
-      #   tar -C /usr/bin -xzf ./tfcmt.tar.gz
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-    env:
-      TERRAFORM_VERSION: "v3.2.1"
-
+      
   # - task: Npm@1
   #   inputs:
   #     command: 'install'
