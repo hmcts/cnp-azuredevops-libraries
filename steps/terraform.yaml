@@ -131,7 +131,7 @@ steps:
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     inputs:
       targetType: 'inline'
-      script: "tfcmt -var env=${{ parameters.environment }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }} -var $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars plan -- terraform plan"
+      script: "tfcmt -var env:${{ parameters.environment }} -var builtFrom:$(Build.Repository.Name) -var product:${{ parameters.product }} ${{ parameters.planCommandOptions }} -config $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars plan -- terraform plan"
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
   - task: TerraformCLI@0
