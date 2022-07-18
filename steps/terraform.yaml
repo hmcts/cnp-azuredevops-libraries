@@ -124,15 +124,14 @@ steps:
     env:
       GITHUB_TOKEN: $(github-api-token)
     inputs:
-      script: export $GITHUB_TOKEN=$GITHUB_TOKEN
+      script: "export $GITHUB_TOKEN=$GITHUB_TOKEN"
 
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     inputs:
       targetType: 'inline'
-      script: |
-        tfcmt -var env=${{ parameters.environment }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }} -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars plan -- terraform plan
+      script: "tfcmt -var env=${{ parameters.environment }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }} -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars plan -- terraform plan"
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
   - task: TerraformCLI@0
