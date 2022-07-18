@@ -119,7 +119,7 @@ steps:
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
   - task: Bash@3
-    displayName: tfcmt Terraform plan ${{ parameters.component }}
+    displayName: Publish Plan to GitHub ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     env:
       GITHUB_TOKEN: $(github-api-token)
@@ -127,6 +127,7 @@ steps:
       # PR_NUMBER: ${{ github.event.number }}
     inputs:
       script: |
+        export GITHUB_TOKEN=$env:GITHUB_TOKEN
         tfcmt plan --terraform plan \
         -var env=${{ parameters.environment }} \
         -var builtFrom=$(Build.Repository.Name) \
