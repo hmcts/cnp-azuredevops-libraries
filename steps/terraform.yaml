@@ -126,7 +126,6 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        export $GITHUB_TOKEN=$GITHUB_TOKEN \
         tfcmt plan -var env=${{ parameters.environment }} -var builtFrom=$(Build.Repository.Name) -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }} -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
