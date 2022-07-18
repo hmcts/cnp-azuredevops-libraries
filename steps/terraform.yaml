@@ -118,7 +118,7 @@ steps:
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
-  - task: Bash@3
+  - task: CmdLine@2
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     env:
@@ -127,11 +127,11 @@ steps:
       script: |
         echo hello \
         export GITHUB_TOKEN=$env:GITHUB_TOKEN \
-        # tfcmt plan --terraform plan \
-        # -var env=${{ parameters.environment }} \
-        # -var builtFrom=$(Build.Repository.Name) \
-        # -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }} \
-        # -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars \
+        tfcmt plan --terraform plan \
+        -var env=${{ parameters.environment }} \
+        -var builtFrom=$(Build.Repository.Name) \
+        -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }} \
+        -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars \
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
   - task: TerraformCLI@0
