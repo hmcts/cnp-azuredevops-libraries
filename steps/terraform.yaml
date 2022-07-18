@@ -59,8 +59,8 @@ steps:
   - task: Bash@3
     displayName: Install github-comment
     inputs:
-    filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/install-github-comment.sh
-    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/install-github-comment.sh
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   # - task: Npm@1
   #   inputs:
