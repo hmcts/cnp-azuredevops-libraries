@@ -105,12 +105,8 @@ steps:
   - task: TerraformCLI@0
     displayName: Terraform plan ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
-    env:
-      GITHUB_TOKEN: $(github-api-token)
-      # PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-      # PR_NUMBER: ${{ github.event.number }}
     inputs:
-      command: tfcmt plan -- terraform plan
+      command: plan
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
@@ -121,6 +117,22 @@ steps:
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
+
+  - task: Bash@3
+    displayName: tfcmt Terraform plan ${{ parameters.component }}
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+    env:
+      GITHUB_TOKEN: $(github-api-token)
+      # PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      # PR_NUMBER: ${{ github.event.number }}
+    inputs:
+      script: |
+        tfcmt plan --terraform plan \
+        -var env=${{ parameters.environment }} \
+        -var builtFrom=$(Build.Repository.Name) \
+        -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }} \
+        -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars \
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
   - task: TerraformCLI@0
     displayName: Terraform apply ${{ parameters.component }}
