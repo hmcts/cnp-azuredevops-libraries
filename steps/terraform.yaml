@@ -118,14 +118,15 @@ steps:
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
-  - task: CmdLine@2
+  - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     env:
       GITHUB_TOKEN: $(github-api-token)
     inputs:
+      targetType: 'inline'
       script: |
-        echo hello \
+        'echo hello' \
         export GITHUB_TOKEN=$env:GITHUB_TOKEN \
         tfcmt plan --terraform plan \
         -var env=${{ parameters.environment }} \
