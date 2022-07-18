@@ -118,13 +118,13 @@ steps:
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
-  - task: Bash@3
-    displayName: Export token
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
-    env:
-      GITHUB_TOKEN: $(github-api-token)
-    inputs:
-      script: "export $GITHUB_TOKEN=$GITHUB_TOKEN"
+  # - task: Bash@3
+  #   displayName: Export token
+  #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+  #   env:
+  #     GITHUB_TOKEN: $(github-api-token)
+  #   inputs:
+  #     script: export $GITHUB_TOKEN=$GITHUB_TOKEN
 
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
