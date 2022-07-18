@@ -111,8 +111,8 @@ steps:
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     env:
       GITHUB_TOKEN: $(github-api-token)
-      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-      PR_NUMBER: ${{ github.event.number }}
+      # PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      # PR_NUMBER: ${{ github.event.number }}
     inputs:
       command: tfcmt plan
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
