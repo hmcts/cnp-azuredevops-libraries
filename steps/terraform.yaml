@@ -62,16 +62,6 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/install-github-comment.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  # - task: Npm@1
-  #   inputs:
-  #     command: 'install'
-  # - script: |
-  #     node ./scripts/_ci/github-comment.js "RELEASE" "[Preparing Preview ...](https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan)"
-  #   displayName: 'Comment on github'
-  #   env:
-  #     ACCESS_REPO: $(ACCESS_REPO)
-  #     ACCESS_TOKEN: $(ACCESS_TOKEN)
-
   - task: AzureKeyVault@1
     displayName: 'Get GitHub API token from Keyvault'
     inputs:
@@ -108,21 +98,21 @@ steps:
       command: validate
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
-  - task: TerraformCLI@0
-    displayName: Terraform plan ${{ parameters.component }}
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
-    inputs:
-      command: plan
-      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      environmentServiceName: ${{ parameters.serviceConnection }}
-      runAzLogin: true
-      commandOptions: >
-        -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
-        -var env=${{ parameters.environment }}
-        -var builtFrom=$(Build.Repository.Name)
-        -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
-        -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
-      publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
+  # - task: TerraformCLI@0
+  #   displayName: Terraform plan ${{ parameters.component }}
+  #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+  #   inputs:
+  #     command: plan
+  #     workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+  #     environmentServiceName: ${{ parameters.serviceConnection }}
+  #     runAzLogin: true
+  #     commandOptions: >
+  #       -out tfplan-${{ parameters.environment }}-${{ parameters.component }}
+  #       -var env=${{ parameters.environment }}
+  #       -var builtFrom=$(Build.Repository.Name)
+  #       -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
+  #       -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
+  #     publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
   - task: Bash@3
     displayName: Hide Github Comments - ${{ parameters.component }}
@@ -130,7 +120,7 @@ steps:
     env:
       GITHUB_TOKEN: $(github-api-token)
     inputs:
-      script: github-comment exec -- github-comment hide -condition 'Comment.Body contains "hello"'
+      script: github-comment hide -condition 'Comment.Body contains "hello"'
 
   # - task: Bash@3
   #   displayName: Publish Plan to GitHub - ${{ parameters.component }}
