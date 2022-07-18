@@ -127,7 +127,8 @@ steps:
       # PR_NUMBER: ${{ github.event.number }}
     inputs:
       script: |
-        export GITHUB_TOKEN=$env:GITHUB_TOKEN
+        echo hello \
+        export GITHUB_TOKEN=$env:GITHUB_TOKEN \
         tfcmt plan --terraform plan \
         -var env=${{ parameters.environment }} \
         -var builtFrom=$(Build.Repository.Name) \
