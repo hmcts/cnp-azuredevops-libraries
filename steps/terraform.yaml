@@ -110,7 +110,7 @@ steps:
       # PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       # PR_NUMBER: ${{ github.event.number }}
     inputs:
-      command: tfcmt plan
+      command: tfcmt plan -- terraform plan
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
