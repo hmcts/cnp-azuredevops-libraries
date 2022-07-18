@@ -126,8 +126,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        echo hello \
-        export GITHUB_TOKEN=$env:GITHUB_TOKEN \
+        export $GITHUB_TOKEN=$GITHUB_TOKEN \
         tfcmt plan --terraform plan \
         -var env=${{ parameters.environment }} \
         -var builtFrom=$(Build.Repository.Name) \
