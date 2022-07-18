@@ -120,7 +120,7 @@ steps:
     env:
       GITHUB_TOKEN: $(github-api-token)
     inputs:
-      script: github-comment hide -condition 'Comment.Body contains "hello"'
+      script: "github-comment hide"
 
   # - task: Bash@3
   #   displayName: Publish Plan to GitHub - ${{ parameters.component }}
