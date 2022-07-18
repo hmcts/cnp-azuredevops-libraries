@@ -124,8 +124,7 @@ steps:
     env:
       GITHUB_TOKEN: $(github-api-token)
     inputs:
-      script: cat tfplan-${{ parameters.environment }}-${{ parameters.component }} | tfcmt -- terraform plan
-
+      script: "cat tfplan-${{ parameters.environment }}-${{ parameters.component }} | tfcmt -- terraform plan"
   # - task: Bash@3
   #   displayName: Publish Plan to GitHub - ${{ parameters.component }}
   #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
