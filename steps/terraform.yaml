@@ -52,12 +52,11 @@ steps:
 
   - task: Bash@3
     displayName: Install tfcmt
-    script: |
-      sudo curl -fL -o tfcmt.tar.gz https://github.com/suzuki-shunsuke/tfcmt/releases/download/$TERRAFORM_VERSION/tfcmt_linux_amd64.tar.gz
-      sudo tar -C /usr/bin -xzf ./tfcmt.tar.gz
     inputs:
-      # filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/install-tfcmt.sh
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+        script: |
+          curl -fL -o tfcmt.tar.gz https://github.com/suzuki-shunsuke/tfcmt/releases/download/$TERRAFORM_VERSION/tfcmt_linux_amd64.tar.gz
+          tar -C /usr/bin -xzf ./tfcmt.tar.gz
+        workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     env:
       TERRAFORM_VERSION: "v3.2.1"
 
