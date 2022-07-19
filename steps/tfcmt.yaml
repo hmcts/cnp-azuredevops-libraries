@@ -1,0 +1,2 @@
+templates:
+  plan_title: "## {{if eq .ExitCode 1}}:x: {{end}}Plan Result - ${{ parameters.environment }}-${{ parameters.component }} {{if .Vars.target}} ({{.Vars.target}}){{end}}"
