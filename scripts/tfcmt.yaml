@@ -1,8 +1,7 @@
 ci:
-  owner: "hirosassa"
-  repo: "tfcmt-gitlab"
+  owner: "hmcts"
+  repo: "sds-jenkins-infrastructure"
 terraform:
-  use_raw_output: true
   plan:
     template: |
       ## {{if eq .ExitCode 1}}:x: {{end}}Plan Result - ${{ parameters.environment }}-${{ parameters.component }} {{if .Vars.target}} ({{.Vars.target}}){{end}}
