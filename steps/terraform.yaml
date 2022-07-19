@@ -129,7 +129,7 @@ steps:
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     inputs:
       targetType: 'inline'
-      script: "tfcmt plan -- terraform show tfplan-${{ parameters.environment }}-${{ parameters.component"
+      script: "tfcmt plan -- terraform show tfplan-${{ parameters.environment }}-${{ parameters.component }}"
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
   - task: TerraformCLI@0
