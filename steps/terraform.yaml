@@ -131,7 +131,7 @@ steps:
       GITHUB_TOKEN: $(github-api-token)
     inputs:
       targetType: 'inline'
-      script: "tfcmt -owner hmcts -repo sds-jenkins-infrastructure -pr 39 -config tfcmt.yaml plan -- terraform show tfplan-${{ parameters.environment }}-${{ parameters.component }}"
+      script: "tfcmt -owner hmcts -repo sds-jenkins-infrastructure -pr 39 -config $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/scripts/tfcmt.yaml plan -- terraform show tfplan-${{ parameters.environment }}-${{ parameters.component }}"
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
   - task: TerraformCLI@0
