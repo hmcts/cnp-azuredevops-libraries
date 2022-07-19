@@ -50,17 +50,12 @@ steps:
       serviceConnection: ${{ parameters.serviceConnection }}
       environment: ${{ parameters.environment }}
 
-  - task: Bash@3
-    displayName: Install tfcmt
-    inputs:
-      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/install-tfcmt.sh
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-    
-  # - task: Bash@3
-  #   displayName: Install github-comment
-  #   inputs:
-  #     filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/install-github-comment.sh
-  #     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+  - ${{ if ne(variables['System.PullRequest.PullRequestId'], '0') }}:
+    - task: Bash@3
+      displayName: Install tfcmt
+      inputs:
+        filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/install-tfcmt.sh
+        workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureKeyVault@1
     displayName: 'Get GitHub API token from Keyvault'
@@ -114,25 +109,16 @@ steps:
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
 
-  # - task: Bash@3
-  #   displayName: Hide Github Comments - ${{ parameters.component }}
-  #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
-  #   env:
-  #     GITHUB_TOKEN: $(github-api-token)
-  #   inputs:
-  #     targetType: 'inline'
-  #     script: github-comment hide -condition 'Comment.Body contains "hello"'
-  #     workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-
-  - task: Bash@3
-    displayName: Publish Plan to GitHub - ${{ parameters.component }}
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
-    env:
-      GITHUB_TOKEN: $(github-api-token)
-    inputs:
-      targetType: 'inline'
-      script: "tfcmt -owner hmcts -repo $(Build.Repository.Name) -pr $(System.PullRequest.PullRequestId) -var target:${{ parameters.environment }}-${{ parameters.component }} plan -patch -- terraform show tfplan-${{ parameters.environment }}-${{ parameters.component }}"
-      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+  - ${{ if ne(variables['System.PullRequest.PullRequestId'], '0') }}:
+    - task: Bash@3
+      displayName: Publish Plan to GitHub - ${{ parameters.component }}
+      condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+      env:
+        GITHUB_TOKEN: $(github-api-token)
+      inputs:
+        targetType: 'inline'
+        script: "tfcmt -owner hmcts -repo $(Build.Repository.Name) -pr $(System.PullRequest.PullRequestId) -var target:${{ parameters.environment }}-${{ parameters.component }} plan -patch -- terraform show tfplan-${{ parameters.environment }}-${{ parameters.component }}"
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
   - task: TerraformCLI@0
     displayName: Terraform apply ${{ parameters.component }}
