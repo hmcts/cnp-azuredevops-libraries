@@ -19,39 +19,39 @@ steps:
   - checkout: cnp-azuredevops-libraries
   - template: ./set-build-repo-suffix-env-var.yaml
 
-  # - task: Bash@3
-  #   displayName: Terraform install (tfenv)
-  #   inputs:
-  #     filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
-  #     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+  - task: Bash@3
+    displayName: Terraform install (tfenv)
+    inputs:
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  # - task: AzureKeyVault@1
-  #   displayName: Retrieve keyvault secret for ADO token
-  #   inputs:
-  #     ConnectedServiceName: ${{ parameters.serviceConnection }}
-  #     keyVaultName: ${{ parameters.keyvaultName }}
-  #     secretsFilter: ${{ parameters.keyvaultSecret }}
-  #     runAsPreJob: false
+  - task: AzureKeyVault@1
+    displayName: Retrieve keyvault secret for ADO token
+    inputs:
+      ConnectedServiceName: ${{ parameters.serviceConnection }}
+      keyVaultName: ${{ parameters.keyvaultName }}
+      secretsFilter: ${{ parameters.keyvaultSecret }}
+      runAsPreJob: false
 
-  # - task: PowerShell@2
-  #   displayName: Run tests
-  #   inputs:
-  #     targetType: 'filePath'
-  #     filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/pester-tests.ps1
-  #     pwsh: true
+  - task: PowerShell@2
+    displayName: Run tests
+    inputs:
+      targetType: 'filePath'
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/pester-tests.ps1
+      pwsh: true
 
-  # - task: PublishTestResults@2
-  #   displayName: 'Publish Test Results **/TEST-*.xml'
-  #   inputs:
-  #     testResultsFormat: NUnit
-  #     failTaskOnFailedTests: true
-  #   condition: always()
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results **/TEST-*.xml'
+    inputs:
+      testResultsFormat: NUnit
+      failTaskOnFailedTests: true
+    condition: always()
 
-  # - task: Bash@3
-  #   displayName: Prevent parallel run
-  #   env:
-  #     thisbuild: $(Build.BuildId)
-  #     pipelinedefinition: $(System.DefinitionId)
-  #     azuredevopstoken: $(azure-devops-token)
-  #   inputs:
-  #     filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/builds-check.sh
+  - task: Bash@3
+    displayName: Prevent parallel run
+    env:
+      thisbuild: $(Build.BuildId)
+      pipelinedefinition: $(System.DefinitionId)
+      azuredevopstoken: $(azure-devops-token)
+    inputs:
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/builds-check.sh
