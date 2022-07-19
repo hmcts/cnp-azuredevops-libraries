@@ -127,6 +127,8 @@ steps:
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+    env:
+      GITHUB_TOKEN: $(github-api-token)
     inputs:
       targetType: 'inline'
       script: "tfcmt -owner hmcts -repo sds-jenkins-infrastructure -pr 39 plan -- terraform show tfplan-${{ parameters.environment }}-${{ parameters.component }}"
