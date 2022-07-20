@@ -128,7 +128,10 @@ steps:
       GITHUB_TOKEN: $(github-api-token)
     inputs:
       targetType: 'inline'
-      script: "tfcmt -owner hmcts -repo $(buildRepo) -pr $(System.PullRequest.PullRequestNumber) -var target:${{ parameters.environment }}-${{ parameters.component }} plan -patch -- terraform show tfplan-${{ parameters.environment }}-${{ parameters.component }}"
+      script:
+        buildRepo=$( echo $(Build.Repository.Name) | sed 's/hmcts\///' )
+        echo $buildRepo
+        tfcmt -owner hmcts -repo $(buildRepo) -pr $(System.PullRequest.PullRequestNumber) -var target:${{ parameters.environment }}-${{ parameters.component }} plan -patch -- terraform show tfplan-${{ parameters.environment }}-${{ parameters.component }}
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
   - task: TerraformCLI@0
