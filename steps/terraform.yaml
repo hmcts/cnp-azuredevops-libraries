@@ -71,6 +71,18 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
+  - task: Bash@3
+    displayName: Get repo name
+    env:
+      GITHUB_TOKEN: $(github-api-token)
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo $Build.Repository.Name
+        buildRepo=$( echo $Build.Repository.Name | sed 's/hmcts\///' )
+        echo $buildRepo
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+
   - task: TerraformCLI@0
     displayName: Terraform init ${{ parameters.component }}
     inputs:
@@ -108,20 +120,6 @@ steps:
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
       publishPlanResults: '${{ parameters.environment }}-${{ parameters.component }}'
-
-
-  - task: Bash@3
-    displayName: Get repo name
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
-    env:
-      GITHUB_TOKEN: $(github-api-token)
-    inputs:
-      targetType: 'inline'
-      script: |
-        echo $Build.Repository.Name
-        buildRepo=$( echo $Build.Repository.Name | sed 's/hmcts\///' )
-        echo $buildRepo
-      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
