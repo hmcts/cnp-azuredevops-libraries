@@ -111,12 +111,12 @@ steps:
 
 
   - task: Bash@3
-    displayName: Publish Plan to GitHub - ${{ parameters.component }}
+    displayName: Get repo name
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
     inputs:
       targetType: 'inline'
       script: |
-        buildRepo=$(echo "$Build.Repository.Name" | cut -d '/' -f 2)
+        buildRepo=$(echo $Build.Repository.Name | cut -d '/' -f 2)
         echo $buildRepo
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
