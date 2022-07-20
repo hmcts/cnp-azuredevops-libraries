@@ -78,8 +78,8 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        echo $Build.Repository.Name
-        buildRepo=$( echo $Build.Repository.Name | sed 's/hmcts\///' )
+        echo $(Build.Repository.Name)
+        buildRepo=$( echo $(Build.Repository.Name) | sed 's/hmcts\///' )
         echo $buildRepo
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
