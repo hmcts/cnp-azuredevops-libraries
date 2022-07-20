@@ -114,6 +114,7 @@ steps:
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
     env:
       GITHUB_TOKEN: $(github-api-token)
+      buildRepo: $(echo "$Build.Repository.Name" | cut -d '/' -f 2)
     inputs:
       targetType: 'inline'
       script: "tfcmt -owner hmcts -repo $(buildRepo) -pr $(System.PullRequest.PullRequestNumber) -var target:${{ parameters.environment }}-${{ parameters.component }} plan -patch -- terraform show tfplan-${{ parameters.environment }}-${{ parameters.component }}"
