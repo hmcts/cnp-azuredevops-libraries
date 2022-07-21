@@ -9,4 +9,8 @@ terraform:
   plan:
     template: |
       ## Plan Result
-      <details><summary>See ADO for Plan.</summary></details>
+      {{if .Result}}
+      <pre><code>{{ .Result }}
+      </pre></code>
+      {{end}}
+      <summary>See ADO for Plan.</summary>
