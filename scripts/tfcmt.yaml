@@ -1,18 +1,27 @@
 ci:
-  owner:
-  - type: envsubst
-    value: hmcts
-  repo:
-  - type: envsubst
-    value: sds-jenkins-infrastructure
+  owner: "hmcts"
+  repo: "sds-jenkins-infrastructure"
 terraform:
   plan:
     template: |
-      ## Plan Result
+      {{if .HasDestroy}}
+      ## :warning: WARNING: Resource Deletion will happen :warning:
+      This plan contains **resource deletion**. Please check the plan result very carefully!
+      {{else}}
+      ## Plan Result ({{.Vars.target}})"
       {{if .Result}}
       <pre><code>{{ .Result }}
       </pre></code>
       {{end}}
-      <summary><a href="https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan">See plan in Azure DevOps</a></summary>
-      <pre><code>{{ .CombinedOutput }}
-      </pre></code>
+      <details><summary>Details (Click me)</summary>
+      <pre><code>
+      </pre></code></details>
+      {{end}}
+    when_add_or_update_only:
+      label: "add-or-update"
+    when_destroy:
+      label: "destroy"
+    when_no_changes:
+      label: "no-changes"
+    when_plan_error:
+      label: "error"
