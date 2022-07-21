@@ -1,0 +1,12 @@
+ci:
+  owner:
+  - type: envsubst
+    value: hmcts
+  repo:
+  - type: envsubst
+    value: sds-jenkins-infrastructure
+terraform:
+  plan:
+    template: |
+      ## Plan Result
+      <details><summary>See ADO for Plan.</summary></details>
