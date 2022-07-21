@@ -1,6 +1,10 @@
 ci:
-  owner: "hmcts"
-  repo: "sds-jenkins-infrastructure"
+  owner:
+  - type: envsubst
+    value: hmcts
+  repo:
+  - type: envsubst
+    value: sds-jenkins-infrastructure
 terraform:
   plan:
     template: |
