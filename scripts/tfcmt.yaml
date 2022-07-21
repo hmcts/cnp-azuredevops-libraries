@@ -8,7 +8,7 @@ terraform:
       ## :warning: WARNING: Resource Deletion will happen :warning:
       This plan contains **resource deletion**. Please check the plan result very carefully!
       {{else}}
-      ## Plan Result ({{.Vars.target}})"
+      ## Plan Result {{.Vars.target}}
       {{if .Result}}
       <pre><code>{{ .Result }}
       </pre></code>
