@@ -13,4 +13,4 @@ terraform:
       <pre><code>{{ .Result }}
       </pre></code>
       {{end}}
-      <summary>[See plan in Azure DevOps](https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan)</summary>
+      <summary><a href="https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan">See plan in Azure DevOps</a></summary>
