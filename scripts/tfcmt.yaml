@@ -17,9 +17,7 @@ terraform:
       <pre><code>{{ .Result }}
       </pre></code>
       {{end}}
-      <details><summary>Details (Click me)</summary>
-      <pre><code>
-      </pre></code></details>
+      <summary><a href="https://dev.azure.com//hmcts/CNP/_build/results?buildId={0}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan">See plan in Azure DevOps</a></summary>
       {{end}}
     when_add_or_update_only:
       label: "add-or-update"
