@@ -126,7 +126,8 @@ steps:
           --var build_id:247625 \
           --var sensitive:true \
           --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
-          plan -patch -- terraform show tfplan-${{ parameters.environment }}-${{ parameters.component }}"
+          plan -patch -- \
+          terraform show tfplan-${{ parameters.environment }}-${{ parameters.component }}
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
   - task: TerraformCLI@0
