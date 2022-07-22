@@ -1,10 +1,21 @@
-ci:
-  vars:
-    - ChangedResult: |
-{{if and .ChangedResult (eq .Sensitive false) }}
-<details><summary>Change Result (Click me)</summary>
-{{ wrapCode .ChangedResult }}
-</details>
-{{ else }}
-<a href="https://dev.azure.com/$ORGANISATION/$PROJECT/_build/results?buildId=$BUILD_ID&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan">See plan in Azure DevOps</a>
-{{end}}
+terraform:
+  plan:
+    disable_label: false
+    template: |
+      {{template "plan_title" .}}
+
+      {{if .Link}}[CI link]({{.Link}}){{end}}
+
+      {{template "deletion_warning" .}}
+      {{template "result" .}}
+      {{template "updated_resources" .}}
+
+
+      {{ if eq .Vars.sensitive "false" }}
+      {{template "changed_result" .}}
+      {{ else}}
+      [See plan in Azure DevOps](https://dev.azure.com/{{ .Vars.ado_org }}/{{ .Vars.ado_project }}/_build/results?buildId={{ .Vars.build_id }}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan)
+      {{ end }}
+      {{template "change_outside_terraform" .}}
+      {{template "warning" .}}
+      {{template "error_messages" .}}
