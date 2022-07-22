@@ -1,22 +1,10 @@
 ci:
-  owner:
-  - type: envsubst
-    value: hmcts
-  repo:
-  - type: envsubst
-    value: sds-jenkins-infrastructure
-terraform:
-  plan:
-    template: |
-      {{if .HasDestroy}}
-      ## :warning: WARNING: Resource Deletion will happen :warning:
-      This plan contains **resource deletion**. Please check the plan result very carefully!
-      <a href="https://dev.azure.com//hmcts/CNP/_build/results?buildId=$(Build.BuildId)&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan">See plan in Azure DevOps</a>
-      {{else}}
-      ## Plan Result {{.Vars.target}}
-      {{if .Result}}
-      <pre><code>{{ .Result }}
-      </pre></code>
-      {{end}}
-      <a href="https://dev.azure.com//hmcts/CNP/_build/results?buildId=$(Build.BuildId)&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan">See plan in Azure DevOps</a>
-      {{end}}
+  vars:
+    - ChangedResult: |
+{{if and .ChangedResult (eq .Sensitive false) }}
+<details><summary>Change Result (Click me)</summary>
+{{ wrapCode .ChangedResult }}
+</details>
+{{ else }}
+<a href="https://dev.azure.com/$ORGANISATION/$PROJECT/_build/results?buildId=$BUILD_ID&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan">See plan in Azure DevOps</a>
+{{end}}
