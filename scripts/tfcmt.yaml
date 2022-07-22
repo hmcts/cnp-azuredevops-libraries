@@ -5,8 +5,6 @@ ci:
   repo:
   - type: envsubst
     value: sds-jenkins-infrastructure
-  - type: envsubst
-    value: azure-platform-terraform
 terraform:
   plan:
     template: |
@@ -22,4 +20,3 @@ terraform:
       {{end}}
       <a href="https://dev.azure.com//hmcts/CNP/_build/results?buildId=$(Build.BuildId)&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan">See plan in Azure DevOps</a>
       {{end}}
-      @appInfo.BuildNumber
