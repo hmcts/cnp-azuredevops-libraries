@@ -11,7 +11,7 @@ terraform:
       {{template "updated_resources" .}}
 
 
-      {{ if eq .Vars.sensitive "False" }}
+      {{ if or (eq .Vars.sensitive "False") (eq .Vars.sensitive "false" }}
       {{template "changed_result" .}}
       {{ else}}
       [See plan in Azure DevOps]({{ .Vars.ado_url }}/{{ .Vars.ado_project }}/_build/results?buildId={{ .Vars.build_id }}&view=charleszipp.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-plan)
