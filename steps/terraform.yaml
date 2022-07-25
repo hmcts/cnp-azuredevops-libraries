@@ -39,6 +39,9 @@ parameters:
   - name: terraformInitSubscription
     default: ''
 
+  - name: sensitive
+    default: false
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -117,14 +120,16 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
+        env
+        
         tfcmt --owner hmcts \
           --repo $(buildRepoSuffix) \
           --pr $(System.PullRequest.PullRequestNumber) \
           --var target:${{ parameters.environment }}-${{ parameters.component }} \
           --var ado_org:hmcts \
-          --var ado_project:PlatformOperations \
-          --var build_id:247625 \
-          --var sensitive:true \
+          --var ado_project:$SYSTEM_TEAMPROJECT \
+          --var build_id:$(Build.BuildId) \
+          --var sensitive:${{ parameters.sensitive }} \
           --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
           plan -patch -- \
           terraform show tfplan-${{ parameters.environment }}-${{ parameters.component }}
