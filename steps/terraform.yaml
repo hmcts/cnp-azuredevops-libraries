@@ -121,6 +121,8 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
+        echo ${{ parameters.sensitive }}
+        
         tfcmt --owner hmcts \
           --repo $(buildRepoSuffix) \
           --pr $(System.PullRequest.PullRequestNumber) \
