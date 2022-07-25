@@ -3,8 +3,8 @@ parameters:
   default: ''
 - name: domain_prefix
   default: ''
-- name: playbook_file
-  default: 'pipeline-tests.yaml'
+- name: test_file
+  default: ''
 - name: workingDirectory
   default: ''
 - name: junit_output_dir
@@ -18,16 +18,16 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      mkdir junit
-      echo "localhost ansible_connection=local" > /tmp/hosts
-      ansible-playbook ${{ parameters.playbook_file }} -i /tmp/hosts
+      git submodule add https://github.com/bats-core/bats-core.git test/bats
+      git submodule add https://github.com/bats-core/bats-support.git test/test_helper/bats-support
+      git submodule add https://github.com/bats-core/bats-assert.git test/test_helper/bats-assert
+      mkdir -p ${{ parameters.junit_output_dir }}
+      test/bats/bin/bats --report-formatter junit ${{ parameters.test_file }} --output ${{ parameters.junit_output_dir }}
     workingDirectory: '${{ parameters.workingDirectory }}'
-    failOnStderr: true
+    failOnStderr: false
   env:
-    ANSIBLE_LOCALHOST_WARNING: false
-    ANSIBLE_CALLBACKS_ENABLED: junit
-    JUNIT_FAIL_ON_IGNORE: true
-    JUNIT_OUTPUT_DIR: '${{ parameters.junit_output_dir }}'
+    BATS_REPORT_FILENAME: yeet
+    BATS_REPORT_FILE_NAME: report_$(system.jobId).xml
     ${{ if eq(parameters.environment, 'prod') }}:
       GLOBAL_DOMAIN_NAME: '${{ parameters.root_domain }}'
     ${{ else }}:
@@ -39,5 +39,5 @@ steps:
   inputs:
     testResultsFormat: 'JUnit'
     failTaskOnFailedTests: true
-    testResultsFiles: '${{ parameters.junit_output_dir }}/pipeline-tests-*.*.xml'
-    testRunTitle: 'Platform Pipeline Tests (${{ parameters.environment }})'
+    testResultsFiles: '${{ parameters.junit_output_dir }}/*.xml'
+    testRunTitle: 'Tests (${{ parameters.environment }})'
