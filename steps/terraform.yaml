@@ -122,6 +122,8 @@ steps:
       script: |
         echo ${{ parameters.sensitive }}
         
+        env | grep hmcts
+        
         
         tfcmt --owner hmcts \
           --repo $(buildRepoSuffix) \
