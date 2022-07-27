@@ -1,0 +1,41 @@
+parameters:
+- name: environment
+  default: ''
+- name: domain_prefix
+  default: ''
+- name: test_file
+  default: ''
+- name: workingDirectory
+  default: ''
+- name: junit_output_dir
+  default: ''
+- name: root_domain
+  default: platform.hmcts.net
+
+steps:
+- task: Bash@3
+  displayName: Run pipeline tests
+  inputs:
+    targetType: 'inline'
+    script: |
+      mkdir -p ${{ parameters.junit_output_dir }}
+      yarn
+      yarn test-junit
+    workingDirectory: '${{ parameters.workingDirectory }}'
+    failOnStderr: false
+  env:
+    JEST_JUNIT_OUTPUT_DIR: ${{ parameters.junit_output_dir }}
+    JEST_JUNIT_OUTPUT_NAME: report_$(system.jobId).xml
+    ${{ if eq(parameters.environment, 'prod') }}:
+      GLOBAL_DOMAIN_NAME: '${{ parameters.root_domain }}'
+    ${{ else }}:
+      GLOBAL_DOMAIN_NAME: '${{ parameters.domain_prefix }}.${{ parameters.root_domain }}'
+
+- task: PublishTestResults@2
+  displayName: Publish pipeline tests
+  condition: always()
+  inputs:
+    testResultsFormat: 'JUnit'
+    failTaskOnFailedTests: true
+    testResultsFiles: '${{ parameters.junit_output_dir }}/*.xml'
+    testRunTitle: 'Tests (${{ parameters.environment }})'
