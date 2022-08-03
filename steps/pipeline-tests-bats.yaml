@@ -13,20 +13,20 @@ parameters:
   default: platform.hmcts.net
 
 steps:
+- checkout: self
+  submodules: true
+  
 - task: Bash@3
   displayName: Run pipeline tests
   inputs:
     targetType: 'inline'
     script: |
-      git submodule add https://github.com/bats-core/bats-core.git test/bats
-      git submodule add https://github.com/bats-core/bats-support.git test/test_helper/bats-support
-      git submodule add https://github.com/bats-core/bats-assert.git test/test_helper/bats-assert
       mkdir -p ${{ parameters.junit_output_dir }}
       test/bats/bin/bats --report-formatter junit ${{ parameters.test_file }} --output ${{ parameters.junit_output_dir }}
     workingDirectory: '${{ parameters.workingDirectory }}'
     failOnStderr: false
   env:
-    BATS_REPORT_FILENAME: yeet
+    BATS_REPORT_FILENAME: not_required
     BATS_REPORT_FILE_NAME: report_$(system.jobId).xml
     ${{ if eq(parameters.environment, 'prod') }}:
       GLOBAL_DOMAIN_NAME: '${{ parameters.root_domain }}'
