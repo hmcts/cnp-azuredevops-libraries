@@ -1,0 +1,38 @@
+name: terraform_fmt
+
+on:
+  workflow_call:
+    inputs:
+      terraform_file_patterns:
+        required: true
+        type: string
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          repository: hmcts/cnp-azuredevops-libraries
+          path: cnp-azuredevops-libraries
+
+      - name: Setup Script
+        run: |
+          chmod +x cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
+      - name: Setup Terraform
+        run: ./cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
+        working-directory: ./
+        shell: bash
+
+      - uses: pre-commit/action@v3.0.0
+        with: 
+          extra_args: terraform_fmt --all-files
+        continue-on-error: true
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          file_pattern: ${{ inputs.terraform_file_patterns }}
