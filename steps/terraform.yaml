@@ -42,6 +42,9 @@ parameters:
   - name: sensitive
     default: false
 
+  - name: kvConnectedServiceName
+    default: 'azurerm-sandbox'
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -65,7 +68,7 @@ steps:
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
       runAsPreJob: false
-      ConnectedServiceName: 'azurerm-sandbox'
+      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'github-api-token'
 
