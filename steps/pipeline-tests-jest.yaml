@@ -9,6 +9,8 @@ parameters:
   default: ''
 - name: junit_output_dir
   default: ''
+- name: test_title
+  default: ''
 - name: root_domain
   default: platform.hmcts.net
 
@@ -38,4 +40,4 @@ steps:
     testResultsFormat: 'JUnit'
     failTaskOnFailedTests: true
     testResultsFiles: '${{ parameters.junit_output_dir }}/*.xml'
-    testRunTitle: 'Tests (${{ parameters.environment }})'
+    testRunTitle: 'Tests (${{ parameters.test_title }})'
