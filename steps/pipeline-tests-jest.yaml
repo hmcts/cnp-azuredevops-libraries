@@ -24,7 +24,7 @@ steps:
     script: |
       mkdir -p ${{ parameters.junit_output_dir }}
       yarn
-      yarn test-junit
+      yarn test
     workingDirectory: '${{ parameters.workingDirectory }}'
     failOnStderr: false
   env:
