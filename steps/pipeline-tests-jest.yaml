@@ -13,6 +13,8 @@ parameters:
   default: ''
 - name: root_domain
   default: platform.hmcts.net
+- name: test_url
+  default: ''
 
 steps:
 - task: Bash@3
@@ -28,10 +30,7 @@ steps:
   env:
     JEST_JUNIT_OUTPUT_DIR: ${{ parameters.junit_output_dir }}
     JEST_JUNIT_OUTPUT_NAME: report_$(system.jobId).xml
-    ${{ if eq(parameters.environment, 'prod') }}:
-      GLOBAL_DOMAIN_NAME: '${{ parameters.root_domain }}'
-    ${{ else }}:
-      GLOBAL_DOMAIN_NAME: '${{ parameters.domain_prefix }}.${{ parameters.root_domain }}'
+    TEST_URL: ${{ parameters.test_url }}
 
 - task: PublishTestResults@2
   displayName: Publish pipeline tests
