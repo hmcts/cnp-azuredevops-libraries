@@ -11,9 +11,9 @@ parameters:
   default: ''
 - name: test_title
   default: ''
-- name: root_domain
+- name: dns_zone
   default: platform.hmcts.net
-- name: test_url
+- name: app_name
   default: ''
 
 steps:
@@ -30,7 +30,7 @@ steps:
   env:
     JEST_JUNIT_OUTPUT_DIR: ${{ parameters.junit_output_dir }}
     JEST_JUNIT_OUTPUT_NAME: report_$(system.jobId).xml
-    TEST_URL: ${{ parameters.test_url }}
+    TEST_URL: '${{ parameters.app_name }}.${{ parameters.dns_zone }}'
 
 - task: PublishTestResults@2
   displayName: Publish pipeline tests
