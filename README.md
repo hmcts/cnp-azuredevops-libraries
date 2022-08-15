@@ -24,7 +24,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
        type: github
        ref: refs/heads/master
        name: hmcts/cnp-azuredevops-libraries
-       endpoint: 'hmcts'  
+       endpoint: 'hmcts (1)'  
     
    ```
 3. Use the vars/input-variables.yaml template to add the common variables to your pipeline.
