@@ -37,17 +37,3 @@ steps:
       lowerCaseEnv=$(echo "${{ parameters.environment }}" | tr "[:upper:]" "[:lower:]")
       echo "##vso[task.setvariable variable=env]$lowerCaseEnv"
       echo Lower case env: $lowerCaseEnv
-
-
-- task: AzureKeyVault@1
-  displayName: 'Get Secrets from KeyVault'
-  inputs:
-    azureSubscription: ${{ parameters.serviceConnection }}
-    keyVaultName: $(controlKeyVault)
-    secretsFilter: 'sp-application-id,sp-token'
-
-- script: |
-    echo '##vso[task.setvariable variable=ARM_CLIENT_ID]$(sp-application-id)'
-    echo '##vso[task.setvariable variable=ARM_CLIENT_SECRET]$(sp-token)'
-  displayName: 'Export Keyvault Variables'
-  name: SetSubscriptionSP
