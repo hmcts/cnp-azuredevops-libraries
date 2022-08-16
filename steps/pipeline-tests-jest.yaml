@@ -17,7 +17,7 @@ steps:
   displayName: Run pipeline tests
   inputs:
     targetType: 'filePath'
-    filePath: scripts/get-dns-zone-names.sh
+    filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/get-dns-zone-names.sh
 
 - task: Bash@3
   displayName: Run pipeline tests
