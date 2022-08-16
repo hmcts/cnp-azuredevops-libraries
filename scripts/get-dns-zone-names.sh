@@ -19,6 +19,8 @@ fi
 if [ $PRODUCT = 'sds-platform' ]; then
     if [ $ENVIRONMENT = 'stg' ]; then
         DNS_ENVIRONMENT=staging
+    elif [ $ENVIRONMENT = 'test' ]; then
+        DNS_ENVIRONMENT=test
     fi
     APP_NAME=toffee
 fi
