@@ -40,7 +40,7 @@ steps:
     JEST_JUNIT_OUTPUT_DIR: ${{ parameters.junit_output_dir }}
     JEST_JUNIT_OUTPUT_NAME: report_$(system.jobId).xml
     APP_NAME: $(APP_NAME)
-    TEST_URL: '$(APP_NAME).$(ENVIRONMENT).${{ parameters.dns_zone }}'
+    TEST_URL: '$(APP_NAME).$(DNS_ENVIRONMENT).${{ parameters.dns_zone }}'
 
 - task: PublishTestResults@2
   displayName: Publish pipeline tests
