@@ -11,16 +11,20 @@ parameters:
   default: ''
 - name: dns_zone
   default: platform.hmcts.net
+- name: product
+  default: ''
 
 steps:
 - checkout: self
 - checkout: cnp-azuredevops-libraries
 
 - task: Bash@3
-  displayName: Run pipeline tests
+  displayName: Get dns zone names
   inputs:
-    targetType: 'filePath'
     filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/get-dns-zone-names.sh
+    env:
+      ENVIRONMENT: ${{ parameters.environment }}
+      PRODUCT: ${{ parameters.product }}
 
 - task: Bash@3
   displayName: Run pipeline tests
