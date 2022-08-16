@@ -15,6 +15,7 @@ parameters:
   default: ''
 
 steps:
+- checkout: self
 - checkout: cnp-azuredevops-libraries
 
 - task: Bash@3
