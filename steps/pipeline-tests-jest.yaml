@@ -22,9 +22,9 @@ steps:
   displayName: Get dns zone names
   inputs:
     filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/get-dns-zone-names.sh
-    env:
-      ENVIRONMENT: ${{ parameters.environment }}
-      PRODUCT: ${{ parameters.product }}
+  env:
+    ENVIRONMENT: ${{ parameters.environment }}
+    PRODUCT: ${{ parameters.product }}
 
 - task: Bash@3
   displayName: Run pipeline tests
