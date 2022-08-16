@@ -3,6 +3,8 @@ set -e
 
 if [ $ENVIRONMENT = 'sbox' ]; then
     DNS_ENVIRONMENT=sandbox
+elif [ $ENVIRONMENT = 'ithc' ]; then
+    DNS_ENVIRONMENT=ithc
 fi
 
 if [ $PRODUCT = 'cft-platform' ]; then
