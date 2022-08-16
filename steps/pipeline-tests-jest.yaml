@@ -1,8 +1,6 @@
 parameters:
 - name: environment
   default: ''
-- name: test_file
-  default: ''
 - name: workingDirectory
   default: ''
 - name: junit_output_dir
