@@ -1,8 +1,6 @@
 parameters:
 - name: environment
   default: ''
-- name: domain_prefix
-  default: ''
 - name: test_file
   default: ''
 - name: workingDirectory
@@ -13,10 +11,14 @@ parameters:
   default: ''
 - name: dns_zone
   default: platform.hmcts.net
-- name: app_name
-  default: ''
 
 steps:
+- task: Bash@3
+  displayName: Run pipeline tests
+  inputs:
+    targetType: 'filePath'
+    filePath: ../scripts/get-dns-zone-names.sh
+
 - task: Bash@3
   displayName: Run pipeline tests
   inputs:
@@ -30,8 +32,8 @@ steps:
   env:
     JEST_JUNIT_OUTPUT_DIR: ${{ parameters.junit_output_dir }}
     JEST_JUNIT_OUTPUT_NAME: report_$(system.jobId).xml
-    APP_NAME: ${{ parameters.app_name }}
-    TEST_URL: '${{ parameters.app_name }}.${{ parameters.dns_zone }}'
+    APP_NAME: $(APP_NAME)
+    TEST_URL: '$(APP_NAME).$(ENVIRONMENT).${{ parameters.dns_zone }}'
 
 - task: PublishTestResults@2
   displayName: Publish pipeline tests
