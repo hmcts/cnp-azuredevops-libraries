@@ -21,5 +21,5 @@ if [ $PRODUCT = 'sds-platform' ]; then
     APP_NAME=toffee
 fi
 
-echo "##vso[task.setvariable variable=DNS_ENVIRONMENT;isOutput=true]true"
-echo "##vso[task.setvariable variable=APP_NAME;isOutput=true]true"
+echo "##vso[task.setvariable variable=DNS_ENVIRONMENT;isOutput=true]$DNS_ENVIRONMENT"
+echo "##vso[task.setvariable variable=APP_NAME;isOutput=true]$APP_NAME"
