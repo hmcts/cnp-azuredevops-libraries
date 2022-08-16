@@ -13,6 +13,8 @@ parameters:
   default: platform.hmcts.net
 
 steps:
+- checkout: self
+
 - task: Bash@3
   displayName: Run pipeline tests
   inputs:
