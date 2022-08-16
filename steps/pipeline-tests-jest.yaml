@@ -31,10 +31,6 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      echo "app name is $(APP_NAME)"
-      echo "dns environment is $(DNS_ENVIRONMENT)"
-      echo "environment is ${{ parameters.environment }}"
-      echo "product is ${{ parameters.product }}"
       mkdir -p ${{ parameters.junit_output_dir }}
       yarn
       yarn test-junit
