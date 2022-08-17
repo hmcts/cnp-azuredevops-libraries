@@ -33,14 +33,12 @@ else
           $matchResults = $result.Matches.Value
 
           foreach ($matchResult in $matchResults){
-            [array]$matchFound = @() 
+            [array]$testResults = @() 
             foreach($roleException in $roleExceptions) {
               $testResult = ($matchResult | Select-String -Pattern "role_definition_name.*=.\`"$roleException")
-              if (-not [string]::IsNullOrEmpty($testResult)) {
-                $matchFound += $true
-              }
+                $testResults += $testResult
             }
-            if ($matchFound -notcontains $true) {
+            if ([string]::IsNullOrEmpty($testResults)) {
               Write-Output "[ $matchResult ] is not a permitted Owner role"
               $badResultFound = $True
             }
