@@ -11,6 +11,8 @@ parameters:
   default: platform.hmcts.net
 - name: product
   default: ''
+- name: test_pattern
+  default: ''
 
 steps:
 - checkout: self
@@ -31,7 +33,7 @@ steps:
     script: |
       mkdir -p ${{ parameters.junit_output_dir }}
       yarn
-      yarn test
+      yarn test ${TEST_PATTERN}
     workingDirectory: '${{ parameters.workingDirectory }}'
     failOnStderr: false
   env:
@@ -39,6 +41,7 @@ steps:
     JEST_JUNIT_OUTPUT_NAME: report_$(system.jobId).xml
     APP_NAME: $(APP_NAME)
     TEST_URL: '$(APP_NAME).$(DNS_ENVIRONMENT).${{ parameters.dns_zone }}'
+    TEST_PATTERN: ${{ parameters.test_pattern }}
 
 - task: PublishTestResults@2
   displayName: Publish pipeline tests
