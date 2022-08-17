@@ -19,10 +19,31 @@ else
       }
     }
 
-    Context "Do not contain the 'Owner' role" {
-      It "<Instance> does not have owner role" -TestCases $TfTestCases {
+    Context "Do not contain a disallowed 'Owner' role" {
+      It "<Instance> does not have a disallowed 'Owner' role" -TestCases $TfTestCases {
           Param($Instance)
-           ((Get-Content -raw $Instance) | Select-String -Pattern "role_definition_name.*=.*Owner" ) | should BeNullOrEmpty
+
+          [array]$roleExceptions = (
+            "Azure Event Hubs Data Owner"
+          )
+          
+          [bool]$badResultFound = $False 
+          
+          $result = ((Get-Content -raw $Instance) | Select-String -Pattern "role_definition_name.*=.*Owner" -AllMatches) 
+          $matchResults = $result.Matches.Value
+
+          foreach ($matchResult in $matchResults){
+            [array]$testResults = @() 
+            foreach($roleException in $roleExceptions) {
+              $testResult = ($matchResult | Select-String -Pattern "role_definition_name.*=.\`"$roleException")
+                $testResults += $testResult
+            }
+            if ([string]::IsNullOrEmpty($testResults)) {
+              Write-Output "[ $matchResult ] is not a permitted Owner role"
+              $badResultFound = $True
+            }
+          }
+          $badResultFound | Should -BeFalse
       }
     }
 
