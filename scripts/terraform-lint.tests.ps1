@@ -24,8 +24,7 @@ else
           Param($Instance)
 
           [array]$roleExceptions = (
-            "Azure Event Hubs Data Owner",
-            "Test Role Owner"
+            "Azure Event Hubs Data Owner"
           )
           
           [bool]$badResultFound = $False 
