@@ -33,7 +33,7 @@ steps:
     script: |
       mkdir -p ${{ parameters.junit_output_dir }}
       yarn
-      yarn test
+      yarn test ${TEST_PATTERN}
     workingDirectory: '${{ parameters.workingDirectory }}'
     failOnStderr: false
   env:
