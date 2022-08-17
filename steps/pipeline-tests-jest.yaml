@@ -1,0 +1,50 @@
+parameters:
+- name: environment
+  default: ''
+- name: workingDirectory
+  default: ''
+- name: junit_output_dir
+  default: ''
+- name: test_title
+  default: ''
+- name: dns_zone
+  default: platform.hmcts.net
+- name: product
+  default: ''
+
+steps:
+- checkout: self
+- checkout: cnp-azuredevops-libraries
+
+- task: Bash@3
+  displayName: Get dns zone names
+  inputs:
+    filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/get-dns-zone-names.sh
+  env:
+    ENVIRONMENT: ${{ parameters.environment }}
+    PRODUCT: ${{ parameters.product }}
+
+- task: Bash@3
+  displayName: Run pipeline tests
+  inputs:
+    targetType: 'inline'
+    script: |
+      mkdir -p ${{ parameters.junit_output_dir }}
+      yarn
+      yarn test
+    workingDirectory: '${{ parameters.workingDirectory }}'
+    failOnStderr: false
+  env:
+    JEST_JUNIT_OUTPUT_DIR: ${{ parameters.junit_output_dir }}
+    JEST_JUNIT_OUTPUT_NAME: report_$(system.jobId).xml
+    APP_NAME: $(APP_NAME)
+    TEST_URL: '$(APP_NAME).$(DNS_ENVIRONMENT).${{ parameters.dns_zone }}'
+
+- task: PublishTestResults@2
+  displayName: Publish pipeline tests
+  condition: always()
+  inputs:
+    testResultsFormat: 'JUnit'
+    failTaskOnFailedTests: true
+    testResultsFiles: '${{ parameters.junit_output_dir }}/*.xml'
+    testRunTitle: 'Tests (${{ parameters.test_title }})'
