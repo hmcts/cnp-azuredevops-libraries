@@ -13,8 +13,6 @@ parameters:
   default: ''
 - name: test_pattern
   default: ''
-- name: component
-  default: ''
 
 steps:
 - checkout: self
