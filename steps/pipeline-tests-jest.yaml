@@ -13,6 +13,8 @@ parameters:
   default: ''
 - name: test_pattern
   default: ''
+- name: component
+  default: ''
 
 steps:
 - checkout: self
@@ -21,10 +23,11 @@ steps:
 - task: Bash@3
   displayName: Get dns zone names
   inputs:
-    filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/get-dns-zone-names.sh
+    filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/pipeline-test-variables.sh
   env:
     ENVIRONMENT: ${{ parameters.environment }}
     PRODUCT: ${{ parameters.product }}
+    COMPONENT: ${{ parameters.component }}
 
 - task: Bash@3
   displayName: Run pipeline tests
