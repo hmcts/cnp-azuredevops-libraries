@@ -25,7 +25,6 @@ steps:
   env:
     ENVIRONMENT: ${{ parameters.environment }}
     PRODUCT: ${{ parameters.product }}
-    COMPONENT: ${{ parameters.component }}
 
 - task: Bash@3
   displayName: Run pipeline tests
