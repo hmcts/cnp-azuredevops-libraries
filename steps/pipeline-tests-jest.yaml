@@ -8,7 +8,7 @@ parameters:
 - name: test_title
   default: ''
 - name: dns_zone
-  default: platform.hmcts.net
+  default: '.platform.hmcts.net'
 - name: product
   default: ''
 - name: test_pattern
@@ -19,12 +19,13 @@ steps:
 - checkout: cnp-azuredevops-libraries
 
 - task: Bash@3
-  displayName: Get dns zone names
+  displayName: Get variables for pipeline tests
   inputs:
-    filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/get-dns-zone-names.sh
+    filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/pipeline-test-variables.sh
   env:
     ENVIRONMENT: ${{ parameters.environment }}
     PRODUCT: ${{ parameters.product }}
+    COMPONENT: ${{ parameters.component }}
 
 - task: Bash@3
   displayName: Run pipeline tests
@@ -40,7 +41,7 @@ steps:
     JEST_JUNIT_OUTPUT_DIR: ${{ parameters.junit_output_dir }}
     JEST_JUNIT_OUTPUT_NAME: report_$(system.jobId).xml
     APP_NAME: $(APP_NAME)
-    TEST_URL: '$(APP_NAME).$(DNS_ENVIRONMENT).${{ parameters.dns_zone }}'
+    TEST_URL: '$(APP_NAME)$(DNS_ENVIRONMENT)${{ parameters.dns_zone }}'
     TEST_PATTERN: ${{ parameters.test_pattern }}
 
 - task: PublishTestResults@2
