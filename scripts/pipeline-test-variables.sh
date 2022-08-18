@@ -14,7 +14,7 @@ if [ $PRODUCT = 'cft-platform' ]; then
         DNS_ENVIRONMENT=perftest
     fi
     if [ $COMPONENT = 'apim' ]; then
-    APP_NAME=cft-api
+    APP_NAME=cft-api-mgmt
     else
     APP_NAME=plum
     fi
@@ -27,7 +27,7 @@ if [ $PRODUCT = 'sds-platform' ]; then
         DNS_ENVIRONMENT=test
     fi
     if [ $COMPONENT = 'apim' ]; then
-    APP_NAME=sds-api
+    APP_NAME=sds-api-mgmt
     else
     APP_NAME=toffee
     fi
