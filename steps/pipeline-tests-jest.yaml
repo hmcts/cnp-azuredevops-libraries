@@ -21,7 +21,7 @@ steps:
 - checkout: cnp-azuredevops-libraries
 
 - task: Bash@3
-  displayName: Get dns zone names
+  displayName: Get variables for pipeline tests
   inputs:
     filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/pipeline-test-variables.sh
   env:
