@@ -5,6 +5,8 @@ if [ $ENVIRONMENT = 'sbox' ]; then
     DNS_ENVIRONMENT=sandbox
 elif [ $ENVIRONMENT = 'ithc' ]; then
     DNS_ENVIRONMENT=ithc
+elif [ $ENVIRONMENT = 'demo' ]; then
+    DNS_ENVIRONMENT=demo
 fi
 
 if [ $PRODUCT = 'cft-platform' ]; then
