@@ -2,18 +2,18 @@
 set -e
 
 if [ $ENVIRONMENT = 'sbox' ]; then
-    DNS_ENVIRONMENT=sandbox
+    DNS_ENVIRONMENT='.sandbox'
 elif [ $ENVIRONMENT = 'ithc' ]; then
-    DNS_ENVIRONMENT=ithc
+    DNS_ENVIRONMENT='.ithc'
 elif [ $ENVIRONMENT = 'demo' ]; then
-    DNS_ENVIRONMENT=demo
+    DNS_ENVIRONMENT='.demo'
 fi
 
 if [ $PRODUCT = 'cft-platform' ]; then
     if [ $ENVIRONMENT = 'stg' ]; then
-        DNS_ENVIRONMENT=aat
+        DNS_ENVIRONMENT='.aat'
     elif [ $ENVIRONMENT = 'test' ]; then
-        DNS_ENVIRONMENT=perftest
+        DNS_ENVIRONMENT='.perftest'
     fi
     if [ $COMPONENT = 'apim' ]; then
     APP_NAME=cft-api-mgmt
@@ -24,9 +24,9 @@ fi
 
 if [ $PRODUCT = 'sds-platform' ]; then
     if [ $ENVIRONMENT = 'stg' ]; then
-        DNS_ENVIRONMENT=staging
+        DNS_ENVIRONMENT='.staging'
     elif [ $ENVIRONMENT = 'test' ]; then
-        DNS_ENVIRONMENT=test
+        DNS_ENVIRONMENT='.test'
     fi
     if [ $COMPONENT = 'apim' ]; then
     APP_NAME=sds-api-mgmt
