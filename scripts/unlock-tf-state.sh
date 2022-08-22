@@ -3,8 +3,7 @@ set -e
 
 storage_account_name=$1
 stateFilePath=$2
-subscription=${3:-HMCTS-CONTROL}
-container=${4:-subscription-tfstate}
+container=${3:-subscription-tfstate}
 
 if az account list | grep "HMCTS-CONTROL"
 then
