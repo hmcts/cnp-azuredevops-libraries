@@ -6,6 +6,13 @@ stateFilePath=$2
 subscription=${3:-HMCTS-CONTROL}
 container=${4:-subscription-tfstate}
 
+if az account list | grep "HMCTS-CONTROL"
+then
+  subscription="HMCTS-CONTROL"
+else
+  subscription="DCD-RBAC-CONTROL"
+fi
+
 az account set --subscription $subscription
 
 export AZURE_STORAGE_KEY=$(az storage account keys list  -n $storage_account_name --query [0].value -o tsv)
