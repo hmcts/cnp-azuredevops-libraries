@@ -55,3 +55,11 @@ steps:
       azuredevopstoken: $(azure-devops-token)
     inputs:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/builds-check.sh
+
+  - task: Bash@3
+    displayName: Export ado token
+    name: export_ado_token
+    env:
+      azuredevopstoken: $(azure-devops-token)
+    inputs:
+      script: echo "##vso[task.setvariable variable=AZDO_PERSONAL_ACCESS_TOKEN;isOutput=true]$(azure-devops-token)"
