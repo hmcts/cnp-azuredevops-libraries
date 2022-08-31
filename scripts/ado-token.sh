@@ -1,0 +1,1 @@
+echo "##vso[task.setvariable variable=AZDO_PERSONAL_ACCESS_TOKEN;isOutput=true]$azure-devops-token"
