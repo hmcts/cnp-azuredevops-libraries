@@ -114,7 +114,7 @@ steps:
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
-      publishPlanResults: '${{ parameters.environment }}-${{ lower(replace(parameters.location, " ", "")) }}-${{ parameters.component }}'
+      publishPlanResults: "${{ parameters.environment }}-${{ lower(replace(parameters.location, ' ', '')) }}-${{ parameters.component }}"
 
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
@@ -148,7 +148,7 @@ steps:
       command: apply
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
-      commandOptions: '--auto-approve tfplan-${{ parameters.environment }}-${{ lower(replace(parameters.location, " ", "")) }}-${{ parameters.component }} ${{ parameters.applyCommandOptions }}'
+      commandOptions: "--auto-approve tfplan-${{ parameters.environment }}-${{ lower(replace(parameters.location, ' ', '')) }}-${{ parameters.component }} ${{ parameters.applyCommandOptions }}"
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: TerraformCLI@0
