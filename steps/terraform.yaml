@@ -45,6 +45,16 @@ parameters:
   - name: kvConnectedServiceName
     default: 'azurerm-sandbox'
 
+  - name: varFileName
+    default: ''
+
+variables:
+  - name: varFileName
+    ${{ if eq(parameters['varFileName'], '') }}:
+      value: ${{ parameters.environment }}
+    ${{ if ne(parameters['varFileName'], '') }}:
+      value: ${{ parameters.varFileName }}
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -113,7 +123,7 @@ steps:
         -var env=${{ parameters.environment }}
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
-        -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
+        -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ variables.varFileName }}.tfvars
       publishPlanResults: "${{ parameters.environment }}-${{ lower(replace(parameters.location, ' ', '')) }}-${{ parameters.component }}"
 
   - task: Bash@3
@@ -162,7 +172,7 @@ steps:
             -var env=${{ parameters.environment }}
             -var builtFrom=$(Build.Repository.Name)
             -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-            -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
+            -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ variables.varFileName }}.tfvars
 
   - task: AzureCLI@2
     displayName: 'Unlock TF state if required'
