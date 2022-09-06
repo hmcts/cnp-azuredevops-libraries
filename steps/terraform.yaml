@@ -148,7 +148,7 @@ steps:
       command: apply
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
-      commandOptions: "--auto-approve tfplan-${{ parameters.environment }}-${{ lower(replace(parameters.location, ' ', '')) }}-${{ parameters.component }} ${{ parameters.applyCommandOptions }}"
+      commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-${{ parameters.environment }}-${{ lower(replace(parameters.location, ' ', '')) }}-${{ parameters.component }}"
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: TerraformCLI@0
