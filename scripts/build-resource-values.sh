@@ -13,8 +13,8 @@ TF_VARS_NAME="$ENVIRONMENT"
 formatted_location=$(echo "$LOCATION" | tr "[:upper:]" "[:lower:]" | tr -d "[:space:]")
 
 if [[ $MULTI_REGION == true ]]; then
-TF_PLAN_NAME="$ENVIRONMENT-$formatted_location-$COMPONENT"
-TF_VARS_NAME="$ENVIRONMENT-$formatted_location"
+  TF_PLAN_NAME="$ENVIRONMENT-$formatted_location-$COMPONENT"
+  TF_VARS_NAME="$ENVIRONMENT-$formatted_location"
 fi
 
 echo "##vso[task.setvariable variable=tfPlanName]$TF_PLAN_NAME"
