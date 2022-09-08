@@ -20,6 +20,10 @@ parameters:
       - 'UK South'
       - 'UK West'
 
+  - name: multiRegion
+    default: false
+    type: boolean
+
   - name: overrideAction
     default: plan
     values:
@@ -78,6 +82,13 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
+  - task: Bash@3
+    displayName: Build resource values
+    inputs:
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      arguments: "${{ parameters.multiRegion }} ${{ parameters.environment }} ${{ parameters.component }} ${{ parameters.location }}"
+
   - task: TerraformCLI@0
     displayName: Terraform init ${{ parameters.component }}
     inputs:
@@ -109,12 +120,12 @@ steps:
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       commandOptions: >
-        -out tfplan-${{ parameters.environment }}-${{ lower(replace(parameters.location, ' ', '')) }}-${{ parameters.component }}
+        -out tfplan-$(TF_PLAN_NAME)
         -var env=${{ parameters.environment }}
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
-        -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
-      publishPlanResults: "${{ parameters.environment }}-${{ lower(replace(parameters.location, ' ', '')) }}-${{ parameters.component }}"
+        -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
+      publishPlanResults: "$(TF_PLAN_NAME)"
 
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
@@ -127,14 +138,14 @@ steps:
         tfcmt --owner hmcts \
           --repo $(buildRepoSuffix) \
           --pr $(System.PullRequest.PullRequestNumber) \
-          --var target:${{ parameters.environment }}-${{ lower(replace(parameters.location, ' ', '')) }}-${{ parameters.component }} \
+          --var target:$(tfPlanName) \
           --var ado_url:$SYSTEM_COLLECTIONURI \
           --var ado_project:"$SYSTEM_TEAMPROJECT" \
           --var build_id:$BUILD_BUILDID \
           --var sensitive:${{ parameters.sensitive }} \
           --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
           plan -patch -- \
-          terraform show tfplan-${{ parameters.environment }}-${{ lower(replace(parameters.location, ' ', '')) }}-${{ parameters.component }}
+          terraform show tfplan-$(tfPlanName)
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
   - task: TerraformCLI@0
@@ -148,7 +159,7 @@ steps:
       command: apply
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
-      commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-${{ parameters.environment }}-${{ lower(replace(parameters.location, ' ', '')) }}-${{ parameters.component }}"
+      commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName)"
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: TerraformCLI@0
@@ -162,7 +173,7 @@ steps:
             -var env=${{ parameters.environment }}
             -var builtFrom=$(Build.Repository.Name)
             -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-            -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/${{ parameters.environment }}.tfvars
+            -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
 
   - task: AzureCLI@2
     displayName: 'Unlock TF state if required'
