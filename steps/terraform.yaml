@@ -84,10 +84,14 @@ steps:
 
   - task: Bash@3
     displayName: Build resource values
+    env:
+      MULTI_REGION: ${{ parameters.multiRegion }}
+      ENVIRONMENT: ${{ parameters.environment }}
+      COMPONENT: ${{ parameters.component }}
+      LOCATION: ${{ parameters.location }}
     inputs:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      arguments: "${{ parameters.multiRegion }} ${{ parameters.environment }} ${{ parameters.component }} ${{ parameters.location }}"
 
   - task: TerraformCLI@0
     displayName: Terraform init ${{ parameters.component }}

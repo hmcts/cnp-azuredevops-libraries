@@ -1,11 +1,15 @@
 #!/bin/bash
+###########################################################################################
 # This script is used to dynamically set some pipeline values
-set -e
+# Values below are passed in via the pipeline step.
 
-MULTI_REGION=$1
-ENVIRONMENT=$2
-COMPONENT=$3
-LOCATION=$4
+#   MULTI_REGION
+#   ENVIRONMENT
+#   COMPONENT
+#   LOCATION
+#------------------------------------------------------------------------------------------
+
+set -e
 
 TF_PLAN_NAME="$ENVIRONMENT-$COMPONENT"
 TF_VARS_NAME="$ENVIRONMENT"
