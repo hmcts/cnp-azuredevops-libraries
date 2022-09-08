@@ -94,7 +94,7 @@ Template requires the below folder structure for the build repository.
     ├── azure_pipeline.yaml
     ├── .terraform-version                                 # terraform version (read by tfenv)
 
-### Multi Regions:  
+### Multiple regions
 
 Some repositories have separate `tfvars` files based on region i.e. `UK South` or `UK West` and having all enviroment
 variables in a single `tfvars` file may not meet the requirement.
