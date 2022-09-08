@@ -96,7 +96,7 @@ Template requires the below folder structure for the build repository.
 
 ### Multi Regions:  
 
-Some repos have separate `tfvars` files based on region i.e. `UK South` or `UK West` and having all enviroment
+Some repositories have separate `tfvars` files based on region i.e. `UK South` or `UK West` and having all enviroment
 variables in a single `tfvars` file may not meet the requirement.
 If you need to use a different set of variables for your build then you can pass the `multiRegion` parameter and
 set this as `true`, the default is `false`.
