@@ -106,6 +106,6 @@ Using multi region requires the below environments folder structure for the buil
     Repo
     ├── environments                                       # Environment specific .tfvars files
     │   └── <env>
-    │   │    └── <env>-<location>.tfvars                   # Region specific tfvars file without spaces e.g. prod-ukwest.tfvars
+    │   │    └── <location>.tfvars                         # Region specific tfvars file without spaces e.g. prod-ukwest.tfvars
     
 With this a different variable file will be used. An example can be found in the [hub-panorama repo](https://github.com/hmcts/hub-panorama-terraform).
