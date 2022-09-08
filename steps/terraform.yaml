@@ -120,12 +120,12 @@ steps:
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       commandOptions: >
-        -out tfplan-$(TF_PLAN_NAME)
+        -out tfplan-$(tfPlanName)
         -var env=${{ parameters.environment }}
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
-      publishPlanResults: "$(TF_PLAN_NAME)"
+      publishPlanResults: "$(TtfPlanName)"
 
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
