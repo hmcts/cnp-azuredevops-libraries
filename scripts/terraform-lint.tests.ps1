@@ -19,34 +19,6 @@ else
       }
     }
 
-    Context "Do not contain a disallowed 'Owner' role" {
-      It "<Instance> does not have a disallowed 'Owner' role" -TestCases $TfTestCases {
-          Param($Instance)
-
-          [array]$roleExceptions = (
-            "Azure Event Hubs Data Owner"
-          )
-          
-          [bool]$badResultFound = $False 
-          
-          $result = ((Get-Content -raw $Instance) | Select-String -Pattern "role_definition_name.*=.*Owner" -AllMatches) 
-          $matchResults = $result.Matches.Value
-
-          foreach ($matchResult in $matchResults){
-            [array]$testResults = @() 
-            foreach($roleException in $roleExceptions) {
-              $testResult = ($matchResult | Select-String -Pattern "role_definition_name.*=.\`"$roleException")
-                $testResults += $testResult
-            }
-            if ([string]::IsNullOrEmpty($testResults)) {
-              Write-Output "[ $matchResult ] is not a permitted Owner role"
-              $badResultFound = $True
-            }
-          }
-          $badResultFound | Should -BeFalse
-      }
-    }
-
     $TfFolderTestCases=@()
     ((($TfFiles).DirectoryName | Select-Object -Unique)).ForEach{$TfFolderTestCases += @{Instance = $_}}
       Context "Are correctly formatted" {
