@@ -101,7 +101,7 @@ variables in a single `tfvars` file may not meet the requirement.
 If you need to use a different set of variables for your build then you can pass the `multiRegion` parameter and
 set this as `true`, the default is `false`.
 
-Using multi region requires the below environments folder structure for the build repository.
+Using multiple region support requires the below environments folder structure for the build repository.
 
     Repo
     ├── environments                                       # Environment specific .tfvars files
