@@ -3,16 +3,10 @@ set -e
 
 storage_account_name=$1
 stateFilePath=$2
-container=${3:-subscription-tfstate}
+terraformInitSubscription=$3
+container=${4:-subscription-tfstate}
 
-if az account list | grep "HMCTS-CONTROL"
-then
-  subscription="HMCTS-CONTROL"
-else
-  subscription="DCD-RBAC-CONTROL"
-fi
-
-az account set --subscription $subscription
+az account set --subscription $terraformInitSubscription
 
 export AZURE_STORAGE_KEY=$(az storage account keys list  -n $storage_account_name --query [0].value -o tsv)
 
