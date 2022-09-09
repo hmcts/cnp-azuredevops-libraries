@@ -12,11 +12,11 @@
 set -e
 
 TF_PLAN_NAME="$ENVIRONMENT-$COMPONENT"
-TF_VARS_NAME="$MULTI_REGION"
+TF_VARS_NAME="$ENVIRONMENT"
 
 formatted_location=$(echo "$LOCATION" | tr "[:upper:]" "[:lower:]" | tr -d "[:space:]")
 
-if [[ $MULTI_REGION == true ]]; then
+if [[ $MULTI_REGION == True ]]; then
   TF_PLAN_NAME="$ENVIRONMENT-$formatted_location-$COMPONENT"
   TF_VARS_NAME="$formatted_location"
 fi
