@@ -93,4 +93,19 @@ Template requires the below folder structure for the build repository.
     │   │    └── *.tfvars
     ├── azure_pipeline.yaml
     ├── .terraform-version                                 # terraform version (read by tfenv)
+
+### Multiple regions
+
+Some repositories have separate `tfvars` files based on region i.e. `UK South` or `UK West` and having all enviroment
+variables in a single `tfvars` file may not meet the requirement.
+If you need to use a different set of variables for your build then you can pass the `multiRegion` parameter and
+set this as `true`, the default is `false`.
+
+Using multiple region support requires the below environments folder structure for the build repository.
+
+    Repo
+    ├── environments                                       # Environment specific .tfvars files
+    │   └── <env>
+    │   │    └── <location>.tfvars                         # Region specific tfvars file without spaces e.g. prod-ukwest.tfvars
     
+With this a different variable file will be used. An example can be found in the [hub-panorama repo](https://github.com/hmcts/hub-panorama-terraform).
