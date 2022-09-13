@@ -1,0 +1,6 @@
+---
+github:
+  user: "GitHub Actions Bot"
+  email: "bots@udpatecli.io"
+  username: "github-actions"
+  token: "UPDATECLI_GITHUB_TOKEN"
