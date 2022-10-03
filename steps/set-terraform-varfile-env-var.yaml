@@ -1,12 +1,16 @@
 parameters:
-  - name: terraformVarFile
-  - name: environment
+  terraformVarFile: ''
+  environment: ''
 
 steps:
   - bash: |
-      ${{ if ne('${{ parameters.terraformVarFile }}', '') }}:
-        TERRAFORM_VAR_FILE=${{ parameters.terraformVarFile }}
-      ${{ if eq('${{ parameters.terraformVarFile }}', '') }}:
-        TERRAFORM_VAR_FILE=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
+      if [ $terraformVarFile == "" ]; then
+        TERRAFORM_VAR_FILE=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/$environment/$(tfVarsName).tfvars
+      else
+        TERRAFORM_VAR_FILE=$terraformVarFile
+      fi
       echo "##vso[task.setvariable variable=tfVarFile]$TERRAFORM_VAR_FILE"
     displayName: Set terraform var-file env variable
+    inputs:
+      terraformVarFile: ${{ parameters.terraformVarFile }}
+      environment: ${{ parameters.environment }}
