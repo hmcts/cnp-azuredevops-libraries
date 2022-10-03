@@ -7,7 +7,7 @@ steps:
       $terraformVarFile = $env:terraformVarFile
       $environment = $env:environment
 
-      if ($string::IsNullOrWhiteSpace($terraformVarFile)) {
+      if ([string]::IsNullOrWhiteSpace($terraformVarFile)) {
          $TERRAFORM_VAR_FILE = "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/$environment/$(tfVarsName).tfvars"
          $SPECIFY_VAR_FILE_COMMAND_OPTION = $True
       } elseif ("none" -eq "$terraformVarFile".ToLower()) {
