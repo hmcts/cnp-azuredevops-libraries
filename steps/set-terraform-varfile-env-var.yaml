@@ -18,7 +18,7 @@ steps:
       }
 
       if ($SPECIFY_VAR_FILE_COMMAND_OPTION -eq $True) {
-          $TERRAFORM_VAR_FILE_COMMAND_OPTION = "-var-file=""$TERRAFORM_VAR_FILE"""
+          $TERRAFORM_VAR_FILE_COMMAND_OPTION = "-var-file ""$TERRAFORM_VAR_FILE"""
        } else {
           $TERRAFORM_VAR_FILE_COMMAND_OPTION = ""
       }
