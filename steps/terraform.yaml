@@ -49,6 +49,9 @@ parameters:
   - name: kvConnectedServiceName
     default: 'azurerm-sandbox'
 
+  - name: terraformVarFile
+    default: ''
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -93,6 +96,11 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
+  - template: ./set-terraform-varfile-env-var.yaml
+    parameters:
+      terraformVarFile: ${{ parameters.terraformVarFile }}
+      environment: ${{ parameters.environment }}
+
   - task: TerraformCLI@0
     displayName: Terraform init ${{ parameters.component }}
     inputs:
@@ -128,7 +136,7 @@ steps:
         -var env=${{ parameters.environment }}
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
-        -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
+        -var-file $(tfVarFile)
       publishPlanResults: "$(tfPlanName)"
 
   - task: Bash@3
@@ -177,7 +185,7 @@ steps:
             -var env=${{ parameters.environment }}
             -var builtFrom=$(Build.Repository.Name)
             -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-            -var-file $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
+            -var-file $(tfVarFile)
 
   - task: AzureCLI@2
     displayName: 'Unlock TF state if required'
