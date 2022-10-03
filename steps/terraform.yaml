@@ -136,7 +136,7 @@ steps:
         -var env=${{ parameters.environment }}
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
-        -var-file $(tfVarFile)
+        $(tfVarFileCommandOption)
       publishPlanResults: "$(tfPlanName)"
 
   - task: Bash@3
@@ -185,7 +185,7 @@ steps:
             -var env=${{ parameters.environment }}
             -var builtFrom=$(Build.Repository.Name)
             -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-            -var-file $(tfVarFile)
+            $(tfVarFileCommandOption)
 
   - task: AzureCLI@2
     displayName: 'Unlock TF state if required'

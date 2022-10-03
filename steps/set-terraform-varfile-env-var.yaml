@@ -6,10 +6,19 @@ steps:
   - bash: |
       if [ $terraformVarFile == "" ]; then
         TERRAFORM_VAR_FILE=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/$environment/$(tfVarsName).tfvars
+      elif [ $terraformVarFile == "none" ]; then
+        TERRAFORM_VAR_FILE=""
       else
         TERRAFORM_VAR_FILE=$terraformVarFile
       fi
-      echo "##vso[task.setvariable variable=tfVarFile]$TERRAFORM_VAR_FILE"
+
+      if [ $TERRAFORM_VAR_FILE == "" ]; then
+        TERRAFORM_VAR_FILE_COMMAND_OPTION=""
+      else
+        TERRAFORM_VAR_FILE_COMMAND_OPTION="-var-file \"$TERRAFORM_VAR_FILE\""
+      fi
+
+      echo "##vso[task.setvariable variable=tfVarFileCommandOption]$TERRAFORM_VAR_FILE_COMMAND_OPTION"
     displayName: Set terraform var-file env variable
     env:
       terraformVarFile: ${{ parameters.terraformVarFile }}
