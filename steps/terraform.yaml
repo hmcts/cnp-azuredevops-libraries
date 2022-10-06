@@ -50,7 +50,7 @@ parameters:
     default: 'azurerm-sandbox'
 
   - name: terraformVarFile
-    default: ''
+    default: '$(System.DefaultWorkingDirectory)/${{ variables.buildRepoSuffix }}/environments/${{ parameters.environment }}/${{ variables.tfVarsName }}.tfvars'
 
 steps:
   - checkout: self
@@ -127,20 +127,13 @@ steps:
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       publishPlanResults: "$(tfPlanName)"
-      ${{ if eq(parameters['terraformVarFile'], '') }}:
+      ${{ if eq(parameters['terraformVarFile'], 'none') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
-          -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-      ${{ if eq(parameters['terraformVarFile'], 'NULL') }}:
-        commandOptions: >
-          -out tfplan-$(tfPlanName)
-          -var env=${{ parameters.environment }}
-          -var builtFrom=$(Build.Repository.Name)
-          -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
-      ${{ if notIn(parameters['terraformVarFile'], '', 'NULL') }}:
+      ${{ if ne(parameters['terraformVarFile'], 'none') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
@@ -190,18 +183,12 @@ steps:
           command: destroy
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
           environmentServiceName: ${{ parameters.serviceConnection }}
-          ${{ if eq(parameters['terraformVarFile'], '') }}:
+          ${{ if eq(parameters['terraformVarFile'], 'none') }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-              -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-          ${{ if eq(parameters['terraformVarFile'], 'NULL') }}:
-            commandOptions: >
-              -var env=${{ parameters.environment }}
-              -var builtFrom=$(Build.Repository.Name)
-              -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-          ${{ if notIn(parameters['terraformVarFile'], '', 'NULL') }}:
+          ${{ if ne(parameters['terraformVarFile'], 'none') }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
