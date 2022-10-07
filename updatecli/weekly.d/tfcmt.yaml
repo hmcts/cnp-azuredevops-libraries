@@ -21,7 +21,7 @@ sources:
     spec:
       owner: suzuki-shunsuke
       repository: tfcmt
-      token: {{ requiredEnv "UPDATECLI_GITHUB_TOKEN" }}
+      token: {{ or .github.token requiredEnv "UPDATECLI_GITHUB_TOKEN" }}
       versionfilter:
         kind: semver
 
