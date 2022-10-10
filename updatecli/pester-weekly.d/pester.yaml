@@ -1,6 +1,6 @@
 ---
 version: 0.33.3
-title: "Update tfcmt version"
+title: "Update  version"
 
 scms:
   default:
@@ -15,35 +15,36 @@ scms:
       branch: {{ or .github.branch "main" }}
 
 sources:
-  latestTfcmtImageVersion:
+  latestPesterImageVersion:
     kind: githubrelease
-    name: Get the latest published tfcmt version
+    name: Get the latest published pester version
     spec:
-      owner: suzuki-shunsuke
-      repository: tfcmt
+      owner: pester
+      repository: Pester
+      token: {{ or .github.token (requiredEnv "UPDATECLI_GITHUB_TOKEN") }}
       versionfilter:
         kind: semver
 
 targets:
-  setTfcmtImageVersion:
-    sourceid: latestTfcmtVersion
-    name: Bump Tfcmt Version
+  setPesterImageVersion:
+    sourceid: latestPesterImageVersion
+    name: Bump pester Version
     kind: file
     scmid: default
     spec:
       files:
-        - scripts/install-tfcmt.sh
-      matchpattern: 'TFCMT_VERSION=v \"(\d+\.)?(\d+\.)?(\*|\d+)\"'
-      content: 'TFCMT_VERSION=v "{{ source `latestTfcmtImageVersion` }}"'
+        - scripts/pester-tests.ps1
+      matchpattern: '-MaximumVersion (\d+\.)?(\d+\.)?(\*|\d+)'
+      content: '-MaximumVersion {{ source `latestPesterImageVersion` }}'
 
 pullrequests:
-  setATfcmtImageVersion:
+  setPesterImageVersion:
     kind: github
     scmid: default
     title: >-
-      [updatecli] Bump Tfcmt version to {{ source "latestTfcmtImageVersion" }}
+      [updatecli] Bump pester version to {{ source "latestPesterImageVersion" }}
     spec:
       automerge: false
       draft: false
       description: |
-        Bump Tfcmt version to {{ source "latestTfcmtImageVersion" }}
+        Bump pester version to {{ source "latestPesterImageVersion" }}
