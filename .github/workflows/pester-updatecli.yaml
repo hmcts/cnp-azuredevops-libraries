@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   schedule:
     # Run once a week
-    - cron: '0 12 * * *'
+    - cron: '30 11 * * *'
 
 permissions:
   contents: write
