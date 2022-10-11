@@ -1,4 +1,4 @@
-name: updatecli
+name: updatecli-pester
 
 on:
   pull_request:

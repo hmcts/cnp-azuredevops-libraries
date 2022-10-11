@@ -1,4 +1,4 @@
-name: updatecli
+name: updatecli-tfenv
 
 on:
   pull_request:
