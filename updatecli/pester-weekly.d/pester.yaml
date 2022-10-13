@@ -1,6 +1,6 @@
 ---
 version: 0.33.3
-title: "Update  version"
+title: "Update pester version"
 
 scms:
   default:
