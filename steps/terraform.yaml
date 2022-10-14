@@ -40,6 +40,9 @@ parameters:
   - name: serviceConnection
     default: ''
 
+  - name: subscriptionId
+    default: ''
+
   - name: terraformInitSubscription
     default: ''
 
