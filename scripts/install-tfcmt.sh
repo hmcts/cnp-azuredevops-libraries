@@ -10,4 +10,3 @@ then
 else
   tar -C /usr/bin -xzf ./tfcmt.tar.gz tfcmt
 fi
-echo $TFCMT_VERSION
