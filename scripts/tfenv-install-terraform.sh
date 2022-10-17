@@ -3,7 +3,6 @@ set -e
 
 rm -rf ~/.tfenv
 git clone -b v3.0.0 --single-branch https://github.com/tfutils/tfenv.git ~/.tfenv
-echo v3.0.0
 
 if [ $(whoami) == "root" ]; then
   ln -s -f ~/.tfenv/bin/* /usr/local/bin
