@@ -1,2 +1,2 @@
-Install-Module -Name Pester -MaximumVersion 4.99.99 -Force -Verbose -Scope CurrentUser
+Install-Module -Name Pester -MaximumVersion 5.3.3 -Force -Verbose -Scope CurrentUser
 Invoke-Pester ../ -OutputFormat NUnitXml -OutputFile ./TEST-CI.xml -EnableExit
