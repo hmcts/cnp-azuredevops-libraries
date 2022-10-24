@@ -35,7 +35,7 @@ targets:
       files:
         - scripts/install-tfcmt.sh
       matchpattern: 'TFCMT_VERSION=v(\d+\.)?(\d+\.)?(\*|\d+)'
-      content: 'TFCMT_VERSION=v{{ source `latestTfcmtImageVersion` }}'
+      content: 'TFCMT_VERSION={{ source `latestTfcmtImageVersion` }}'
 
 pullrequests:
   setTfcmtImageVersion:

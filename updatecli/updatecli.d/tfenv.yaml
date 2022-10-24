@@ -35,7 +35,7 @@ targets:
       files:
         - scripts/tfenv-install-terraform.sh
       matchpattern: 'git clone -b v(\d+\.)?(\d+\.)?(\*|\d+)'
-      content: 'git clone -b v{{ source `latestTfenvImageVersion` }}'
+      content: 'git clone -b {{ source `latestTfenvImageVersion` }}'
 
 pullrequests:
   setTfenvImageVersion:
