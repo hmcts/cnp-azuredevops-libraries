@@ -56,10 +56,7 @@ parameters:
     default: false
 
   - name: terraformVarFile
-    ${{ if eq(parameters['perComponnentTfVarFile'], true) }}:
-      default: "1"
-    ${{ if eq(parameters['perComponnentTfVarFile'], false) }}:
-      default: "2"
+    default: ''
 
 steps:
   - checkout: self
