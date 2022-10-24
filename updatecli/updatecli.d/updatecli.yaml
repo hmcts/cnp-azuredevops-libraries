@@ -39,7 +39,7 @@ targets:
     sourceid: latestUpdatecliVersion
     kind: yaml
     spec:
-      file: ".github/workflows/updatecli.yaml"
+      file: ".github/workflows/run-updatecli.yaml"
       key: "jobs.updatecli.steps[1].with.version"
     scmid: default
 
