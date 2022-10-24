@@ -109,10 +109,10 @@ steps:
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       backendType: azurerm
       ensureBackend: false
-    ${{ if eq(parameters['networkServiceConnection'], '') }}:
-      backendServiceArm: ${{ parameters.serviceConnection }}
-    ${{ else }}:
-      backendServiceArm: ${{ parameters.networkServiceConnection }}
+      ${{ if eq(parameters['networkServiceConnection'], '') }}:
+        backendServiceArm: ${{ parameters.serviceConnection }}
+      ${{ else }}:
+        backendServiceArm: ${{ parameters.networkServiceConnection }}
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
       backendAzureRmResourceGroupLocation: ${{ parameters.location }}
       backendAzureRmStorageAccountName: $(controlStorageAccount)
@@ -133,10 +133,10 @@ steps:
     inputs:
       command: plan
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-    ${{ if eq(parameters['networkServiceConnection'], '') }}:
-      environmentServiceName: ${{ parameters.serviceConnection }}
-    ${{ else }}:
-      environmentServiceName: ${{ parameters.networkServiceConnection }}
+      ${{ if eq(parameters['networkServiceConnection'], '') }}:
+        environmentServiceName: ${{ parameters.serviceConnection }}
+      ${{ else }}:
+        environmentServiceName: ${{ parameters.networkServiceConnection }}
       runAzLogin: true
       publishPlanResults: "$(tfPlanName)"
       ${{ if eq(parameters['terraformVarFile'], true) }}:
@@ -191,10 +191,10 @@ steps:
     inputs:
       command: apply
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-    ${{ if eq(parameters['networkServiceConnection'], '') }}:
-      environmentServiceName: ${{ parameters.serviceConnection }}
-    ${{ else }}:
-      environmentServiceName: ${{ parameters.networkServiceConnection }}
+      ${{ if eq(parameters['networkServiceConnection'], '') }}:
+        environmentServiceName: ${{ parameters.serviceConnection }}
+      ${{ else }}:
+        environmentServiceName: ${{ parameters.networkServiceConnection }}
       commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName)"
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
@@ -204,10 +204,10 @@ steps:
         inputs:
           command: destroy
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-        ${{ if eq(parameters['networkServiceConnection'], '') }}:
-          environmentServiceName: ${{ parameters.serviceConnection }}
-        ${{ else }}:
-          environmentServiceName: ${{ parameters.networkServiceConnection }}
+          ${{ if eq(parameters['networkServiceConnection'], '') }}:
+            environmentServiceName: ${{ parameters.serviceConnection }}
+          ${{ else }}:
+            environmentServiceName: ${{ parameters.networkServiceConnection }}
           ${{ if eq(parameters['terraformVarFile'], '') }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
