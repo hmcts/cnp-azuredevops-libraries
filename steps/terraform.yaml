@@ -208,7 +208,7 @@ steps:
           environmentServiceName: ${{ parameters.serviceConnection }}
         ${{ else }}:
           environmentServiceName: ${{ parameters.networkServiceConnection }}
-        ${{ if eq(parameters['terraformVarFile'], '') }}:
+          ${{ if eq(parameters['terraformVarFile'], '') }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
