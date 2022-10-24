@@ -40,6 +40,9 @@ parameters:
   - name: serviceConnection
     default: ''
 
+  - name: networkServiceConnection
+    default: ''
+
   - name: terraformInitSubscription
     default: ''
 
@@ -49,8 +52,14 @@ parameters:
   - name: kvConnectedServiceName
     default: 'azurerm-sandbox'
 
+  - name: perComponnentTfVarFile
+    default: false
+
   - name: terraformVarFile
-    default: ''
+    ${{ if eq(parameters['perComponnentTfVarFile'], true) }}:
+      default: "1"
+    ${{ if eq(parameters['perComponnentTfVarFile'], false) }}:
+      default: "2"
 
 steps:
   - checkout: self
@@ -103,7 +112,10 @@ steps:
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       backendType: azurerm
       ensureBackend: false
-      backendServiceArm: ${{ parameters.serviceConnection }}
+      ${{ if eq(parameters['networkServiceConnection'], '') }}:
+        backendServiceArm: ${{ parameters.serviceConnection }}
+      ${{ else }}:
+        backendServiceArm: ${{ parameters.networkServiceConnection }}
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
       backendAzureRmResourceGroupLocation: ${{ parameters.location }}
       backendAzureRmStorageAccountName: $(controlStorageAccount)
@@ -124,29 +136,32 @@ steps:
     inputs:
       command: plan
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      environmentServiceName: ${{ parameters.serviceConnection }}
+      ${{ if eq(parameters['networkServiceConnection'], '') }}:
+        environmentServiceName: ${{ parameters.serviceConnection }}
+      ${{ else }}:
+        environmentServiceName: ${{ parameters.networkServiceConnection }}
       runAzLogin: true
       publishPlanResults: "$(tfPlanName)"
-      ${{ if eq(parameters['terraformVarFile'], '') }}:
+      ${{ if eq(parameters['terraformVarFile'], true) }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-      ${{ if eq(parameters['terraformVarFile'], 'NULL') }}:
+      ${{ if eq(parameters['terraformVarFile'], false) }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
+          -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.component }}/$(tfVarsName).tfvars"
       ${{ if notIn(parameters['terraformVarFile'], '', 'NULL') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
-          -var-file "${{ parameters.terraformVarFile }}"
 
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
@@ -179,7 +194,10 @@ steps:
     inputs:
       command: apply
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      environmentServiceName: ${{ parameters.serviceConnection }}
+      ${{ if eq(parameters['networkServiceConnection'], '') }}:
+        environmentServiceName: ${{ parameters.serviceConnection }}
+      ${{ else }}:
+        environmentServiceName: ${{ parameters.networkServiceConnection }}
       commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName)"
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
@@ -189,7 +207,10 @@ steps:
         inputs:
           command: destroy
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-          environmentServiceName: ${{ parameters.serviceConnection }}
+          ${{ if eq(parameters['networkServiceConnection'], '') }}:
+            environmentServiceName: ${{ parameters.serviceConnection }}
+          ${{ else }}:
+            environmentServiceName: ${{ parameters.networkServiceConnection }}
           ${{ if eq(parameters['terraformVarFile'], '') }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
