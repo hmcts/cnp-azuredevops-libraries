@@ -1,0 +1,50 @@
+---
+version: 0.33.3
+name: "Update tfcmt version"
+
+scms:
+  default:
+    kind: github
+    spec:
+      user: '{{ .github.user }}'
+      email: '{{ .github.email }}'
+      owner: '{{ .github.owner }}'
+      repository: '{{ .github.repository }}'
+      token: '{{ or .github.token (requiredEnv "UPDATECLI_GITHUB_TOKEN") }}'
+      username: '{{ or .github.user (requiredEnv "UPDATECLI_GITHUB_ACTOR") }}'
+      branch: '{{ or .github.branch "main" }}'
+
+sources:
+  latestTfcmtImageVersion:
+    kind: githubrelease
+    name: Get the latest published tfcmt version
+    spec:
+      owner: suzuki-shunsuke
+      repository: tfcmt
+      token: '{{ or .github.token (requiredEnv "UPDATECLI_GITHUB_TOKEN") }}'
+      versionfilter:
+        kind: semver
+
+targets:
+  setTfcmtImageVersion:
+    sourceid: latestTfcmtImageVersion
+    name: Bump tfcmt Version
+    kind: file
+    scmid: default
+    spec:
+      files:
+        - scripts/install-tfcmt.sh
+      matchpattern: 'TFCMT_VERSION=v(\d+\.)?(\d+\.)?(\*|\d+)'
+      content: 'TFCMT_VERSION={{ source `latestTfcmtImageVersion` }}'
+
+pullrequests:
+  setTfcmtImageVersion:
+    kind: github
+    scmid: default
+    title: >-
+      [updatecli] Bump tfcmt version to {{ source "latestTfcmtImageVersion" }}
+    spec:
+      automerge: false
+      draft: false
+      description: |
+        Bump tfcmt version to {{ source "latestTfcmtImageVersion" }}
