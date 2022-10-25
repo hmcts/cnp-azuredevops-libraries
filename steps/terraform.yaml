@@ -43,12 +43,6 @@ parameters:
   - name: networkServiceConnection
     default: ''
 
-  - name: tfServiceConnection
-    ${{ if eq(parameters['networkServiceConnection'], '') }}:
-      default: ${{ parameters.serviceConnection }}
-    ${{ else }}:
-      default: ${{ parameters.networkServiceConnection }}
-
   - name: terraformInitSubscription
     default: ''
 
@@ -115,7 +109,7 @@ steps:
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       backendType: azurerm
       ensureBackend: false
-      backendServiceArm: ${{ parameters.tfServiceConnection }}
+      backendServiceArm: ${{ parameters.serviceConnection }}
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
       backendAzureRmResourceGroupLocation: ${{ parameters.location }}
       backendAzureRmStorageAccountName: $(controlStorageAccount)
@@ -136,7 +130,7 @@ steps:
     inputs:
       command: plan
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      environmentServiceName: ${{ parameters.tfServiceConnection }}
+      environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       publishPlanResults: "$(tfPlanName)"
       ${{ if eq(parameters['terraformVarFile'], true) }}:
@@ -191,7 +185,7 @@ steps:
     inputs:
       command: apply
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      environmentServiceName: ${{ parameters.tfServiceConnection }}
+      environmentServiceName: ${{ parameters.serviceConnection }}
       commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName)"
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
@@ -201,7 +195,7 @@ steps:
         inputs:
           command: destroy
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-          environmentServiceName: ${{ parameters.tfServiceConnection }}
+          environmentServiceName: ${{ parameters.serviceConnection }}
           ${{ if eq(parameters['terraformVarFile'], '') }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
