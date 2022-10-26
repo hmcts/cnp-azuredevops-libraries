@@ -137,19 +137,19 @@ steps:
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-      ${{ if eq(parameters['terraformVarFile'], 'NULL') }}:
+      ${{ elseif eq(parameters['terraformVarFile'], 'NULL') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
-          -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.component }}/$(tfVarsName).tfvars"
-      ${{ if notIn(parameters['terraformVarFile'], '', 'NULL') }}:
+      ${{ else }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
+          -var-file "${{ parameters.terraformVarFile }}"
 
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
@@ -199,12 +199,12 @@ steps:
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
               -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-          ${{ if eq(parameters['terraformVarFile'], 'NULL') }}:
+          ${{ elseif eq(parameters['terraformVarFile'], 'NULL') }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-          ${{ if notIn(parameters['terraformVarFile'], '', 'NULL') }}:
+          ${{ else }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
