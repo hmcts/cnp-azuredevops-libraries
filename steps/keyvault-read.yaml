@@ -2,6 +2,11 @@ parameters:
   environment: ''
   keyvaultName: ''
   serviceConnection: ''
+  subscriptionIdVariableName: 'ARM_SUBSCRIPTION_ID'
+  tenantIdVariableName: 'ARM_TENANT_ID'
+  storageAccountVariableName: 'controlStorageAccount'
+  keyVaultVariableName: 'controlKeyVault'
+  envVariableName: 'env'
 
 steps:
 
@@ -17,9 +22,9 @@ steps:
       TENANT_ID=$(az account show --query tenantId -o tsv)
 
       echo $SUB_ID
-      echo "##vso[task.setvariable variable=ARM_SUBSCRIPTION_ID]$SUB_ID"
+      echo "##vso[task.setvariable variable=${{ parameters.subscriptionIdVariableName }}]$SUB_ID"
       echo $TENANT_ID
-      echo "##vso[task.setvariable variable=ARM_TENANT_ID]$TENANT_ID"
+      echo "##vso[task.setvariable variable=${{ parameters.tenantIdVariableName }}]$TENANT_ID"
 
       FIRST=$(echo $SUB_ID | cut -c 1-8)
       SECOND=$(echo $SUB_ID | cut -c 25-36)
@@ -29,10 +34,10 @@ steps:
       STORAGE_ACCOUNT=${JOINT}sa
 
       echo KeyVault: $KEY_VAULT
-      echo "##vso[task.setvariable variable=controlKeyVault]$KEY_VAULT"
+      echo "##vso[task.setvariable variable=${{ parameters.keyVaultVariableName }}]$KEY_VAULT"
       echo Storage account: $STORAGE_ACCOUNT
-      echo "##vso[task.setvariable variable=controlStorageAccount]$STORAGE_ACCOUNT"
+      echo "##vso[task.setvariable variable=${{ parameters.storageAccountVariableName }}]$STORAGE_ACCOUNT"
 
       lowerCaseEnv=$(echo "${{ parameters.environment }}" | tr "[:upper:]" "[:lower:]")
-      echo "##vso[task.setvariable variable=env]$lowerCaseEnv"
+      echo "##vso[task.setvariable variable="${{ parameters.envVariableName }}"]$lowerCaseEnv"
       echo Lower case env: $lowerCaseEnv
