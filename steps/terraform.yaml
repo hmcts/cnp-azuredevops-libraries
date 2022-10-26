@@ -130,14 +130,14 @@ steps:
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       publishPlanResults: "$(tfPlanName)"
-      ${{ if eq(parameters['terraformVarFile'], true) }}:
+      ${{ if eq(parameters['terraformVarFile'], '') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-      ${{ if eq(parameters['terraformVarFile'], false) }}:
+      ${{ if eq(parameters['terraformVarFile'], 'NULL') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
