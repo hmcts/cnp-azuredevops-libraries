@@ -7,7 +7,6 @@ steps:
 
 - task: AzureCLI@2
   displayName: Determine Key Vault and Storage names
-  name: SetControlVars
   inputs:
     azureSubscription: ${{ parameters.serviceConnection }}
     scriptType: 'bash'
