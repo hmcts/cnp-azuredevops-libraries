@@ -49,10 +49,7 @@ parameters:
   - name: kvConnectedServiceName
     default: 'azurerm-sandbox'
 
-  - name: perComponnentTfVarFile
-    default: false
-
-  - name: terraformVarFile
+  - name: tfVarsFile
     default: ''
 
 steps:
@@ -130,14 +127,14 @@ steps:
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       publishPlanResults: "$(tfPlanName)"
-      ${{ if eq(parameters['terraformVarFile'], '') }}:
+      ${{ if eq(parameters['tfVarsFile'], '') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-      ${{ elseif eq(parameters['terraformVarFile'], 'NULL') }}:
+      ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
@@ -149,7 +146,7 @@ steps:
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
-          -var-file "${{ parameters.terraformVarFile }}"
+          -var-file "${{ parameters.tfVarsFile }}"
 
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
@@ -193,13 +190,13 @@ steps:
           command: destroy
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
           environmentServiceName: ${{ parameters.serviceConnection }}
-          ${{ if eq(parameters['terraformVarFile'], '') }}:
+          ${{ if eq(parameters['tfVarsFile'], '') }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
               -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-          ${{ elseif eq(parameters['terraformVarFile'], 'NULL') }}:
+          ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
@@ -209,7 +206,7 @@ steps:
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-              -var-file "${{ parameters.terraformVarFile }}"
+              -var-file "${{ parameters.tfVarsFile }}"
 
   - task: AzureCLI@2
     displayName: 'Unlock TF state if required'
