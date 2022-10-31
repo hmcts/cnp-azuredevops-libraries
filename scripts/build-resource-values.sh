@@ -16,6 +16,10 @@ TF_VARS_NAME="$ENVIRONMENT"
 
 formatted_location=$(echo "$LOCATION" | tr "[:upper:]" "[:lower:]" | tr -d "[:space:]")
 
+if [[ $COMPONENT == acme ]]; then
+  TF_PLAN_NAME="$ENVIRONMENT-$STAGE-$COMPONENT"
+fi
+
 if [[ $MULTI_REGION == True ]]; then
   TF_PLAN_NAME="$ENVIRONMENT-$formatted_location-$COMPONENT"
   TF_VARS_NAME="$formatted_location"
