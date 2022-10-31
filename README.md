@@ -109,3 +109,23 @@ Using multiple region support requires the below environments folder structure f
     │   │    └── <location>.tfvars                         # Region specific tfvars file without spaces e.g. prod-ukwest.tfvars
     
 With this a different variable file will be used. An example can be found in the [hub-panorama repo](https://github.com/hmcts/hub-panorama-terraform).
+
+### tfvars file location
+
+Some repositories do not have the `tfvars` file in the standard location, or do not need `tfvars` file at all. In such cases, the `tfVarsFile` option can be used to specify this
+
+#### a) Custom location of `tfvars` file
+If `tfvars` file is in a non-standard location, the `tfVarsFile` option can be used to specify the full path of the `tfvars` file, as shown below
+```yaml
+tfVarsFile: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/network/${{ parameters.env }}.tfvars"
+```
+> see [example in aks-cft-deploy repo](https://github.com/hmcts/aks-cft-deploy/blob/main/azure-pipelines.yml)
+
+#### b) No `tfvars` file
+If the component does not need a `tfvars` file, then a special `NULL` string (all caps) can be specified for  `tfVarsFile`, as shown below. 
+```yaml
+tfVarsFile: NULL
+```
+Note: This is different from the terraform reserved word `null` and is essentially a special string to indicate that no `tfvars` file is needed.
+
+> see [example in aks-cft-deploy repo](https://github.com/hmcts/aks-cft-deploy/blob/main/azure-pipelines.yml)
