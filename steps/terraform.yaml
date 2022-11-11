@@ -178,8 +178,8 @@ steps:
     condition: |
       or(
       and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'apply')),
-      and(succeeded(), eq(variables['isMain'], true), eq(variables['isAutoTriggered'], true))
-      and(succeeded(), eq(variables['applyOverrideBranch'], true), eq('${{ parameters.overrideAction }}', 'apply')),
+      and(succeeded(), eq(variables['isMain'], true), eq(variables['isAutoTriggered'], true)),
+      and(succeeded(), eq(variables['applyOverrideBranch'], true), eq('${{ parameters.overrideAction }}', 'apply'))
       )
     inputs:
       command: apply
