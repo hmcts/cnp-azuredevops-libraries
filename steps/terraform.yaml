@@ -13,7 +13,7 @@ parameters:
 
   - name: environment
     default: sandbox
-    
+
   - name: stage
     default: ''
 
@@ -85,8 +85,15 @@ steps:
   - task: Bash@3
     displayName: Terraform install (tfenv)
     inputs:
-      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
+      targetType: 'inline'
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      script: |
+        rm -rf /tmp/tfenv
+        git clone -b v3.0.0 --single-branch --depth=1 https://github.com/tfutils/tfenv.git /tmp/tfenv
+        echo '##vso[task.prependpath]/tmp/tfenv/bin'
+        tfenv use
+    env:
+      TFENV_AUTO_INSTALL: true
 
   - task: Bash@3
     displayName: Build resource values
