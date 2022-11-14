@@ -57,7 +57,9 @@ parameters:
 
 steps:
   - checkout: self
+    clean: true
   - checkout: cnp-azuredevops-libraries
+    clean: true
   - bash: echo ${{ parameters.environment }}
 
   - template: ./set-build-repo-suffix-env-var.yaml
