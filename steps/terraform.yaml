@@ -13,7 +13,7 @@ parameters:
 
   - name: environment
     default: sandbox
-    
+
   - name: stage
     default: ''
 
