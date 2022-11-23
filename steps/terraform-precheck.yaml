@@ -55,4 +55,3 @@ steps:
       azuredevopstoken: $(azure-devops-token)
     inputs:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/builds-check.sh
-    condition: eq('${{ parameters.overrideAction }}', 'plan')
