@@ -55,6 +55,11 @@ parameters:
   - name: tfVarsFile
     default: ''
 
+  - name: tf_env_vars
+    type: object
+    default:
+      FOO: bar
+
 steps:
   - checkout: self
     clean: true
@@ -124,26 +129,10 @@ steps:
       command: validate
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
-
-  - task: Bash@3
-    displayName: debug tf_Var
-    env:
-      TF_VAR_DYNATRACE_PLATOPS_API_KEY: $(dynatrace-platops-api-key)
-    inputs:
-      targetType: 'inline'
-      script: |
-        env
-        echo first
-        echo $(dynatrace-platops-api-key)
-        echo second
-        echo $(TF_VAR_DYNATRACE_PLATOPS_API_KEY)
-      failOnStderr: true
-
   - task: TerraformCLI@0
     displayName: Terraform plan ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
-    env:
-      TF_VAR_DYNATRACE_PLATOPS_API_KEY: $(dynatrace-platops-api-key)
+    env: ${{ parameters.tf_env_vars  }}
     inputs:
       command: plan
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
@@ -194,6 +183,7 @@ steps:
 
   - task: TerraformCLI@0
     displayName: Terraform apply ${{ parameters.component }}
+    env: ${{ parameters.tf_env_vars  }}
     condition: |
       or(
       and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'apply')),
@@ -208,6 +198,7 @@ steps:
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: TerraformCLI@0
         displayName: Terraform destroy ${{ parameters.component }}
+        env: ${{ parameters.tf_env_vars  }}
         condition: and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'destroy'))
         inputs:
           command: destroy
