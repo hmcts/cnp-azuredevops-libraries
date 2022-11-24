@@ -124,9 +124,26 @@ steps:
       command: validate
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
+
+  - task: Bash@3
+    displayName: debug tf_Var
+    env:
+      TF_VAR_DYNATRACE_PLATOPS_API_KEY: $(dynatrace-platops-api-key)
+    inputs:
+      targetType: 'inline'
+      script: |
+        env
+        echo first
+        echo $(dynatrace-platops-api-key)
+        echo second
+        echo $(TF_VAR_DYNATRACE_PLATOPS_API_KEY)
+      failOnStderr: true
+
   - task: TerraformCLI@0
     displayName: Terraform plan ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+    env:
+      TF_VAR_DYNATRACE_PLATOPS_API_KEY: $(dynatrace-platops-api-key)
     inputs:
       command: plan
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
