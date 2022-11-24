@@ -65,6 +65,7 @@ steps:
   - checkout: cnp-azuredevops-libraries
     clean: true
   - bash: echo ${{ parameters.environment }}
+    displayName: Display environment parameter
 
   - template: ./set-build-repo-suffix-env-var.yaml
   - template: ./keyvault-read.yaml
