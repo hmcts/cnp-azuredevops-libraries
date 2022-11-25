@@ -4,31 +4,31 @@ Reusable pipeline components for CNP Azure DevOps pipelines
 ## Terraform workflow templates
 
 The template files below contain steps to add Terraform Init/Plan/Apply/Destroy tasks to a pipeline.
-    
-    ├── scripts                                  
+
+    ├── scripts
     ├── steps
     │   └── terraform-precheck.yaml             # Precheck stage tasks
     │   └── terraform.yaml                      # Terraform plan and apply stage tasks
-    ├── tasks   
-    ├── vars   
+    ├── tasks
+    ├── vars
 
 ### Reusing templates:
 1. Create the [required folder structure](#required-terraform-folder-structure) in your repository
-2. Add the cnp-azure-devops-libraries repository resource as below  
-   
+2. Add the cnp-azure-devops-libraries repository resource as below
+
    ```yaml
-   
-   resources:  
+
+   resources:
      repositories:
      - repository: cnp-azuredevops-libraries
        type: github
        ref: refs/heads/master
        name: hmcts/cnp-azuredevops-libraries
-       endpoint: 'hmcts (1)'  
-    
+       endpoint: 'hmcts (1)'
+
    ```
 3. Use the vars/input-variables.yaml template to add the common variables to your pipeline.
-   
+
    Make sure you use the correct syntax when declaring a mixture of regular variables and templates, like below.
 
    Syntax example
@@ -57,37 +57,37 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
        value: b8d29n39-8007-49m0-95b8-3c8691e90kb
      - template: vars/input-variables.yaml@cnp-azuredevops-libraries
    ```
-  
+
    [More information on the correct syntax when using regular variables, variables groups and templates.](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch#specify-variables)
- 
+
 4. Add the terraform-precheck.yaml template to a `Precheck` stage
 5. Add the terraform.yaml template to a `TerraformPlanApply` stage
    > see [Example refactored pipeline](https://github.com/hmcts/azure-platform-terraform/blob/master/azure_pipeline.yaml)
-6. First time pipeline run:  
-   * Run build with the Terraform plan option. State file will be created in new location   
-   * Copy state file from old location to overwrite new state file  
-   * Run build with Terraform plan to confirm plan reflects migrated state file  
-7. Run pipeline with plan/apply option as required   
+6. First time pipeline run:
+   * Run build with the Terraform plan option. State file will be created in new location
+   * Copy state file from old location to overwrite new state file
+   * Run build with Terraform plan to confirm plan reflects migrated state file
+7. Run pipeline with plan/apply option as required
 
-### State file:  
-* In storage accounts in the `HMCTS-CONTROL` subscription  
-* Storage account name derived from the resources subscription id as below:  
-  >'c' + '1st-8th character of subscription id' + '25th-36th character of subscription id' + 'sa'  
-  _e.g. 'cb72ab7b703b0f2c6a1bbsa'_  
-* Stored in the 'subscription-tfstate' storage container in the folder path derived as below:  
-  >'location/product/build repo name/environment/component name/terraform.tfstate'  
-  _e.g. 'UK South/cft-platform/azure-platform-terraform/sbox/shutter/terraform.tfstate'_  
+### State file:
+* In storage accounts in the `HMCTS-CONTROL` subscription
+* Storage account name derived from the resources subscription id as below:
+  >'c' + '1st-8th character of subscription id' + '25th-36th character of subscription id' + 'sa'
+  _e.g. 'cb72ab7b703b0f2c6a1bbsa'_
+* Stored in the 'subscription-tfstate' storage container in the folder path derived as below:
+  >'location/product/build repo name/environment/component name/terraform.tfstate'
+  _e.g. 'UK South/cft-platform/azure-platform-terraform/sbox/shutter/terraform.tfstate'_
 
-### Required terraform folder structure:  
-Template requires the below folder structure for the build repository.  
+### Required terraform folder structure:
+Template requires the below folder structure for the build repository.
 
     Repo
-    ├── components                                         
+    ├── components
     │   └── <a> (e.g. network)                             # group of .tf files
     │   │       └── .terraform-version (symlink)           # link to .terraform-version at root level (for local testing)
     │   │       │                                            command: ln -s ../../.terraform-version .terraform-version
     │   │       └── *.tf
-    │   └── <n> 
+    │   └── <n>
     ├── environments                                       # Environment specific .tfvars files
     │   └── <env>
     │   │    └── *.tfvars
@@ -107,7 +107,7 @@ Using multiple region support requires the below environments folder structure f
     ├── environments                                       # Environment specific .tfvars files
     │   └── <env>
     │   │    └── <location>.tfvars                         # Region specific tfvars file without spaces e.g. prod-ukwest.tfvars
-    
+
 With this a different variable file will be used. An example can be found in the [hub-panorama repo](https://github.com/hmcts/hub-panorama-terraform).
 
 ### tfvars file location
@@ -122,10 +122,30 @@ tfVarsFile: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/n
 > see [example in aks-cft-deploy repo](https://github.com/hmcts/aks-cft-deploy/blob/main/azure-pipelines.yml)
 
 #### b) No `tfvars` file
-If the component does not need a `tfvars` file, then a special `NULL` string (all caps) can be specified for  `tfVarsFile`, as shown below. 
+If the component does not need a `tfvars` file, then a special `NULL` string (all caps) can be specified for  `tfVarsFile`, as shown below.
 ```yaml
 tfVarsFile: NULL
 ```
 Note: This is different from the terraform reserved word `null` and is essentially a special string to indicate that no `tfvars` file is needed.
 
 > see [example in aks-cft-deploy repo](https://github.com/hmcts/aks-cft-deploy/blob/main/azure-pipelines.yml)
+
+### Passing environment variables to terraform template:
+
+You can pass environment variables directly to terraform tasks (plan, apply, destroy)
+Which then can be used as variable within terraform code as shown in below example:
+
+```yaml
+- template: steps/terraform.yaml@cnp-azuredevops-libraries
+  parameters:
+    overrideAction: ${{ parameters.overrideAction }}
+    environment: ${{ deployment.environment }}
+    component: ${{ deployment.component }}
+    serviceConnection: ${{ deployment.service_connection }}
+    terraformInitSubscription: ${{ variables.terraformInitSubscription }}
+    product: ${{ variables.product }}
+    terraformEnvironmentVariables:
+      TF_VAR_foo: $(bar)
+```
+In terraform you can then reference this variable as `var.foo`
+
