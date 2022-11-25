@@ -129,3 +129,23 @@ tfVarsFile: NULL
 Note: This is different from the terraform reserved word `null` and is essentially a special string to indicate that no `tfvars` file is needed.
 
 > see [example in aks-cft-deploy repo](https://github.com/hmcts/aks-cft-deploy/blob/main/azure-pipelines.yml)
+
+### Passing environment variables to terraform template:
+
+You can pass environment variables directly to terraform tasks (plan, apply, destroy)
+Which then can be used as variable within terraform code as shown in below example:
+
+```yaml
+          - template: steps/terraform.yaml@cnp-azuredevops-libraries
+            parameters:
+              overrideAction: ${{ parameters.overrideAction }}
+              environment: ${{ deployment.environment }}
+              component: ${{ deployment.component }}
+              serviceConnection: ${{ deployment.service_connection }}
+              terraformInitSubscription: ${{ variables.terraformInitSubscription }}
+              product: ${{ variables.product }}
+              tf_env_vars:
+                TF_VAR_FOO: $(bar)
+```
+In terraform you can then reference this variable as `var.FOO`
+
