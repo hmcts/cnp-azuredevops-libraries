@@ -55,7 +55,7 @@ parameters:
   - name: tfVarsFile
     default: ''
 
-  - name: tf_env_vars
+  - name: terraformEnvironmentVariables
     type: object
     default: null
 
@@ -132,8 +132,8 @@ steps:
   - task: TerraformCLI@0
     displayName: Terraform plan ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
-    ${{ if parameters.tf_env_vars }}:
-      env: ${{ parameters.tf_env_vars  }}
+    ${{ if parameters.terraformEnvironmentVariables }}:
+      env: ${{ parameters.terraformEnvironmentVariables  }}
     inputs:
       command: plan
       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
@@ -184,8 +184,8 @@ steps:
 
   - task: TerraformCLI@0
     displayName: Terraform apply ${{ parameters.component }}
-    ${{ if parameters.tf_env_vars }}:
-      env: ${{ parameters.tf_env_vars  }}
+    ${{ if parameters.terraformEnvironmentVariables }}:
+      env: ${{ parameters.terraformEnvironmentVariables  }}
     condition: |
       or(
       and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'apply')),
@@ -200,8 +200,8 @@ steps:
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: TerraformCLI@0
         displayName: Terraform destroy ${{ parameters.component }}
-        ${{ if parameters.tf_env_vars }}:
-          env: ${{ parameters.tf_env_vars  }}
+        ${{ if parameters.terraformEnvironmentVariables }}:
+          env: ${{ parameters.terraformEnvironmentVariables  }}
         condition: and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'destroy'))
         inputs:
           command: destroy
