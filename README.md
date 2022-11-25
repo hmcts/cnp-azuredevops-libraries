@@ -144,7 +144,7 @@ Which then can be used as variable within terraform code as shown in below examp
               serviceConnection: ${{ deployment.service_connection }}
               terraformInitSubscription: ${{ variables.terraformInitSubscription }}
               product: ${{ variables.product }}
-              tf_env_vars:
+              terraformEnvironmentVariables:
                 TF_VAR_foo: $(bar)
 ```
 In terraform you can then reference this variable as `var.FOO`
