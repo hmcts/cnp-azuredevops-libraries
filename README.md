@@ -147,5 +147,5 @@ Which then can be used as variable within terraform code as shown in below examp
               terraformEnvironmentVariables:
                 TF_VAR_foo: $(bar)
 ```
-In terraform you can then reference this variable as `var.FOO`
+In terraform you can then reference this variable as `var.foo`
 
