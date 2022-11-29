@@ -117,7 +117,7 @@ def main():
             )
             logger.info(json.dumps(builds_in_progress, indent=4))
             logger.info("Checking again in 5 minutes...")
-            time.sleep(5)
+            time.sleep(10)
         else:
             logger.info("There is no other builds in progress...")
             logger.info("Carrying on...")
