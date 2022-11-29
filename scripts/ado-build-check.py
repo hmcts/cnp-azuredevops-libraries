@@ -61,6 +61,20 @@ logger.info(f"Current build id is : {buildid}")
 
 
 def get_builds(buildid, ado_definition_url):
+    """
+    This function takes a build ID and an ADO Definition URL and returns a list of builds
+    with information about their ID, build number, status, queue time, URL, and requested by.
+
+    Parameters:
+    buildid (int): The ID of the build for which to return other builds.
+    ado_definition_url (str): The URL of the ADO definition.
+
+    Returns:
+    list: A list of builds with information about their ID, build number, status, queue time, URL, and requested by.
+
+    Raises:
+    Exception: If an exception is raised, the debug info of the builds is logged.
+    """
     try:
         builds = requests.get(ado_definition_url, auth=HTTPBasicAuth("user", pat))
         builds = builds.json()["value"]
@@ -84,6 +98,17 @@ def get_builds(buildid, ado_definition_url):
 
 
 def main():
+    """
+    This function checks if any builds are in progress, and if so, waits a
+    specified amount of time before checking again.
+
+    Requires parameters:
+    buildid (str): The build ID
+    ado_definition_url (str): The ADO definition URL
+
+    Returns:
+    None
+    """
     while True:
         builds_in_progress = get_builds(buildid, ado_definition_url)
         if len(builds_in_progress) > 0:
