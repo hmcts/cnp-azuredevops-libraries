@@ -6,6 +6,7 @@ import logging
 import requests
 from requests.auth import HTTPBasicAuth
 
+retry_time_in_seconds = 10
 
 logging.basicConfig(
     level=logging.INFO,
@@ -116,8 +117,8 @@ def main():
                 f"There is currently {len(builds_in_progress)} builds in progress..."
             )
             logger.info(json.dumps(builds_in_progress, indent=4))
-            logger.info("Checking again in 5 minutes...")
-            time.sleep(10)
+            logger.info(f"Re-trying in {retry_time_in_seconds} seconds...")
+            time.sleep(retry_time_in_seconds)
         else:
             logger.info("There are no other builds in progress...")
             logger.info("Carrying on...")
