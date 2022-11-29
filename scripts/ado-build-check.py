@@ -119,7 +119,7 @@ def main():
             logger.info("Checking again in 5 minutes...")
             time.sleep(10)
         else:
-            logger.info("There is no other builds in progress...")
+            logger.info("There are no other builds in progress...")
             logger.info("Carrying on...")
             break
 
