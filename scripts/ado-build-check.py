@@ -78,6 +78,8 @@ def get_builds(buildid, ado_definition_url):
             if "inProgress" in build["status"] and build["id"] != buildid
         ]
     except Exception as e:
+        logger.info("Something went wrong... dislaying debug info below...")
+        logger.info(builds.content)
         raise Exception(e)
 
 

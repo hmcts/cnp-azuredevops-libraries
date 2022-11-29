@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -x
 organization="hmcts"
 project="$SYSTEM_TEAMPROJECT"
 link="https://dev.azure.com/$organization/$project/_apis/build/builds?api-version=5.1&definitions=$pipelinedefinition"
