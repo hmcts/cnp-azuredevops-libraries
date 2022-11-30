@@ -19,10 +19,9 @@ steps:
   - checkout: cnp-azuredevops-libraries
   - template: ./set-build-repo-suffix-env-var.yaml
 
-  - task: Bash@3
-    displayName: Terraform install (tfenv)
-    inputs:
-      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
+  - template: ./install-use-tfswitch.yaml
+    parameters:
+      tfswitchArgs: -b ~/.local/bin/terraform --latest
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureKeyVault@1

@@ -89,11 +89,10 @@ steps:
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'github-api-token'
 
-  - task: Bash@3
-    displayName: Terraform install (tfenv)
-    inputs:
-      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfenv-install-terraform.sh
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+  - template: ./install-use-tfswitch.yaml
+    parameters:
+      tfswitchArgs: -b ~/.local/bin/terraform
+      workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
 
   - task: Bash@3
     displayName: Build resource values

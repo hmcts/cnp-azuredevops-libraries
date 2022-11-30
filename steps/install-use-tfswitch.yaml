@@ -1,0 +1,18 @@
+---
+parameters:
+  - name: workingDirectory
+    default: $(System.DefaultWorkingDirectory)
+  - name: tfswitchArgs
+    default: ''
+steps:
+  - task: Bash@3
+    displayName: Terraform install (tfswitch)
+    env:
+      BINDIR: ~/.local/bin
+    inputs:
+      targetType: 'inline'
+      script: |
+        curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | bash -s -- -b  ~/.local/bin latest
+        set -x
+        tfswitch ${{ parameters.tfswitchArgs }}
+      workingDirectory: ${{ parameters.workingDirectory}}
