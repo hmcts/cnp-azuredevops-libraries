@@ -1,3 +1,4 @@
+import re
 import sys
 import json
 import time
@@ -92,9 +93,15 @@ def get_builds(buildid, ado_definition_url):
             if "inProgress" in build["status"] and build["id"] != buildid
         ]
     except Exception as e:
-        if "The Personal Access Token used has expired" in e:
-            logger.exception("The Personal Access Token used has expired")
-        else:
+        try:
+            if "<title>" in builds.content:
+                # Try to parse title HTML tag if HTML error type.
+                logger.exception(
+                    re.findall("<title>(.*?)</title>", str(builds.content))
+                )
+            else:
+                raise
+        except:
             logger.info("Unknown error... dislaying debug info below...")
             logger.info(builds.content)
             raise Exception(e)
