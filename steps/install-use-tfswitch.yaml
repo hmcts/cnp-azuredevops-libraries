@@ -14,5 +14,7 @@ steps:
       script: |
         curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | bash -s -- -b  ~/.local/bin latest
         set -x
+        # Make sure ~/.local/bin is set for both root and non-root based agents (self-hosted etc)
+        echo '##vso[task.prependpath]$(HOME)/.local/bin'
         tfswitch ${{ parameters.tfswitchArgs }}
       workingDirectory: ${{ parameters.workingDirectory}}
