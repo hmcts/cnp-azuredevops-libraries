@@ -92,7 +92,7 @@ def get_builds(buildid, ado_definition_url):
             if "inProgress" in build["status"] and build["id"] != buildid
         ]
     except Exception as e:
-        if 'The Personal Access Token used has expired' in e:
+        if "The Personal Access Token used has expired" in e:
             logger.exception("The Personal Access Token used has expired")
         else:
             logger.info("Unknown error... dislaying debug info below...")
