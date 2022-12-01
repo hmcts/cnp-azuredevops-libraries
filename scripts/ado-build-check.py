@@ -99,6 +99,7 @@ def get_builds(buildid, ado_definition_url):
                 logger.exception(
                     re.findall("<title>(.*?)</title>", str(builds.content))
                 )
+                logger.debug(builds.content)
             else:
                 raise
         except:
