@@ -79,7 +79,6 @@ def get_builds(buildid, ado_definition_url):
     try:
         builds = requests.get(ado_definition_url, auth=HTTPBasicAuth("user", pat))
         builds = builds.json()["value"]
-
         return [
             {
                 "id": build["id"],
@@ -93,9 +92,12 @@ def get_builds(buildid, ado_definition_url):
             if "inProgress" in build["status"] and build["id"] != buildid
         ]
     except Exception as e:
-        logger.info("Something went wrong... dislaying debug info below...")
-        logger.info(builds.content)
-        raise Exception(e)
+        if 'The Personal Access Token used has expired' in e:
+            logger.exception("The Personal Access Token used has expired")
+        else:
+            logger.info("Unknown error... dislaying debug info below...")
+            logger.info(builds.content)
+            raise Exception(e)
 
 
 def main():
