@@ -121,7 +121,6 @@ def main():
             time.sleep(retry_time_in_seconds)
         else:
             logger.info("There are no other builds in progress...")
-            logger.info("Carrying on...")
             break
 
 
