@@ -105,6 +105,14 @@ def get_builds(buildid, ado_definition_url):
                 if buildid not in build_ids:
                     logger.error(f"Provided build id {buildid} not found in builds.")
                     return False
+
+                build_ids_in_progress = [
+                    build["id"] for build in builds if "inProgress" in build["status"]
+                ]
+                if min(build_ids_in_progress) == buildid:
+                    logger.info(f"Build id {buildid} is next in queue. Exiting...")
+                    return
+
                 return [
                     {
                         "id": build["id"],
