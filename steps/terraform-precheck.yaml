@@ -17,7 +17,6 @@ parameters:
   - name: overrideAction
     default: apply
 
-
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
