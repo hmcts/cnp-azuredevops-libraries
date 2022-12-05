@@ -14,6 +14,10 @@ parameters:
   - name: serviceConnection
     default: ''
 
+  - name: overrideAction
+    default: apply
+
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -48,6 +52,7 @@ steps:
 
   - task: Bash@3
     displayName: Prevent parallel run
+    condition: and(succeeded(), ne('${{ parameters.overrideAction }}', 'plan'))
     env:
       thisbuild: $(Build.BuildId)
       pipelinedefinition: $(System.DefinitionId)
