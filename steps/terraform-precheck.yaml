@@ -52,12 +52,9 @@ steps:
   - task: Bash@3
     displayName: Prevent parallel run
     condition: and(succeeded(), ne('${{ parameters.overrideAction }}', 'plan'))
+    env:
+      thisbuild: $(Build.BuildId)
+      pipelinedefinition: $(System.DefinitionId)
+      azuredevopstoken: $(azure-devops-token)
     inputs:
-      targetType: inline
-      script: |
-        python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-build-check.py \
-        --pat $(azure-devops-token) \
-        --buildid $(Build.BuildId) \
-        --organization hmcts \
-        --project $(System.TeamProject) \
-        --pipelineid $(System.DefinitionId)
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/builds-check.sh
