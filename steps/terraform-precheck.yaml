@@ -52,7 +52,19 @@ steps:
   - task: Bash@3
     displayName: Prevent parallel run
     # (Run if not a plan and is manually triggered) or (Run if branch is main/master and is auto triggered)
-    condition: and( succeeded(), ne('${{ parameters.overrideAction }}', 'plan'), eq(variables['isAutoTriggered'], false))
+    condition: |
+      and( succeeded(),
+        or(
+            and(
+                ne('${{ parameters.overrideAction }}', 'plan'),
+                eq(variables['isAutoTriggered'], false)
+            ),
+            and(
+                eq(variables['isAutoTriggered'], true),
+                eq(variables['isMain'], true)
+            )
+        )
+      )
     env:
       thisbuild: $(Build.BuildId)
       pipelinedefinition: $(System.DefinitionId)
