@@ -53,7 +53,7 @@ steps:
     displayName: Prevent parallel run
     # Run step if (not a plan and is manually triggered) or (branch is main and is auto triggered)
     condition: |
-      and( succeeded(),
+      and(succeeded(),
         or(
             and(
                 ne('${{ parameters.overrideAction }}', 'plan'),
