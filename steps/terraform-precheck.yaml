@@ -51,7 +51,7 @@ steps:
 
   - task: Bash@3
     displayName: Prevent parallel run
-    # (Run if not a plan and is manually triggered) or (Run if branch is main/master and is auto triggered)
+    # Run step if (not a plan and is manually triggered) or (branch is main and is auto triggered)
     condition: |
       and( succeeded(),
         or(
