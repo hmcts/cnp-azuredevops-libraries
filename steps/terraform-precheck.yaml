@@ -55,6 +55,7 @@ steps:
     inputs:
       targetType: inline
       script: |
+        python3 -m pip install requests && \
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-build-check.py \
         --pat $(azure-devops-token) \
         --buildid $(Build.BuildId) \
