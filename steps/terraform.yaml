@@ -164,15 +164,17 @@ steps:
           -lock=false
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), contains(variables['Build.SourceBranch'], 'refs/pull'))
     env:
       GITHUB_TOKEN: $(github-api-token)
     inputs:
       targetType: 'inline'
       script: |
+        BRANCH=$(Build.SourceBranch)
+        PR_NUMBER=$(echo $BRANCH | cut -d "/" -f3 )
         tfcmt --owner hmcts \
           --repo $(buildRepoSuffix) \
-          --pr $(System.PullRequest.PullRequestNumber) \
+          --pr $PR_NUMBER \
           --var target:$(tfPlanName) \
           --var ado_url:$SYSTEM_COLLECTIONURI \
           --var ado_project:"$SYSTEM_TEAMPROJECT" \
