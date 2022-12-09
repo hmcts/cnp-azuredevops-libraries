@@ -75,14 +75,14 @@ steps:
 
   - task: Bash@3
     displayName: Install tfcmt
-    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    condition: contains(variables['Build.SourceBranch'], 'refs/pull')
     inputs:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/install-tfcmt.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureKeyVault@1
     displayName: 'Get GitHub API token from Keyvault'
-    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    condition: contains(variables['Build.SourceBranch'], 'refs/pull')
     inputs:
       runAsPreJob: false
       ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
