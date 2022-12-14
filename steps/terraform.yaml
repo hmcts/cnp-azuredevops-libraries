@@ -228,7 +228,19 @@ steps:
 
   - task: AzureCLI@2
     displayName: 'Unlock TF state if required'
-    condition: always()
+    condition: |
+      and( succeeded(),
+        or(
+            and(
+                ne('${{ parameters.overrideAction }}', 'plan'),
+                eq(variables['isAutoTriggered'], false)
+            ),
+            and(
+                eq(variables['isAutoTriggered'], true),
+                eq(variables['isMain'], true)
+            )
+        )
+      )
     inputs:
       scriptType: bash
       scriptLocation: scriptPath
