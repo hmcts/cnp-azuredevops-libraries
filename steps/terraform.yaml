@@ -64,7 +64,7 @@ parameters:
 
 
 variables:
-- name: terraformComponentDirectory
+  - name: terraformComponentDirectory
     ${{ if eq( parameters['baseDirectory'], '') }}: 
       value: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
     ${{ else }}: 
