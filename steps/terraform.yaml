@@ -63,13 +63,6 @@ parameters:
     default: ''
 
 
-variables:
-  - name: terraformComponentDirectory
-    ${{ if eq( parameters['baseDirectory'], '') }}: 
-      value: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}"
-    ${{ else }}: 
-      value: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}"
-
 steps:
   - checkout: self
     clean: true
@@ -103,7 +96,10 @@ steps:
   - template: ./install-use-tfswitch.yaml
     parameters:
       tfswitchArgs: -b ~/.local/bin/terraform
-      workingDirectory: '${{ variables.terraformComponentDirectory}}'
+      ${{ if eq( parameters['baseDirectory'], '') }}: 
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      ${{ else }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
   - task: Bash@3
     displayName: Build resource values
@@ -121,7 +117,10 @@ steps:
     displayName: Terraform init ${{ parameters.component }}
     inputs:
       command: init
-      workingDirectory: '${{ variables.terraformComponentDirectory}}'
+      ${{ if eq( parameters['baseDirectory'], '') }}: 
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      ${{ else }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       backendType: azurerm
       ensureBackend: false
       backendServiceArm: ${{ parameters.serviceConnection }}
@@ -137,7 +136,10 @@ steps:
     displayName: Terraform validate
     inputs:
       command: validate
-      workingDirectory: '${{ variables.terraformComponentDirectory}}'
+      ${{ if eq( parameters['baseDirectory'], '') }}: 
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      ${{ else }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
   - task: TerraformCLI@0
     displayName: Terraform plan ${{ parameters.component }}
@@ -146,7 +148,10 @@ steps:
       env: ${{ parameters.terraformEnvironmentVariables  }}
     inputs:
       command: plan
-      workingDirectory: '${{ variables.terraformComponentDirectory}}'
+      ${{ if eq( parameters['baseDirectory'], '') }}: 
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      ${{ else }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       publishPlanResults: "$(tfPlanName)"
@@ -192,7 +197,10 @@ steps:
           --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
           plan -patch -- \
           terraform show tfplan-$(tfPlanName)
-      workingDirectory: '${{ variables.terraformComponentDirectory}}'
+      ${{ if eq( parameters['baseDirectory'], '') }}: 
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      ${{ else }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
   - task: TerraformCLI@0
     displayName: Terraform apply ${{ parameters.component }}
@@ -205,7 +213,10 @@ steps:
       )
     inputs:
       command: apply
-      workingDirectory: '${{ variables.terraformComponentDirectory}}'
+      ${{ if eq( parameters['baseDirectory'], '') }}: 
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      ${{ else }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
       commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName)"
 
@@ -217,7 +228,10 @@ steps:
         condition: and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'destroy'))
         inputs:
           command: destroy
-          workingDirectory: '${{ variables.terraformComponentDirectory}}'
+          ${{ if eq( parameters['baseDirectory'], '') }}: 
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+          ${{ else }}:
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
           environmentServiceName: ${{ parameters.serviceConnection }}
           ${{ if eq(parameters['tfVarsFile'], '') }}:
             commandOptions: >
