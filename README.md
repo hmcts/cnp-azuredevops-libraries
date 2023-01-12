@@ -130,6 +130,14 @@ Note: This is different from the terraform reserved word `null` and is essential
 
 > see [example in aks-cft-deploy repo](https://github.com/hmcts/aks-cft-deploy/blob/main/azure-pipelines.yml)
 
+### components file location
+
+On repositories, it may not be possible to have components folder directy under the root of the repository. In such case, the `baseDirectory` option can be used so specify the location of the components folder.
+```yaml
+baseDirectory: "terraform/network/components"
+```
+> see [example in oracle-azure-infrastructure repo](https://github.com/hmcts/oracle-azure-infrastructure/blob/DTSPO-9224-pipeline-refactor/terraform/network/azure-pipelines.yml)
+
 ### Passing environment variables to terraform template:
 
 You can pass environment variables directly to terraform tasks (plan, apply, destroy)
