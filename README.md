@@ -130,6 +130,13 @@ Note: This is different from the terraform reserved word `null` and is essential
 
 > see [example in aks-cft-deploy repo](https://github.com/hmcts/aks-cft-deploy/blob/main/azure-pipelines.yml)
 
+### Override components directory
+
+In a monorepo, it may be needed to override the components folder if there's multiple applications that are built from the same repository. You can pass the `baseDirectory` option to specify the location of the components folder.
+```yaml
+baseDirectory: "terraform/network/components"
+```
+
 ### Passing environment variables to terraform template:
 
 You can pass environment variables directly to terraform tasks (plan, apply, destroy)
