@@ -130,9 +130,9 @@ Note: This is different from the terraform reserved word `null` and is essential
 
 > see [example in aks-cft-deploy repo](https://github.com/hmcts/aks-cft-deploy/blob/main/azure-pipelines.yml)
 
-### components file location
+### Override components directory
 
-On repositories, it may not be possible to have components folder directy under the root of the repository. In such case, the `baseDirectory` option can be used so specify the location of the components folder.
+In a monorepo, it may be needed to override the components folder if there's multiple applications that are built from the same repository. You can pass the `baseDirectory` option to specify the location of the components folder.
 ```yaml
 baseDirectory: "terraform/network/components"
 ```
