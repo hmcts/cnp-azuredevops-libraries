@@ -136,7 +136,6 @@ In a monorepo, it may be needed to override the components folder if there's mul
 ```yaml
 baseDirectory: "terraform/network/components"
 ```
-> see [example in oracle-azure-infrastructure repo](https://github.com/hmcts/oracle-azure-infrastructure/blob/DTSPO-9224-pipeline-refactor/terraform/network/azure-pipelines.yml)
 
 ### Passing environment variables to terraform template:
 
