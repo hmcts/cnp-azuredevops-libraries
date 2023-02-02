@@ -127,7 +127,7 @@ def get_builds(buildid, ado_definition_url):
                 ]
         if builds.status_code == 401 and len(builds.text) == 0:
             logger.error("401 response - PAT token provided is invalid")
-            return
+            raise SystemExit(1)
         if not builds:
             try:
                 if "<title>" in builds.text:
@@ -135,13 +135,13 @@ def get_builds(buildid, ado_definition_url):
                     title = re.findall("<title>(.*?)</title>", builds.text)
                     if title:
                         logger.error(title)
-                        return
+                        raise SystemExit(1)
                     else:
                         logger.error(builds.text)
-                        return
+                        raise SystemExit(1)
                 else:
                     logger.error(builds.content)
-                    return
+                    raise SystemExit(1)
             except Exception as e:
                 logger.info("Unknown error...\n\n")
                 raise Exception(e)
