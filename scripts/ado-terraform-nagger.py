@@ -8,6 +8,10 @@ import subprocess
 from packaging import version
 from json.decoder import JSONDecodeError
 
+# Global variable used to exit with error at the end of all checks.
+# To be updated from default value by logging function.
+errors_detected = False
+
 config = {
     "terraform": {"warn_below": "1.3.7", "error_below": "0.12.0"},
     "providers": {
@@ -87,6 +91,8 @@ def log_message(message_type, message):
     Returns:
     None
     """
+    global errors_detected
+
     logger.warning(message)
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
@@ -94,6 +100,7 @@ def log_message(message_type, message):
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
         if message_type == "error":
             logger.error(f"##vso[task.logissue type=error;]{message}")
+            errors_detected = True
 
 
 def extract_version(text, regex):
@@ -127,7 +134,7 @@ def terraform_version_checker(terraform_version):
             "error",
             f"Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["error_below"]}. '
-            "Exiting...",
+            "This is no longer allowed, please upgrade...",
         )
 
     # Warn if terraform version is lower than specified within config.
@@ -178,7 +185,7 @@ def main():
                         f"{terraform_providers[provider]} "
                         "is lower than "
                         f'{config["providers"][provider]["error_below"]}. '
-                        "Exiting...",
+                        "This is no longer allowed, please upgrade...",
                     )
 
                 # Warn if provider version is lower than specified within config.
@@ -214,6 +221,11 @@ def main():
     except Exception as e:
         logger.error("Unknown error occurred")
         raise Exception(e)
+
+    # Exit with error at the end of all checks so that we can see errors for all
+    # unmet versions.
+    if errors_detected:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
