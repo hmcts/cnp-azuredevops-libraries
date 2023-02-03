@@ -1,0 +1,12 @@
+---
+parameters:
+  - name: workingDirectory
+    default: $(System.DefaultWorkingDirectory)
+steps:
+  - task: Bash@3
+    displayName: Terraform version nagger
+    inputs:
+      targetType: 'inline'
+      script: |
+        python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py
+      workingDirectory: ${{ parameters.workingDirectory}}
