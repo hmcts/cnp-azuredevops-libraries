@@ -171,6 +171,8 @@ def main():
                         f'{config["providers"][provider]["error_below"]}. '
                         "Exiting..."
                     )
+
+                    logger.error(f"##vso[task.logissue type=error;]TestExitCode")
                     raise SystemExit(1)
 
                 # Warn if provider version is lower than specified within config.
