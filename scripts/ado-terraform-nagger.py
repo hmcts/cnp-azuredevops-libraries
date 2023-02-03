@@ -33,7 +33,7 @@ config = {
         },
         "registry.terraform.io/microsoft/azuredevops": {
             "warn_below": "0.3.0",
-            "error_below": "0.1.0",
+            "error_below": "0.2.0",
         },
         "registry.terraform.io/paloaltonetworks/panos": {
             "warn_below": "1.11.0",
