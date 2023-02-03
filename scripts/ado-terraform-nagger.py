@@ -128,7 +128,7 @@ def terraform_version_checker(terraform_version):
     if version.parse(terraform_version) < version.parse(
         config["terraform"]["warn_below"]
     ):
-        logger.warning(
+        log_message(
             f"Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["warn_below"]}. '
             "Please upgrade..."
