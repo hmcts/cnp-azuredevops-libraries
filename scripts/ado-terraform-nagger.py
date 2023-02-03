@@ -159,6 +159,11 @@ def main():
         result = json.loads(run_command.stdout.decode("utf-8"))
         terraform_version = result["terraform_version"]
 
+        # Use terraform's `terraform_outdated` JSON object to notify if there
+        # is a new terraform version available.
+        if "terraform_outdated" in result and result["terraform_outdated"]:
+            log_message("warning", "Detected outdated terraform version.")
+
         # Handle terraform versions
         terraform_version_checker(terraform_version)
 
