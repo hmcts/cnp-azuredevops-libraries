@@ -79,7 +79,7 @@ def log_message(message_type, message):
     """
     This function logs a given message with the logging library and,
     if the system is running in Azure DevOps
-    (as determined by the presence of the SYSTEM_ACCESSTOKEN environment variable),
+    (as determined by the SYSTEM_PIPELINESTARTTIME environment variable),
     it also logs a warning issue with Azure DevOps. If message_type is set to warning
     logger will log a warning type, if message_type is set to error logger will log an
     error type, ADO will also raise an error and stop task execution.
