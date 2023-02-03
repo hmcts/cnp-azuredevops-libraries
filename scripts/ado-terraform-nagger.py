@@ -85,7 +85,7 @@ def log_message(message):
     None
     """
     logger.warning(message)
-    is_ado = os.getenv("SYSTEM_ACCESSTOKEN")
+    is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
         logger.warning(f"##vso[task.logissue type=warning;]{message}")
 
