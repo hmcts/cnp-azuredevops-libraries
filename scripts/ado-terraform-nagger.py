@@ -71,14 +71,17 @@ semver_regex = (
 )
 
 
-def log_message(message):
+def log_message(message_type, message):
     """
     This function logs a given message with the logging library and,
     if the system is running in Azure DevOps
     (as determined by the presence of the SYSTEM_ACCESSTOKEN environment variable),
-    it also logs a warning issue with Azure DevOps.
+    it also logs a warning issue with Azure DevOps. If message_type is set to warning
+    logger will log a warning type, if message_type is set to error logger will log an
+    error type, ADO will also raise an error and stop task execution.
 
     Args:
+    message_type(str): The message type, can be either warning or error.
     message (str): The message to be logged.
 
     Returns:
@@ -87,7 +90,10 @@ def log_message(message):
     logger.warning(message)
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
-        logger.warning(f"##vso[task.logissue type=warning;]{message}")
+        if message_type == "warning":
+            logger.warning(f"##vso[task.logissue type=warning;]{message}")
+        if message_type == "error":
+            logger.error(f"##vso[task.logissue type=error;]{message}")
 
 
 def extract_version(text, regex):
@@ -118,20 +124,21 @@ def terraform_version_checker(terraform_version):
         config["terraform"]["error_below"]
     ):
         log_message(
+            "error",
             f"Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["error_below"]}. '
-            "Exiting..."
+            "Exiting...",
         )
-        raise SystemExit(1)
 
     # Warn if terraform version is lower than specified within config.
     if version.parse(terraform_version) < version.parse(
         config["terraform"]["warn_below"]
     ):
         log_message(
+            "warning",
             f"Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["warn_below"]}. '
-            "Please upgrade..."
+            "Please upgrade...",
         )
 
 
@@ -154,9 +161,10 @@ def main():
         for provider in terraform_providers:
             if provider not in config["providers"]:
                 log_message(
+                    "warning",
                     f"Provider {provider} is missing from version config. "
                     "Please add it to the config in this file in order to "
-                    "compare it's versions."
+                    "compare it's versions.",
                 )
             else:
                 # Handle providers
@@ -165,26 +173,25 @@ def main():
                     config["providers"][provider]["error_below"]
                 ):
                     log_message(
+                        "error",
                         f"Detected provider {provider} version "
                         f"{terraform_providers[provider]} "
                         "is lower than "
                         f'{config["providers"][provider]["error_below"]}. '
-                        "Exiting..."
+                        "Exiting...",
                     )
-
-                    logger.error(f"##vso[task.logissue type=error;]TestExitCode")
-                    raise SystemExit(1)
 
                 # Warn if provider version is lower than specified within config.
                 if version.parse(terraform_providers[provider]) < version.parse(
                     config["providers"][provider]["warn_below"]
                 ):
                     log_message(
+                        "warning",
                         f"Detected provider {provider} version "
                         f"{terraform_providers[provider]} "
                         "is lower than "
                         f'{config["providers"][provider]["warn_below"]}. '
-                        "Please upgrade..."
+                        "Please upgrade...",
                     )
 
     except JSONDecodeError:
