@@ -62,6 +62,11 @@ parameters:
   - name: baseDirectory
     default: ''
 
+  - name: forcePreventParallelJobRun
+    displayName: Always force prevent parallem run job
+    type: boolean
+    default: false
+
 
 steps:
   - checkout: self
