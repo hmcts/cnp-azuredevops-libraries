@@ -66,7 +66,7 @@ ado_definition_url = (
     + "/_apis/build/builds?api-version=5.1&definitions="
     + f"{pipelineid}"
 )
-logger.info(f"ADO Pipeline definition URL is : {ado_definition_url}")
+logger.info(f'ADO Pipeline definition URL is : "{ado_definition_url}"')
 logger.info(f"Provided build id is : {buildid}")
 
 
