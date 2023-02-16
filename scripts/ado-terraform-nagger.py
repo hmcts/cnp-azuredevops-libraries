@@ -12,40 +12,6 @@ from json.decoder import JSONDecodeError
 # To be updated from default value by logging function.
 errors_detected = False
 
-config = {
-    "terraform": {"warn_below": "1.3.7", "error_below": "0.12.0"},
-    "providers": {
-        "registry.terraform.io/chilicat/pkcs12": {
-            "warn_below": "0.0.7",
-            "error_below": "0.0.5",
-        },
-        "registry.terraform.io/dynatrace-oss/dynatrace": {
-            "warn_below": "1.18.1",
-            "error_below": "1.16.0",
-        },
-        "registry.terraform.io/hashicorp/azuread": {
-            "warn_below": "2.33.0",
-            "error_below": "2.19.1",
-        },
-        "registry.terraform.io/hashicorp/azurerm": {
-            "warn_below": "3.42.0",
-            "error_below": "2.99.0",
-        },
-        "registry.terraform.io/integrations/github": {
-            "warn_below": "5.16.0",
-            "error_below": "5.3.0",
-        },
-        "registry.terraform.io/microsoft/azuredevops": {
-            "warn_below": "0.3.0",
-            "error_below": "0.2.0",
-        },
-        "registry.terraform.io/paloaltonetworks/panos": {
-            "warn_below": "1.11.0",
-            "error_below": "1.10.0",
-        },
-    },
-}
-
 parser = argparse.ArgumentParser(description="ADO Terraform version nagger")
 parser.add_argument(
     "-d",
@@ -74,6 +40,27 @@ semver_regex = (
     "(?:\\+(?P<meta>[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?\\s*$"
 )
 
+def load_file(filename):
+    """
+    This function loads a file from the same directory as the script itself.
+    Args:
+        filename (str): The name of the file to load.
+    Returns:
+        str: The contents of the file.
+    Raises:
+        FileNotFoundError: If the specified file does not exist.
+    """
+    # Get the path of the script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Construct the path to the file
+    file_path = os.path.join(script_dir, filename)
+    # Open and read the file
+    try:
+        with open(file_path, 'r') as f:
+            contents = f.read()
+    except FileNotFoundError:
+        raise FileNotFoundError(f"The file '{filename}' does not exist.")
+    return contents
 
 def log_message(message_type, message):
     """
@@ -126,6 +113,15 @@ def extract_version(text, regex):
 
 
 def terraform_version_checker(terraform_version):
+    # Load config file with pre-defined versions
+    try:
+        filename = "ado-terraform-nagger-versions.json"
+        config = json.loads(load_file(filename))
+    except json.JSONDecodeError:
+        logger.error(f"{filename} contains invalid JSON")
+    except Exception as e:
+        logger.error(f"Error loading {filename}: {e}")
+
     # Error if terraform version is lower than specified within config.
     if version.parse(terraform_version) < version.parse(
         config["terraform"]["error_below"]
