@@ -17,6 +17,11 @@ parameters:
   - name: overrideAction
     default: apply
 
+  - name: forcePreventParallelJobRun
+    displayName: Always force prevent parallem run job
+    type: boolean
+    default: false
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -55,6 +60,7 @@ steps:
     condition: |
       and(succeeded(),
         or(
+            eq(${{ parameters.forcePreventParallelJobRun }}, true),
             and(
                 ne('${{ parameters.overrideAction }}', 'plan'),
                 eq(variables['isAutoTriggered'], false)
@@ -70,4 +76,12 @@ steps:
       pipelinedefinition: $(System.DefinitionId)
       azuredevopstoken: $(azure-devops-token)
     inputs:
-      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/builds-check.sh
+      targetType: inline
+      script: |
+        set -x
+        python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-build-check.py \
+        --pat "$(azure-devops-token)" \
+        --buildid "$(Build.BuildId)" \
+        --organization "hmcts" \
+        --project "$(System.TeamProject)" \
+        --pipelineid "$(System.DefinitionId)"
