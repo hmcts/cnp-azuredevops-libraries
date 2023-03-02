@@ -211,7 +211,7 @@ def main():
         log_message(
             f"Detected terraform version {terraform_version} does not support "
             "checking provider versions in addition to the main binary. "
-            "Please upgrade youre terraform version to at least v0.13.0"
+            "Please upgrade your terraform version to at least v0.13.0"
         )
         # Strip preceding "v" for version comparison.
         if terraform_version[0].lower() == "v":
