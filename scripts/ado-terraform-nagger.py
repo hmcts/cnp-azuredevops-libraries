@@ -211,8 +211,9 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
     logger.warning(message)
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
-        # Attempt to send slack message
-        log_message_slack(slack_recipient, slack_webhook_url, message)
+        if message_type == "warning":
+            # Attempt to send slack message
+            log_message_slack(slack_recipient, slack_webhook_url, message)
         if message_type == "warning":
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
         if message_type == "error":
