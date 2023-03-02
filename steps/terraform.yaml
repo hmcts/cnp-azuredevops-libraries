@@ -148,6 +148,7 @@ steps:
 
   - template: ./terraform-version-nagger.yaml
     parameters:
+      kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:

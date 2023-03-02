@@ -4,6 +4,7 @@ import sys
 import json
 import logging
 import argparse
+import requests
 import subprocess
 from packaging import version
 from json.decoder import JSONDecodeError
@@ -40,6 +41,7 @@ semver_regex = (
     "(?:\\+(?P<meta>[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?\\s*$"
 )
 
+
 def load_file(filename):
     """
     This function loads a file from the same directory as the script itself.
@@ -56,33 +58,161 @@ def load_file(filename):
     file_path = os.path.join(script_dir, filename)
     # Open and read the file
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             contents = f.read()
     except FileNotFoundError:
         raise FileNotFoundError(f"The file '{filename}' does not exist.")
     return contents
 
-def log_message(message_type, message):
+
+def send_slack_message(webhook, channel, username, text, icon_emoji):
     """
-    This function logs a given message with the logging library and,
-    if the system is running in Azure DevOps
-    (as determined by the SYSTEM_PIPELINESTARTTIME environment variable),
-    it also logs a warning issue with Azure DevOps. If message_type is set to warning
-    logger will log a warning type, if message_type is set to error logger will log an
-    error type, ADO will also raise an error and stop task execution.
+    Sends a message to a Slack channel using a webhook.
 
     Args:
-    message_type(str): The message type, can be either warning or error.
-    message (str): The message to be logged.
+        webhook (str): The webhook URL for the Slack app.
+        channel (str): The name or ID of the Slack channel to send the message to.
+        username (str): The username to display as the sender of the message.
+        text (str): The message text to send.
+        icon_emoji (str): The emoji to use as the sender's icon, e.g. "smile" or "rocket".
 
     Returns:
-    None
+        bool: True if the message was sent successfully.
+
+    Raises:
+        ValueError: If the Slack API returns an error.
+    """
+    slack_data = {
+        "channel": channel,
+        "username": username,
+        "text": text,
+        "icon_emoji": f":{icon_emoji}:",
+    }
+    response = requests.post(webhook, json=slack_data)
+    if response.status_code:
+        return True
+    else:
+        raise ValueError(
+            f"Request to Slack returned an error: {response.status_code},"
+            f"{response.text}"
+        )
+
+
+def get_hmcts_github_slack_user_mappings():
+    """
+    Retrieves a JSON file containing mappings between GitHub usernames and Slack user IDs.
+    Returns:
+        dict: A dictionary containing the mappings.
+    Raises:
+        requests.exceptions.RequestException: If an error occurs while making the request.
+    """
+    url = (
+        "https://raw.githubusercontent.com/"
+        "hmcts/github-slack-user-mappings/master/slack.json"
+    )
+    response = requests.get(url).json()
+    return response
+
+
+def get_github_slack_user_mapping(mappings, github_id):
+    """
+    Return the Slack ID of the user with the provided GitHub ID.
+    If no user is found with the provided GitHub ID, return None.
+
+    Parameters:
+    - mappings (dict): A dictionary of user mappings containing 'users' key,
+        which has a list of dictionaries where each dictionary has 'github'
+        and 'slack' keys representing the GitHub ID and corresponding Slack
+        ID respectively.
+    - github_id (str): A string representing the GitHub ID of the user whose
+        Slack ID is to be retrieved.
+
+    Returns:
+    - str or None: Returns a string representing the Slack ID of the user
+        with the provided GitHub ID, or None if no user is found with the
+        provided GitHub ID.
+    """
+    # Find the user with the provided GitHub ID and return their Slack ID
+    for user in mappings["users"]:
+        if user["github"] == github_id:
+            return user["slack"]
+    return None
+
+
+def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None):
+    """
+    Sends a message to a Slack recipient using a webhook URL.
+
+    If both `slack_recipient` and `slack_webhook_url` are provided, the function
+    will send a message to the specified Slack channel or user using the
+    provided webhook URL.
+
+    Parameters:
+    - message (str): A string representing the message to be sent to Slack.
+    - slack_recipient (str): A string representing the name or ID of the Slack
+        channel or user that the message will be sent to. If not provided, the
+        message will not be sent.
+    - slack_webhook_url (str): A string representing the webhook URL for the
+        Slack integration that the message will be sent through. If not
+        provided, the message will not be sent to Slack.
+
+    Returns:
+    - None
+    """
+    if slack_recipient and slack_webhook_url:
+        repository = os.getenv("BUILD_REPOSITORY_URI")
+        branch = os.getenv("BUILD_SOURCEBRANCHNAME")
+        default_workdir = os.getenv("SYSTEM_DEFAULTWORKINGDIRECTORY")
+        workdir = os.getenv("WORKDIR").replace(default_workdir + "/", "")
+        stage = os.getenv("SYSTEM_STAGEDISPLAYNAME")
+        slack_sender = "cnp-azuredevops-libraries - terraform version nagger"
+        # Format message with useful information to quickly identify the stage,
+        # component, repository and its branch.
+        slack_message = (
+            f"\nREPOSITORY: {repository}/tree/{branch}\n"
+            + f"STAGE: {stage}\n"
+            + f"WORKDIR: {workdir}\n"
+            + f"MESSAGE: {message}\n"
+        )
+        slack_icon = "warning"
+        send_slack_message(
+            slack_webhook_url, slack_recipient, slack_sender, slack_message, slack_icon
+        )
+
+
+def log_message(slack_recipient, slack_webhook_url, message_type, message):
+    """
+    Log a message and, if running in Azure DevOps, log a warning issue and
+    attempt to send a Slack message.
+
+    This function logs a message with the Python logging library, and if the
+    system is running in Azure DevOps (as determined by the
+    SYSTEM_PIPELINESTARTTIME environment variable), it also logs a warning
+    issue with Azure DevOps and attempts to send a message via Slack to the
+    initiating GitHub user. If `message_type` is set to 'warning', the logger
+    will log a warning type. If `message_type` is set to 'error', the logger
+    will log an error type, and Azure DevOps will also raise an error and stop
+    task execution.
+
+    Args:
+    - message_type (str): The type of message to log, either 'warning' or
+        'error'.
+    - message (str): The message to be logged.
+    - slack_recipient (str): The name or ID of the Slack channel or user to
+        send the message to (optional).
+    - slack_webhook_url (str): The webhook URL for the Slack integration to
+        send the message through (optional).
+
+    Returns:
+    - None
     """
     global errors_detected
 
     logger.warning(message)
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
+        # Attempt to send slack message
+        log_message_slack(slack_recipient, slack_webhook_url, message)
         if message_type == "warning":
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
         if message_type == "error":
@@ -116,6 +246,7 @@ def terraform_version_checker(terraform_version):
     # Load config file with pre-defined versions
     try:
         filename = "ado-terraform-nagger-versions.json"
+        global config
         config = json.loads(load_file(filename))
     except json.JSONDecodeError:
         logger.error(f"{filename} contains invalid JSON")
@@ -127,6 +258,8 @@ def terraform_version_checker(terraform_version):
         config["terraform"]["error_below"]
     ):
         log_message(
+            slack_user_id,
+            slack_webhook_url,
             "error",
             f"Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["error_below"]}. '
@@ -138,6 +271,8 @@ def terraform_version_checker(terraform_version):
         config["terraform"]["warn_below"]
     ):
         log_message(
+            slack_user_id,
+            slack_webhook_url,
             "warning",
             f"Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["warn_below"]}. '
@@ -146,6 +281,23 @@ def terraform_version_checker(terraform_version):
 
 
 def main():
+
+    # Retrieve HMCTS github to slack user mappings
+    hmcts_github_slack_user_mappings = get_hmcts_github_slack_user_mappings()
+    # Attempt to retrieve github username
+    github_user = os.getenv("BUILD_SOURCEVERSIONAUTHOR")
+    # Attempt to map github user to slack username
+    global slack_user_id
+    slack_user_id = get_github_slack_user_mapping(
+        hmcts_github_slack_user_mappings, github_user
+    )
+    if not slack_user_id:
+        log_message(None, None, "warning", "Missing slack user ID from github mapping")
+    # Atempt to retrieve slack webhook URL
+    global slack_webhook_url
+    slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL")
+    if not slack_webhook_url:
+        log_message(None, None, "warning", "Missing slack webhook URL")
 
     command = ["terraform", "version", "--json"]
 
@@ -158,7 +310,12 @@ def main():
         # Use terraform's `terraform_outdated` JSON object to notify if there
         # is a new terraform version available.
         if "terraform_outdated" in result and result["terraform_outdated"]:
-            log_message("warning", "Detected outdated terraform version.")
+            log_message(
+                None,
+                None,
+                "warning",
+                f"Detected outdated terraform version: {terraform_version}",
+            )
 
         # Handle terraform versions
         terraform_version_checker(terraform_version)
@@ -169,6 +326,8 @@ def main():
         for provider in terraform_providers:
             if provider not in config["providers"]:
                 log_message(
+                    slack_user_id,
+                    slack_webhook_url,
                     "warning",
                     f"Provider {provider} is missing from version config. "
                     "Please add it to the config in this file in order to "
@@ -181,6 +340,8 @@ def main():
                     config["providers"][provider]["error_below"]
                 ):
                     log_message(
+                        slack_user_id,
+                        slack_webhook_url,
                         "error",
                         f"Detected provider {provider} version "
                         f"{terraform_providers[provider]} "
@@ -194,6 +355,8 @@ def main():
                     config["providers"][provider]["warn_below"]
                 ):
                     log_message(
+                        slack_user_id,
+                        slack_webhook_url,
                         "warning",
                         f"Detected provider {provider} version "
                         f"{terraform_providers[provider]} "
@@ -209,9 +372,11 @@ def main():
         terraform_regex = f"^([Tt]erraform(\\s))(?P<semver>{semver_regex})"
         terraform_version = extract_version(result, terraform_regex)
         log_message(
+            slack_user_id,
+            slack_webhook_url,
             f"Detected terraform version {terraform_version} does not support "
             "checking provider versions in addition to the main binary. "
-            "Please upgrade your terraform version to at least v0.13.0"
+            "Please upgrade your terraform version to at least v0.13.0",
         )
         # Strip preceding "v" for version comparison.
         if terraform_version[0].lower() == "v":
