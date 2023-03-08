@@ -17,6 +17,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
+        pip3 install packaging
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py
       workingDirectory: ${{ parameters.workingDirectory}}
     env:
