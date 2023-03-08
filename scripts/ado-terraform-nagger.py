@@ -42,6 +42,35 @@ semver_regex = (
 )
 
 
+def run_command(command):
+    """Run a command and return the output.
+    Args:
+        command (list): A list of command arguments.
+    Returns:
+        dict: The output of the command.
+    Raises:
+        subprocess.CalledProcessError: If the command returns a non-zero exit code.
+        Exception: If any other error occurs.
+    Note:
+        This function will attempt to run the command using the `capture_output`
+        parameter, which is only available in Python 3.7 or later. If this fails,
+        it will fall back to using the `stdout` and `stderr` parameters instead.
+
+    """
+    try:
+        run_command = subprocess.run(command, capture_output=True)
+        return run_command.stdout.decode("utf-8")
+    except TypeError:
+        run_command = subprocess.run(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        return run_command.stdout.decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        raise subprocess.CalledProcessError(e.returncode, e.cmd, e.output, e.stderr)
+    except Exception as e:
+        raise Exception(f"An error occurred: {e}")
+
+
 def load_file(filename):
     """
     This function loads a file from the same directory as the script itself.
@@ -304,8 +333,7 @@ def main():
 
     try:
         # Try to run `version --json` which is present in tf versions >= 0.13.0
-        run_command = subprocess.run(command, capture_output=True)
-        result = json.loads(run_command.stdout.decode("utf-8"))
+        result = json.loads(run_command(command))
         terraform_version = result["terraform_version"]
 
         # Use terraform's `terraform_outdated` JSON object to notify if there
@@ -368,8 +396,7 @@ def main():
 
     except JSONDecodeError:
         # Fallback to regex when terraform version <= 0.13.0
-        run_command = subprocess.run(command, capture_output=True)
-        result = run_command.stdout.decode("utf-8")
+        result = run_command(command)
         terraform_regex = f"^([Tt]erraform(\\s))(?P<semver>{semver_regex})"
         terraform_version = extract_version(result, terraform_regex)
         log_message(
