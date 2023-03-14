@@ -101,7 +101,7 @@ steps:
   - template: ./install-use-tfswitch.yaml
     parameters:
       tfswitchArgs: -b ~/.local/bin/terraform
-      ${{ if eq( parameters['baseDirectory'], '') }}: 
+      ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -122,7 +122,7 @@ steps:
     displayName: Terraform init ${{ parameters.component }}
     inputs:
       command: init
-      ${{ if eq( parameters['baseDirectory'], '') }}: 
+      ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -141,7 +141,7 @@ steps:
     displayName: Terraform validate
     inputs:
       command: validate
-      ${{ if eq( parameters['baseDirectory'], '') }}: 
+      ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -153,7 +153,7 @@ steps:
       env: ${{ parameters.terraformEnvironmentVariables  }}
     inputs:
       command: plan
-      ${{ if eq( parameters['baseDirectory'], '') }}: 
+      ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -202,7 +202,7 @@ steps:
           --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
           plan -patch -- \
           terraform show tfplan-$(tfPlanName)
-      ${{ if eq( parameters['baseDirectory'], '') }}: 
+      ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -218,7 +218,7 @@ steps:
       )
     inputs:
       command: apply
-      ${{ if eq( parameters['baseDirectory'], '') }}: 
+      ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -233,7 +233,7 @@ steps:
         condition: and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'destroy'))
         inputs:
           command: destroy
-          ${{ if eq( parameters['baseDirectory'], '') }}: 
+          ${{ if eq( parameters['baseDirectory'], '') }}:
             workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
           ${{ else }}:
             workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
