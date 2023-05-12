@@ -22,7 +22,7 @@ else
     $TfFolderTestCases=@()
     ((($TfFiles).DirectoryName | Select-Object -Unique)).ForEach{$TfFolderTestCases += @{Instance = $_}}
       Context "Are correctly formatted" {
-        It "Terraform fmt command has been run on all files in <Instance>, to rewrite files to a canonical format and style." -TestCases $TfFolderTestCases {
+        It "All files in <Instance> are correctly formatted. By running 'terraform fmt'" -TestCases $TfFolderTestCases {
           Param($Instance)
           Invoke-Expression "terraform fmt -check=true $Instance"  | should -BeNullOrEmpty
       }
