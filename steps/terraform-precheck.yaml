@@ -20,7 +20,7 @@ parameters:
   - name: forcePreventParallelJobRun
     displayName: Always force prevent parallem run job
     type: boolean
-    default: false
+    default: true
 
 steps:
   - checkout: self
