@@ -74,13 +74,13 @@ steps:
     env:
       thisbuild: $(Build.BuildId)
       pipelinedefinition: $(System.DefinitionId)
-      azuredevopstoken: $(azure-devops-token)
+      azuredevopstoken: $(devops-test-SP-token)
     inputs:
       targetType: inline
       script: |
         set -x
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-build-check.py \
-        --pat "$(azure-devops-token)" \
+        --pat "$(devops-test-SP-token)" \
         --buildid "$(Build.BuildId)" \
         --organization "hmcts" \
         --project "$(System.TeamProject)" \
