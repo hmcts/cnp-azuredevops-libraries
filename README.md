@@ -48,7 +48,7 @@ The template files below contain steps to add Terraform Init/Plan/Apply/Destroy 
      - name: timeoutInMinutes
        value: 60
      - name: agentPool
-       value: ubuntu-18.04
+       value: ubuntu-latest
      - name: build
        value: $(Build.BuildNumber)
      - name: product
