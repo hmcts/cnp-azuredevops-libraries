@@ -20,7 +20,7 @@ parameters:
   - name: forcePreventParallelJobRun
     displayName: Always force prevent parallem run job
     type: boolean
-    default: false
+    default: true
 
 steps:
   - checkout: self
@@ -61,6 +61,7 @@ steps:
       script: |
         SPTOKEN=$(curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d 'client_id=d93754f7-5b06-4c81-b9ce-12c678db85a0&scope=https://graph.microsoft.com/.default&client_secret=$(devops-test-SP-token)&grant_type=client_credentials' 'https://login.microsoftonline.com/531ff96d-0ae9-462a-8d2d-bec7c0b42082/oauth2/v2.0/token')
         echo "sp token is" $SPTOKEN
+        echo "##vso[task.setvariable variable=SPTOKEN;]$SPTOKEN"
         
   - task: Bash@3
     displayName: Prevent parallel run
@@ -82,13 +83,13 @@ steps:
     env:
       thisbuild: $(Build.BuildId)
       pipelinedefinition: $(System.DefinitionId)
-      azuredevopstoken: $(devops-test-SP-token)
+      azuredevopstoken: $(SPTOKEN)
     inputs:
       targetType: inline
       script: |
         set -x
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-build-check.py \
-        --pat "$(devops-test-SP-token)" \
+        --pat "$(SPTOKEN)" \
         --buildid "$(Build.BuildId)" \
         --organization "hmcts" \
         --project "$(System.TeamProject)" \
