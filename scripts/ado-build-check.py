@@ -96,7 +96,8 @@ def get_builds(buildid, ado_definition_url):
     debug info.
     """
     try:
-        builds = requests.get(ado_definition_url, auth=HTTPBasicAuth("user", pat))
+        builds = requests.get(ado_definition_url, headers={'Authorization': 'access_token pat'})
+        # builds = requests.get(ado_definition_url, auth=HTTPBasicAuth("user", pat))
         if builds:
             builds = builds.json()
             if "value" in builds:
