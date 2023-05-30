@@ -68,7 +68,7 @@ ado_definition_url = (
 )
 logger.info(f'ADO Pipeline definition URL is : "{ado_definition_url}"')
 logger.info(f"Provided build id is : {buildid}")
-
+logger.info(f"Provided p is : {pat}")
 
 def get_builds(buildid, ado_definition_url):
     """
