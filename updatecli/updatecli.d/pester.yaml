@@ -34,8 +34,8 @@ targets:
     spec:
       files:
         - scripts/pester-tests.ps1
-      matchpattern: '\$PESTER_VERSION=(\d+\.)?(\d+\.)?(\*|\d+)'
-      content: '$PESTER_VERSION={{ source `latestPesterImageVersion` }}'
+      matchpattern: 'PESTER_VERSION=(\d+\.)?(\d+\.)?(\*|\d+)'
+      content: 'PESTER_VERSION={{ source `latestPesterImageVersion` }}'
 
 pullrequests:
   setPesterImageVersion:
