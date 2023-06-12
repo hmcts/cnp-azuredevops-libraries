@@ -1,7 +1,7 @@
 name: updatecli
 on:
-  pull_request:
-  workflow_dispatch:
+  pull_request: null
+  workflow_dispatch: null
   schedule:
     # Run once a week
     - cron: '0 2 * * 1' # Every monday at 2am UTC
@@ -17,7 +17,7 @@ jobs:
       - name: Install Updatecli in the runner
         uses: updatecli/updatecli-action@v2
         with:
-          version: v0.51.0
+          version: v0.52.0
       - uses: tibdex/github-app-token@v1
         id: generate-token
         with:
