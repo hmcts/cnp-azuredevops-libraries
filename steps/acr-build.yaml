@@ -12,7 +12,7 @@ steps:
   condition: |
     and(
       eq(variables['Build.Reason'], 'PullRequest'),
-      eq(parameters['customImageTag'], '')
+      eq('${{ parameters['customImageTag'] }}', '')
     )
 
 # Everything else: Set the tag to the branch name
@@ -22,14 +22,14 @@ steps:
   condition: |
     and(
       ne(variables['Build.Reason'], 'PullRequest'),
-      eq(parameters['customImageTag'], '')
+      eq('${{ parameters['customImageTag'] }}', '')
     )
 
 # With custom tag: Set the tag to a custom provided tag label
 - script: |
     echo "##vso[task.setvariable variable=imageTag]${{ parameters['customImageTag'] }}"
   displayName: 'Set Image Tag: Custom'
-  condition: ne(parameters['customImageTag'], '')
+  condition: ne('${{ parameters['customImageTag'] }}', '')
 
 #
 # ACR Build
