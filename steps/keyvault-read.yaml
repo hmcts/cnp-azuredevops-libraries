@@ -20,15 +20,51 @@ steps:
     
       az account set -s ${{ parameters.serviceConnection }}
 
-      if [ $Build.Repository.Name == "aks-cft-deploy" ]; then
-        SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-"${{ parameters.environment }}"'].id" -o tsv)
-      elif [ $Build.Repository.Name == "aks-sds-deploy" ]; then
-        SUB_ID=$(az account list --query "[?name=='DTS-SHAREDSERVICES-"${{ parameters.environment }}"'].id" -o tsv)
-      else
-        SUB_ID=$(az account show --query id -o tsv)
-      fi
+      upperCaseEnv=$(echo "${{ parameters.environment }}" | tr "[:lower:]" "[:upper:]")
+
+      case "$Build.Repository.Name" in
+          aks-cft-deploy)
+              case "$upperCaseEnv" in
+                  AAT)
+                      SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-STG'].id" -o tsv)
+                      ;;
+                  PERFTEST)
+                      SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-TEST'].id" -o tsv)
+                      ;;
+                  PREVIEW)
+                      SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-DEV'].id" -o tsv)
+                      ;;
+                  PTL)
+                      SUB_ID=$(az account list --query "[?name=='DTS-CFTPTL-INTSVC'].id" -o tsv)
+                      ;;
+                  PTLSBOX)
+                      SUB_ID=$(az account list --query "[?name=='DTS-CFTSBOX-INTSVC'].id" -o tsv)
+                      ;;
+                  *)
+                      SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-$upperCaseEnv'].id" -o tsv)
+                      ;;
+              esac
+              ;;
+          aks-sds-deploy)
+              case "$upperCaseEnv" in
+                  PTL)
+                      SUB_ID=$(az account list --query "[?name=='DTS-SHAREDSERVICESPTL'].id" -o tsv)
+                      ;;
+                  PTLSBOX)
+                      SUB_ID=$(az account list --query "[?name=='DTS-SHAREDSERVICESPTL-SBOX'].id" -o tsv)
+                      ;;
+                  *)
+                      SUB_ID=$(az account list --query "[?name=='DTS-SHAREDSERVICES-$upperCaseEnv'].id" -o tsv)
+                      ;;
+              esac
+              ;;
+      esac
 
       TENANT_ID=$(az account show --query tenantId -o tsv)
+
+      SUB_NAME=$(az account list --query "[?id=='$SUB_ID'].name" -o tsv)
+
+      echo $SUB_NAME
 
       echo $SUB_ID
       echo "##vso[task.setvariable variable=${{ parameters.subscriptionIdVariableName }}]$SUB_ID"
