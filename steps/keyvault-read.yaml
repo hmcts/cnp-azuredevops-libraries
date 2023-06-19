@@ -21,6 +21,8 @@ steps:
     
       upperCaseEnv=$(echo "${{ parameters.environment }}" | tr "[:lower:]" "[:upper:]")
 
+      $buildRepoSuffix="${{ parameters.buildRepoSuffix }}"
+
       echo $buildRepoSuffix
 
       case "$buildRepoSuffix" in
