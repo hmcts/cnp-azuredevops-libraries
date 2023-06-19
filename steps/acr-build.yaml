@@ -1,6 +1,7 @@
 parameters:
   serviceConnection: ''
   buildPath: ''
+  customImageTag: ''
 
 steps:
 
@@ -8,13 +9,27 @@ steps:
 - script: |
     echo '##vso[task.setvariable variable=imageTag]pr-$(System.PullRequest.PullRequestNumber)'
   displayName: 'Set Image Tag: Pull Request'
-  condition: eq(variables['Build.Reason'], 'PullRequest')
+  condition: |
+    and(
+      eq(variables['Build.Reason'], 'PullRequest'),
+      eq(parameters['customImageTag'], '')
+    )
 
 # Everything else: Set the tag to the branch name
 - script: |
     echo '##vso[task.setvariable variable=imageTag]$(Build.SourceBranchName)'
   displayName: 'Set Image Tag: Branch'
-  condition: ne(variables['Build.Reason'], 'PullRequest')
+  condition: |
+    and(
+      ne(variables['Build.Reason'], 'PullRequest'),
+      eq(parameters['customImageTag'], '')
+    )
+
+# With custom tag: Set the tag to a custom provided tag label
+- script: |
+    echo "##vso[task.setvariable variable=imageTag]${{ parameters['customImageTag'] }}"
+  displayName: 'Set Image Tag: Custom'
+  condition: ne(parameters['customImageTag'], '')
 
 #
 # ACR Build
