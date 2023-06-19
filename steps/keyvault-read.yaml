@@ -18,9 +18,9 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
     
-      az account set -s ${{ parameters.serviceConnection }}
-
       upperCaseEnv=$(echo "${{ parameters.environment }}" | tr "[:lower:]" "[:upper:]")
+
+      echo $Build.Repository.Name
 
       case "$Build.Repository.Name" in
           aks-cft-deploy)
