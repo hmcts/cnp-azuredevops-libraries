@@ -17,8 +17,17 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
+    
       az account set -s ${{ parameters.serviceConnection }}
-      SUB_ID=$(az account show --query id -o tsv)
+
+      if [ $Build.Repository.Name == "aks-cft-deploy" ]; then
+        SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-"${{ parameters.environment }}"'].id" -o tsv)
+      elif [ $Build.Repository.Name == "aks-sds-deploy" ]; then
+        SUB_ID=$(az account list --query "[?name=='DTS-SHAREDSERVICES-"${{ parameters.environment }}"'].id" -o tsv)
+      else
+        SUB_ID=$(az account show --query id -o tsv)
+      fi
+
       TENANT_ID=$(az account show --query tenantId -o tsv)
 
       echo $SUB_ID
