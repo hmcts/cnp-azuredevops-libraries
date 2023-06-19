@@ -20,9 +20,9 @@ steps:
     
       upperCaseEnv=$(echo "${{ parameters.environment }}" | tr "[:lower:]" "[:upper:]")
 
-      echo $BUILD_REPOSITORY_SHORTNAME
+      echo $buildRepoSuffix
 
-      case "$BUILD_REPOSITORY_SHORTNAME" in
+      case "$buildRepoSuffix" in
           aks-cft-deploy)
               case "$upperCaseEnv" in
                   AAT)
