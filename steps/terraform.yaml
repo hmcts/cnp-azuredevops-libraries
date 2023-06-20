@@ -82,6 +82,7 @@ steps:
       serviceConnection: ${{ parameters.serviceConnection }}
       environment: ${{ parameters.environment }}
       buildRepoSuffix: $(buildRepoSuffix)
+      component: ${{ parameters.component }}
 
   - task: Bash@3
     displayName: Install tfcmt
