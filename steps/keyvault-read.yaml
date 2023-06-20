@@ -8,7 +8,6 @@ parameters:
   keyVaultVariableName: 'controlKeyVault'
   envVariableName: 'env'
   buildRepoSuffix: ''
-  component: ''
 
 steps:
 
@@ -22,66 +21,48 @@ steps:
     
       upperCaseEnv=$(echo "${{ parameters.environment }}" | tr "[:lower:]" "[:upper:]")
 
-      component=$(echo "${{ parameters.component }}")
-
-      echo COMPONENT: $component
-
       buildRepoSuffix=$(echo "${{ parameters.buildRepoSuffix }}")
 
-      echo REPO: $buildRepoSuffix
+      echo BUILD_REPO: $buildRepoSuffix
 
       case "$buildRepoSuffix" in
           aks-cft-deploy)
-                case "$component" in 
-                  network)
-                    SUB_ID=$(az account show --query id -o tsv)
-                    ;;
+              case "$upperCaseEnv" in
+                  AAT)
+                      SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-STG'].id" -o tsv)
+                      ;;
+                  PERFTEST)
+                      SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-TEST'].id" -o tsv)
+                      ;;
+                  PREVIEW)
+                      SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-DEV'].id" -o tsv)
+                      ;;
+                  PTL)
+                      SUB_ID=$(az account list --query "[?name=='DTS-CFTPTL-INTSVC'].id" -o tsv)
+                      ;;
+                  PTLSBOX)
+                      SUB_ID=$(az account list --query "[?name=='DTS-CFTSBOX-INTSVC'].id" -o tsv)
+                      ;;
                   *)
-                    case "$upperCaseEnv" in
-                        AAT)
-                            SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-STG'].id" -o tsv)
-                            ;;
-                        PERFTEST)
-                            SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-TEST'].id" -o tsv)
-                            ;;
-                        PREVIEW)
-                            SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-DEV'].id" -o tsv)
-                            ;;
-                        PTL)
-                            SUB_ID=$(az account list --query "[?name=='DTS-CFTPTL-INTSVC'].id" -o tsv)
-                            ;;
-                        PTLSBOX)
-                            SUB_ID=$(az account list --query "[?name=='DTS-CFTSBOX-INTSVC'].id" -o tsv)
-                            ;;
-                        *)
-                            SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-$upperCaseEnv'].id" -o tsv)
-                            ;;
-                    esac
-                    ;;
-                esac
-                ;;
-          aks-sds-deploy)
-              case "$component" in 
-                  network)
-                    SUB_ID=$(az account show --query id -o tsv)
-                    ;;
-                  *)
-                    case "$upperCaseEnv" in
-                        PTL)
-                            SUB_ID=$(az account list --query "[?name=='DTS-SHAREDSERVICESPTL'].id" -o tsv)
-                            ;;
-                        PTLSBOX)
-                            SUB_ID=$(az account list --query "[?name=='DTS-SHAREDSERVICESPTL-SBOX'].id" -o tsv)
-                            ;;
-                        *)
-                            SUB_ID=$(az account list --query "[?name=='DTS-SHAREDSERVICES-$upperCaseEnv'].id" -o tsv)
-                            ;;
-                    esac
-                    ;;
-                    *)
-                    SUB_ID=$(az account show --query id -o tsv)
-                    ;;
+                      SUB_ID=$(az account list --query "[?name=='DCD-CFTAPPS-$upperCaseEnv'].id" -o tsv)
+                      ;;
               esac
+              ;;
+          aks-sds-deploy)
+              case "$upperCaseEnv" in
+                  PTL)
+                      SUB_ID=$(az account list --query "[?name=='DTS-SHAREDSERVICESPTL'].id" -o tsv)
+                      ;;
+                  PTLSBOX)
+                      SUB_ID=$(az account list --query "[?name=='DTS-SHAREDSERVICESPTL-SBOX'].id" -o tsv)
+                      ;;
+                  *)
+                      SUB_ID=$(az account list --query "[?name=='DTS-SHAREDSERVICES-$upperCaseEnv'].id" -o tsv)
+                      ;;
+              esac
+              ;;
+            *)
+              SUB_ID=$(az account show --query id -o tsv)
               ;;
       esac
 
