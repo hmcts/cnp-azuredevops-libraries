@@ -66,10 +66,7 @@ ado_definition_url = (
     + "/_apis/build/builds?api-version=5.1&definitions="
     + f"{pipelineid}"
 )
-logger.info(f'ADO Pipeline definition URL is : "{ado_definition_url}"')
-logger.info(f"Provided build id is : {buildid}")
-logger.info(f"Provided p is : {pat}")
-print('Bearer ' + pat)
+
 
 def get_builds(buildid, ado_definition_url):
     """
@@ -99,8 +96,6 @@ def get_builds(buildid, ado_definition_url):
     
     try:
         builds = requests.get(ado_definition_url, headers={'Authorization': 'Bearer ' + pat, 'Content-Type': 'application/json'})
-        # builds = requests.get(ado_definition_url, auth=HTTPBasicAuth("user", pat))
-        logger.info(f"Provided builds is : {builds}")
         if builds:
             builds = builds.json()
             logger.info(f"Provided builds.json is : {builds}")
