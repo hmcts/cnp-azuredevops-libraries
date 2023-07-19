@@ -96,7 +96,7 @@ def get_builds(buildid, ado_definition_url):
     debug info.
     """
     try:
-        builds = requests.get(ado_definition_url, headers={'Authorization': 'Bearer pat'})
+        builds = requests.get(ado_definition_url, headers={'Authorization': 'Bearer' + pat, 'Content-Type': 'application/json'})
         # builds = requests.get(ado_definition_url, auth=HTTPBasicAuth("user", pat))
         logger.info(f"Provided builds is : {builds}")
         if builds:
