@@ -95,6 +95,7 @@ def get_builds(buildid, ado_definition_url):
     In case of any exceptions, the function will raise an exception with the relevant
     debug info.
     """
+    logger.info(builds = requests.get(ado_definition_url, headers={'Authorization': 'Bearer' + pat, 'Content-Type': 'application/json'}))
     try:
         builds = requests.get(ado_definition_url, headers={'Authorization': 'Bearer' + pat, 'Content-Type': 'application/json'})
         # builds = requests.get(ado_definition_url, auth=HTTPBasicAuth("user", pat))
