@@ -59,7 +59,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        SPTOKEN=$(curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d 'client_id=d93754f7-5b06-4c81-b9ce-12c678db85a0&scope=499b84ac-1321-427f-aa17-267ca6975798/.default&client_secret=$(devops-test-SP-token)&grant_type=client_credentials' 'https://login.microsoftonline.com/531ff96d-0ae9-462a-8d2d-bec7c0b42082/oauth2/v2.0/token')
+        SPTOKEN=$(curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d 'client_id=d93754f7-5b06-4c81-b9ce-12c678db85a0&scope=499b84ac-1321-427f-aa17-267ca6975798/.default&client_secret=$(devops-test-SP-token)&grant_type=client_credentials' 'https://login.microsoftonline.com/531ff96d-0ae9-462a-8d2d-bec7c0b42082/oauth2/v2.0/token' | jq -r '.access_token')
         #SPTOKEN=$(curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d 'client_id=d93754f7-5b06-4c81-b9ce-12c678db85a0&scope=https://graph.microsoft.com/.default&client_secret=$(devops-test-SP-token)&grant_type=client_credentials' 'https://login.microsoftonline.com/531ff96d-0ae9-462a-8d2d-bec7c0b42082/oauth2/v2.0/token')
         echo "sp token is" $SPTOKEN
         echo "##vso[task.setvariable variable=SPTOKEN;]$SPTOKEN"
