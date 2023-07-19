@@ -69,8 +69,8 @@ ado_definition_url = (
 logger.info(f'ADO Pipeline definition URL is : "{ado_definition_url}"')
 logger.info(f"Provided build id is : {buildid}")
 logger.info(f"Provided p is : {pat}")
-print('Bearer' + pat)
-print("requests.get(ado_definition_url, headers={'Authorization': 'Bearer' + pat, 'Content-Type': 'application/json'})")
+print('Bearer ' + pat)
+
 def get_builds(buildid, ado_definition_url):
     """
     This function takes a build ID and an ADO Definition URL and returns a list of builds
@@ -96,7 +96,7 @@ def get_builds(buildid, ado_definition_url):
     In case of any exceptions, the function will raise an exception with the relevant
     debug info.
     """
-    logger.info(builds = requests.get(ado_definition_url, headers={'Authorization': 'Bearer' + pat, 'Content-Type': 'application/json'}))
+    logger.info(builds = requests.get(ado_definition_url, headers={'Authorization': 'Bearer ' + pat, 'Content-Type': 'application/json'}))
     try:
         builds = requests.get(ado_definition_url, headers={'Authorization': 'Bearer' + pat, 'Content-Type': 'application/json'})
         # builds = requests.get(ado_definition_url, auth=HTTPBasicAuth("user", pat))
