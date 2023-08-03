@@ -32,7 +32,6 @@ steps:
 
   - task: AzureCLI@1
     displayName: "AKS Authenticate"
-    variables:
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
