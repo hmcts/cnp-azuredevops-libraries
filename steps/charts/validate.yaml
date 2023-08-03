@@ -25,6 +25,7 @@ steps:
 
   - task: AzureCLI@1
     displayName: "Determine Active Cluster"
+    name: CheckActiveCluster
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
@@ -71,7 +72,7 @@ steps:
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
-      inlineScript: az aks get-credentials --admin --resource-group $(aksResourceGroup) --name $(aksCluster)
+      inlineScript: az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster)
 
   - task: AzureCLI@1
     displayName: "Add custom charts repo"
