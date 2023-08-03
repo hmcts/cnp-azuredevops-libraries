@@ -50,13 +50,13 @@ steps:
                 return 1
             fi
         }
-        aks_resource_group="cft-preview-00-rg"
-        aks_name="cft-preview-00-aks"
+        aks_resource_group="cft-preview-01-rg"
+        aks_name="cft-preview-01-aks"
         if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
             echo "Pod with the specified argument found in cluster $aks_name."
         else
-            aks_resource_group="cft-preview-01-rg"
-            aks_name="cft-preview-01-aks"
+            aks_resource_group="cft-preview-00-rg"
+            aks_name="cft-preview-00-aks"
             if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
                 echo "Pod with the specified argument found in cluster $aks_name."
             else
