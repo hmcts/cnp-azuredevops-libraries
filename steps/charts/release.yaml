@@ -16,11 +16,12 @@ steps:
     displayName: 'Install Helm ${{parameters.helmVersion}}'
     inputs:
       helmVersionToInstall: ${{parameters.helmVersion}}
+
   - task: Bash@3
     displayName: 'Check Active Preview Cluster'
     inputs:
       targetType: filePath
-      filePath: ../../scripts/active-preview-cluster.sh
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/active-preview-cluster.sh
     name: active_preview_cluster
 
   - task: AzureCLI@1
