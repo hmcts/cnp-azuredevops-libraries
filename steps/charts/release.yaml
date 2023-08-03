@@ -1,8 +1,6 @@
 parameters:
   serviceConnection: "DCD-CFTAPPS-DEV"
   registryServiceConnection: "azurerm-prod"
-  aksResourceGroup: "cft-preview-01-rg"
-  aksCluster: "cft-preview-01-aks"
   acrName: "hmctspublic"
   chartName: ""
   chartReleaseName: ""
@@ -18,12 +16,20 @@ steps:
     displayName: 'Install Helm ${{parameters.helmVersion}}'
     inputs:
       helmVersionToInstall: ${{parameters.helmVersion}}
+  - task: Bash@3
+    displayName: 'Check Active Preview Cluster'
+    inputs:
+      targetType: filePath
+      filePath: ../../scripts/active-preview-cluster.sh
+    name: active_preview_cluster
+
   - task: AzureCLI@1
     displayName: "AKS Authenticate"
+    variables:
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
-      inlineScript: az aks get-credentials --admin --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksCluster }}
+      inlineScript: az aks get-credentials --admin --resource-group $(active_preview_cluster.aksResourceGroup) --name $(active_preview_cluster.aksCluster)
 
   - task: AzureCLI@1
     displayName: "Add custom charts repo"
