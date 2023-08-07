@@ -60,7 +60,6 @@ steps:
       targetType: 'inline'
       script: |
         SPTOKEN=$(curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d 'client_id=10936009-a112-4733-bb2a-94ee240b79ff&scope=499b84ac-1321-427f-aa17-267ca6975798/.default&client_secret=$(azure-devops-sp-token)&grant_type=client_credentials' 'https://login.microsoftonline.com/531ff96d-0ae9-462a-8d2d-bec7c0b42082/oauth2/v2.0/token' | jq -r '.access_token')
-        echo "sp token is" $SPTOKEN
         echo "##vso[task.setvariable variable=SPTOKEN;]$SPTOKEN"
         
   - task: Bash@3
