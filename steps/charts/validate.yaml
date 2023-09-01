@@ -31,11 +31,13 @@ steps:
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
-      environment: ${{ parameters.environment }}
-      businessArea: ${{ parameters.businessArea }}
+      arguments: ${{ parameters.serviceConnection }} ${{ parameters.businessArea }} ${{ parameters.environment }}
       inlineScript: |
+        subscription=$1
+        businessArea=$2
+        environment=$3
         set -x
-        az account set --subscription $(azureSubscription)
+        az account set --subscription $subscription
         check_pod_in_cluster() {
             local aks_rg=$1
             local aks_cluster=$2
