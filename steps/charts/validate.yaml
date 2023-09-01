@@ -32,7 +32,7 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       arguments: ${{ parameters.serviceConnection }} ${{ parameters.businessArea }} ${{ parameters.environment }}
-      scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/chart-validate.sh
+    scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/chart-validate.sh
 
   - task: AzureCLI@1
     displayName: "AKS Authenticate"
