@@ -91,7 +91,8 @@ steps:
       scriptType: bash
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
-      inlineScript: az aks get-credentials --admin --resource-group "${{ parameters.businessArea }}-${{ parameters.environment }}-00-rg"" --name "${{ parameters.businessArea }}-${{ parameters.environment }}-00-aks"
+      arguments: ${{ parameters.serviceConnection }} ${{ parameters.businessArea }} ${{ parameters.environment }}
+      inlineScript: az aks get-credentials --admin --resource-group "$1-$2-00-rg"" --name "$1-$2-00-aks"
 
   - task: AzureCLI@1
     displayName: "Add custom charts repo"
