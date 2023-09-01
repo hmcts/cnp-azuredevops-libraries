@@ -32,7 +32,7 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       arguments: ${{ parameters.serviceConnection }} ${{ parameters.businessArea }} ${{ parameters.environment }}
-      scriptType: inline
+      scriptType: bash
       inlineScript: |
         set -x
         export subscription=$1
