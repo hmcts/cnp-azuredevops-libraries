@@ -26,7 +26,7 @@ steps:
       helmVersionToInstall: ${{parameters.helmVersion}}
 
   - task: AzureCLI@2
-    condition: ${{ if eq('{{ parameters.environment }}','preview') }}
+    condition: ${{ eq(parameters.environment,'preview') }}
     displayName: "Determine Active Cluster"
     name: CheckActiveCluster
     inputs:
@@ -75,8 +75,8 @@ steps:
         echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
         echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
 
-  - task: AzureCLI@1
-    condition: ${{ if eq('{{ parameters.environment }}','preview') }}
+  - task: AzureCLI@2
+    condition: ${{ eq(parameters.environment,'preview') }}
     displayName: "AKS Authenticate - Preview"
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
@@ -84,7 +84,7 @@ steps:
       inlineScript: az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster)
 
   - task: AzureCLI@2
-    condition: ${{ if ne('{{ parameters.environment }}','preview') }}
+    condition: ${{ ne(parameters.environment,'preview') }}
     displayName: "AKS Authenticate - Non Preview"
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
