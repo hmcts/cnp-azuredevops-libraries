@@ -1,5 +1,7 @@
 parameters:
   serviceConnection: "DCD-CFTAPPS-DEV"
+  environment: "preview"
+  businessArea: "cft"
   registryServiceConnection: "azurerm-prod"
   acrName: "hmctspublic"
   chartName: ""
@@ -17,18 +19,24 @@ steps:
     inputs:
       helmVersionToInstall: ${{parameters.helmVersion}}
 
-  - task: AzureCLI@1
+  - task: AzureCLI@2
+    condition: ${{ eq(parameters.environment,'preview') }}
     displayName: "Determine Active Cluster"
     name: CheckActiveCluster
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
+      arguments: ${{ parameters.serviceConnection }} ${{ parameters.businessArea }} ${{ parameters.environment }}
+      scriptType: bash
       inlineScript: |
         set -x
-        az account set --subscription DCD-CFTAPPS-DEV
+        subscription=$1
+        businessArea=$2
+        environment=$3
+        az account set --subscription $subscription
         check_pod_in_cluster() {
-            local aks_rg=$1
-            local aks_cluster=$2
+            local aks_rg="$businessArea-$environment-00-rg"
+            local aks_cluster="$businessArea-$environment-00-aks"
             printf "\n\nTrying cluster $aks_cluster $aks_rg\n"
             az aks get-credentials \
                 --resource-group "$aks_rg" \
@@ -44,15 +52,15 @@ steps:
                 return 1
             fi
         }
-        aks_resource_group="cft-preview-00-rg"
-        aks_name="cft-preview-00-aks"
+        aks_resource_group="$businessArea-$environment-00-rg"
+        aks_name="$businessArea-$environment-00-aks"
         if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
-            echo "Pod with the specified argument found in cluster $aks_name."
+            echo "Pod with the specified argument found in cluster $aks_cluster."
         else
-            aks_resource_group="cft-preview-01-rg"
-            aks_name="cft-preview-01-aks"
+            aks_resource_group="$businessArea-$environment-01-rg"
+            aks_name="$businessArea-$environment-01-aks"
             if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
-                echo "Pod with the specified argument found in cluster $aks_name."
+                echo "Pod with the specified argument found in cluster $aks_cluster."
             else
                 echo "Pod with the specified argument not found in any clusters."
                 echo "##vso[task.complete result=Failed;]Pod not found in any clusters."
@@ -61,12 +69,23 @@ steps:
         echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
         echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
 
-  - task: AzureCLI@1
+  - task: AzureCLI@2
+    condition: ${{ eq(parameters.environment,'preview') }}
     displayName: "AKS Authenticate"
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster)
+
+  - task: AzureCLI@2
+    condition: ${{ ne(parameters.environment,'preview') }}
+    displayName: "AKS Authenticate - Non Preview"
+    inputs:
+      scriptType: bash
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptLocation: "inlineScript"
+      arguments: ${{ parameters.businessArea }} ${{ parameters.environment }}
+      inlineScript: az aks get-credentials --admin --resource-group "$1-$2-00-rg" --name "$1-$2-00-aks"
 
   - task: AzureCLI@1
     displayName: "Add custom charts repo"
