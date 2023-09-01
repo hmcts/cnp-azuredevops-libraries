@@ -33,10 +33,10 @@ steps:
       scriptLocation: "inlineScript"
       arguments: ${{ parameters.serviceConnection }} ${{ parameters.businessArea }} ${{ parameters.environment }}
       inlineScript: |
-        local subscription=$1
-        local businessArea=$2
-        local environment=$3
         set -x
+        subscription=$1
+        businessArea=$2
+        environment=$3
         az account set --subscription $subscription
         check_pod_in_cluster() {
             local aks_rg="$businessArea-$subscription-00-rg"
