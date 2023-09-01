@@ -26,6 +26,7 @@ steps:
       helmVersionToInstall: ${{parameters.helmVersion}}
 
   - task: AzureCLI@2
+    condition: ${{ if eq(parameters.environment,'preview') }}
     displayName: "Determine Active Cluster"
     name: CheckActiveCluster
     inputs:
@@ -75,11 +76,20 @@ steps:
         echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
 
   - task: AzureCLI@1
-    displayName: "AKS Authenticate"
+    condition: ${{ if eq(parameters.environment,'preview') }}
+    displayName: "AKS Authenticate - Preview"
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster)
+
+  - task: AzureCLI@2
+    condition: ${{ if ne(parameters.environment,'preview') }}
+    displayName: "AKS Authenticate - Non Preview"
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptLocation: "inlineScript"
+      inlineScript: az aks get-credentials --admin --resource-group "${{ parameters.businessArea }}-${{ parameters.environment }}-00-rg"" --name "${{ parameters.businessArea }}-${{ parameters.environment }}-00-aks"
 
   - task: AzureCLI@1
     displayName: "Add custom charts repo"
