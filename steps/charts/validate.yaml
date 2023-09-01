@@ -1,6 +1,7 @@
 parameters:
   serviceConnection: "DCD-CFTAPPS-DEV"
   environment: "preview"
+  businessArea: "cft"
   registryServiceConnection: "azurerm-prod"
   acrName: "hmctspublic"
   chartName: ""
@@ -31,6 +32,7 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       environment: ${{ parameters.environment }}
+      businessArea: ${{ parameters.businessArea }}
       inlineScript: |
         set -x
         az account set --subscription $azureSubscription
@@ -52,13 +54,13 @@ steps:
                 return 1
             fi
         }
-        aks_resource_group="cft-$environment-00-rg"
-        aks_name="cft-$environment-00-aks"
+        aks_resource_group="$businessArea-$environment-00-rg"
+        aks_name="$businessArea-$environment-00-aks"
         if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
             echo "Pod with the specified argument found in cluster $aks_name."
         else
-            aks_resource_group="cft-$environment-01-rg"
-            aks_name="cft-$environment-01-aks"
+            aks_resource_group="$businessArea-$environment-01-rg"
+            aks_name="$businessArea-$environment-01-aks"
             if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
                 echo "Pod with the specified argument found in cluster $aks_name."
             else
