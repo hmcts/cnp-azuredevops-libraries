@@ -79,6 +79,7 @@ steps:
     condition: ${{ eq(parameters.environment,'preview') }}
     displayName: "AKS Authenticate - Preview"
     inputs:
+      scriptType: bash
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster)
@@ -87,6 +88,7 @@ steps:
     condition: ${{ ne(parameters.environment,'preview') }}
     displayName: "AKS Authenticate - Non Preview"
     inputs:
+      scriptType: bash
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: az aks get-credentials --admin --resource-group "${{ parameters.businessArea }}-${{ parameters.environment }}-00-rg"" --name "${{ parameters.businessArea }}-${{ parameters.environment }}-00-aks"
