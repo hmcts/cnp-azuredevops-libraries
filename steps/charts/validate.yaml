@@ -31,7 +31,7 @@ steps:
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       arguments: ${{ parameters.serviceConnection }} ${{ parameters.businessArea }} ${{ parameters.environment }}
-      scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/chart-validate.sh
+      scriptPath: ./scripts/chart-validate.sh
       scriptLocation: scriptPath
       scriptType: bash
 
