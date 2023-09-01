@@ -91,7 +91,7 @@ steps:
       scriptType: bash
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
-      arguments: ${{ parameters.serviceConnection }} ${{ parameters.businessArea }} ${{ parameters.environment }}
+      arguments: ${{ parameters.businessArea }} ${{ parameters.environment }}
       inlineScript: az aks get-credentials --admin --resource-group "$1-$2-00-rg"" --name "$1-$2-00-aks"
 
   - task: AzureCLI@1
