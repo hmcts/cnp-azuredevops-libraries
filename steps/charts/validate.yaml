@@ -33,14 +33,14 @@ steps:
       scriptLocation: "inlineScript"
       arguments: ${{ parameters.serviceConnection }} ${{ parameters.businessArea }} ${{ parameters.environment }}
       inlineScript: |
-        subscription=$1
-        businessArea=$2
-        environment=$3
+        local subscription=$1
+        local businessArea=$2
+        local environment=$3
         set -x
         az account set --subscription $subscription
         check_pod_in_cluster() {
-            local aks_rg=$1
-            local aks_cluster=$2
+            local aks_rg="$businessArea-$subscription-00-rg"
+            local aks_cluster="$businessArea-$subscription-00-aks"
             printf "\n\nTrying cluster $aks_cluster $aks_rg\n"
             az aks get-credentials \
                 --resource-group "$aks_rg" \
