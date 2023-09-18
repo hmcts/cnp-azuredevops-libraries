@@ -32,13 +32,6 @@ steps:
       inlineScript: |
         set -x
         az account set --subscription DCD-CFTAPPS-DEV
-        # subId=$(az account show --query "id" -o tsv)
-        # echo "Subscription ID: ${subId}"
-        # restUrl="GET https://management.azure.com/subscriptions/${subId//[$'\t\r\n']/}/providers/Microsoft.ContainerService/managedClusters?api-version=2023-07-01"
-        # echo "Calling: ${restUrl}"
-        # available=true
-        # if name=$(az rest --method GET --uri ${restUrl} --query "value.name" -o tsv); then
-        # echo "Name is $name"
 
         check_pod_in_cluster() {
             local aks_rg=$1
