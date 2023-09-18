@@ -31,7 +31,6 @@ steps:
       scriptLocation: "inlineScript"
       inlineScript: |
         set -x
-        az login
         az account set --subscription DCD-CFTAPPS-DEV
         subId=$(az account show --query "id" -o tsv)
         echo "Subscription ID: ${subId}"
