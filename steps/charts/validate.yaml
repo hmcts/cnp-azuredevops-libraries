@@ -30,10 +30,16 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        set -x
+        # set -x
         az account set --subscription DCD-CFTAPPS-DEV
         subId=$(az account show --query "id" -o tsv)
         echo "Subscription ID: ${subId}"
+        restUrl="GET https://management.azure.com/subscriptions/${subId//[$'\t\r\n']/}/providers/Microsoft.ContainerService/managedClusters?api-version=2023-07-01"
+        echo "Calling: ${restUrl}"
+        available=true
+        if name=$(az rest --method GET --uri ${restUrl} --query "value.name" -o tsv); then
+        echo "Name is $name"
+
         # check_pod_in_cluster() {
         #     local aks_rg=$1
         #     local aks_cluster=$2
@@ -52,12 +58,6 @@ steps:
         #         return 1
         #     fi
         # }
-        restUrl="GET https://management.azure.com/subscriptions/${subId//[$'\t\r\n']/}/providers/Microsoft.ContainerService/managedClusters?api-version=2023-07-01"
-        echo "Calling: ${restUrl}"
-        available=true
-        if name=$(az rest --method GET --uri ${restUrl} --query "value.name" -o tsv); then
-        echo "Name is $name"
-
         # aks_resource_group="cft-preview-00-rg"
         # aks_name="cft-preview-00-aks"
         # if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
