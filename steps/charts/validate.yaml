@@ -31,6 +31,7 @@ steps:
       scriptLocation: "inlineScript"
       inlineScript: |
         set -x
+        az upgrade
         az --version displayName: 'Show Azure CLI version'
         az account set --subscription DCD-CFTAPPS-DEV
 
