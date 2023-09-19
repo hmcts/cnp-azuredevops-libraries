@@ -55,7 +55,7 @@ steps:
         }
         aks_resource_group="${{ parameters.aksResourceGroup }}"
         aks_name="${{ parameters.aksCluster }}"
-        if aks_name == ''
+        if aks_name==''
         then
           aks_resource_group="cft-preview-00-rg"
           aks_name="cft-preview-00-aks"
