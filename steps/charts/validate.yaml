@@ -53,7 +53,8 @@ steps:
                 return 1
             fi
         }
-        if aks_name=="${{ parameters.aksCluster }}" then
+        if aks_name=="${{ parameters.aksCluster }}" 
+        then
           aks_resource_group="${{ parameters.aksResourceGroup }}"
         else
           aks_resource_group="cft-preview-00-rg"
