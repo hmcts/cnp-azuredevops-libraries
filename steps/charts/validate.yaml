@@ -56,6 +56,8 @@ steps:
         if aks_name=="${{ parameters.aksCluster }}" 
         then
           aks_resource_group="${{ parameters.aksResourceGroup }}"
+          echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
+          echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
         else
           aks_resource_group="cft-preview-00-rg"
           aks_name="cft-preview-00-aks"
@@ -71,9 +73,9 @@ steps:
                   echo "##vso[task.complete result=Failed;]Pod not found in any clusters."
               fi
           fi
-        fi 
-        echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
-        echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
+          echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
+          echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
+        fi
 
   - task: AzureCLI@1
     displayName: "AKS Authenticate"
