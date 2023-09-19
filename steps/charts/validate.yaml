@@ -13,8 +13,8 @@ parameters:
   helmInstallWait: "0"
   valuesFile: "ci-values.yaml"
   additionalHelmArgs: ""
-  aksResourceGroup: "cft-sbox-00-rg"
-  aksCluster: "cft-sbox-00-aks"
+  aksResourceGroup: ""
+  aksCluster: ""
 
 steps:
   - checkout: self
