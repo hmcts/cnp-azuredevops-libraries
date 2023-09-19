@@ -70,6 +70,8 @@ steps:
                   echo "##vso[task.complete result=Failed;]Pod not found in any clusters."
               fi
           fi
+        else
+          az account set --subscription DCD-CFTAPPS-SBOX
         fi 
         echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
         echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
