@@ -31,6 +31,7 @@ steps:
       scriptLocation: "inlineScript"
       inlineScript: |
         set -x
+        az --version displayName: 'Show Azure CLI version'
         az account set --subscription DCD-CFTAPPS-DEV
 
         check_pod_in_cluster() {
