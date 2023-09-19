@@ -73,7 +73,9 @@ steps:
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
-      inlineScript: az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster)
+      inlineScript: |
+        az account set --subscription DCD-CFTAPPS-DEV
+        az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster) --subscription 
 
   - task: AzureCLI@1
     displayName: "Add custom charts repo"
