@@ -15,6 +15,7 @@ parameters:
   additionalHelmArgs: ""
   aksResourceGroup: "cft-sbox-00-rg"
   aksCluster: "cft-sbox-00-aks"
+
 steps:
   - checkout: self
     clean: true
@@ -52,9 +53,10 @@ steps:
                 return 1
             fi
         }
-        aks_resource_group="${{ parameters.aksResourceGroup}}"
-        aks_name="${{ parameters.aksCluster}}"
-        if aks_name==""; then
+        aks_resource_group="${{ parameters.aksResourceGroup }}"
+        aks_name="${{ parameters.aksCluster }}"
+        if [ aks_name==""] 
+        then
           aks_resource_group="cft-preview-00-rg"
           aks_name="cft-preview-00-aks"
           if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
