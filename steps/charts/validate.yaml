@@ -13,6 +13,8 @@ parameters:
   helmInstallWait: "0"
   valuesFile: "ci-values.yaml"
   additionalHelmArgs: ""
+  aksResourceGroup: ""
+  aksCluster: ""
 
 steps:
   - checkout: self
@@ -51,20 +53,24 @@ steps:
                 return 1
             fi
         }
-        aks_resource_group="cft-preview-00-rg"
-        aks_name="cft-preview-00-aks"
-        if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
-            echo "Pod with the specified argument found in cluster $aks_name."
-        else
-            aks_resource_group="cft-preview-01-rg"
-            aks_name="cft-preview-01-aks"
-            if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
-                echo "Pod with the specified argument found in cluster $aks_name."
-            else
-                echo "Pod with the specified argument not found in any clusters."
-                echo "##vso[task.complete result=Failed;]Pod not found in any clusters."
-            fi
-        fi
+        aks_resource_group= ${{ parameters.aksResourceGroup}}
+        aks_name=${{ parameters.aksCluster}}
+        if aks_name == ""; then
+          aks_resource_group="cft-preview-00-rg"
+          aks_name="cft-preview-00-aks"
+          if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
+              echo "Pod with the specified argument found in cluster $aks_name."
+          else
+              aks_resource_group="cft-preview-01-rg"
+              aks_name="cft-preview-01-aks"
+              if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
+                  echo "Pod with the specified argument found in cluster $aks_name."
+              else
+                  echo "Pod with the specified argument not found in any clusters."
+                  echo "##vso[task.complete result=Failed;]Pod not found in any clusters."
+              fi
+          fi
+        fi 
         echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
         echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
 
