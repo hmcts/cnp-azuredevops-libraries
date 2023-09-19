@@ -81,7 +81,10 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        az account set --subscription DCD-CFTAPPS-DEV
+        if aks_name=="${{ parameters.aksCluster }}" 
+        then
+          az account set --subscription DCD-CFTAPPS-SBOX
+        fi
         az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster)
 
   - task: AzureCLI@1
