@@ -86,7 +86,6 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        echo 'Sub is ${{ parameters.serviceConnection }}'
         az account set --subscription ${{ parameters.serviceConnection }}
         az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster)
 
