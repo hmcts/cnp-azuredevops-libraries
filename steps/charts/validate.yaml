@@ -15,7 +15,6 @@ parameters:
   additionalHelmArgs: ""
   aksResourceGroup: ""
   aksCluster: ""
-  aksSubscription : ""
 
 steps:
   - checkout: self
@@ -87,7 +86,7 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        az account set --subscription ${{ parameters.aksSubscription }}
+        az account set --subscription ${{ parameters.serviceConnection }}
         az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster)
 
   - task: AzureCLI@1
