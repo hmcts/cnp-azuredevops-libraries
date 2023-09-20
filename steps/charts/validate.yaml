@@ -55,8 +55,9 @@ steps:
                 return 1
             fi
         }
-        if aks_name=="${{ parameters.aksCluster }}" 
+        if [ ! -z ${{ parameters.aksCluster }} ]
         then
+          aks_name=="${{ parameters.aksCluster }}" 
           aks_resource_group="${{ parameters.aksResourceGroup }}"
           echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]${{ parameters.aksResourceGroup }}"
           echo "##vso[task.setvariable variable=aksCluster;isOutput=true]${{ parameters.aksCluster }}"
