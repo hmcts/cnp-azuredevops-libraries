@@ -86,7 +86,7 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        if aks_name=="${{ parameters.aksCluster }}" 
+        if [ ! -z ${{ parameters.aksCluster }} ]
         then
           az account set --subscription DCD-CFTAPPS-SBOX
         else 
