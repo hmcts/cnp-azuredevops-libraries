@@ -89,6 +89,8 @@ steps:
         if aks_name=="${{ parameters.aksCluster }}" 
         then
           az account set --subscription DCD-CFTAPPS-SBOX
+        else 
+          az account set --subscription DCD-CFTAPPS-DEV
         fi
         az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster)
 
