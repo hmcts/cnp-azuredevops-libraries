@@ -15,6 +15,7 @@ parameters:
   additionalHelmArgs: ""
   aksResourceGroup: ""
   aksCluster: ""
+  aksSubscription : ""
 
 steps:
   - checkout: self
@@ -86,12 +87,7 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        if [ ! -z ${{ parameters.aksCluster }} ]
-        then
-          az account set --subscription DCD-CFTAPPS-SBOX
-        else 
-          az account set --subscription DCD-CFTAPPS-DEV
-        fi
+        az account set --subscription ${{ parameters.aksSubscription }}
         az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster)
 
   - task: AzureCLI@1
