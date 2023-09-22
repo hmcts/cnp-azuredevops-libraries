@@ -57,10 +57,10 @@ steps:
         }
         if [ ! -z ${{ parameters.aksCluster }} ]
         then
-          aks_name=="${{ parameters.aksCluster }}" 
-          aks_resource_group="${{ parameters.aksResourceGroup }}"
-          echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aks_resource_group"
-          echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aks_name"
+          # aks_name=="${{ parameters.aksCluster }}" 
+          # aks_resource_group="${{ parameters.aksResourceGroup }}"
+          echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]${{ parameters.aksResourceGroup }}"
+          echo "##vso[task.setvariable variable=aksCluster;isOutput=true]${{ parameters.aksCluster }}"
         else
           aks_resource_group="cft-preview-00-rg"
           aks_name="cft-preview-00-aks"
