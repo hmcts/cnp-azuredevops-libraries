@@ -6,7 +6,7 @@ parameters:
   chartReleaseName: ""
   chartNamespace: ""
   chartPath: "./"
-  helmVersion: "3.8.0"
+  helmVersion: "3.13.0"
   helmInstallTimeout: "120"
   helmTestTimeout: "300"
   helmDeleteWait: "0"
@@ -55,6 +55,7 @@ steps:
                 return 1
             fi
         }
+
         if [ ! -z ${{ parameters.aksCluster }} ]
         then
           echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]${{ parameters.aksResourceGroup }}"
@@ -74,8 +75,8 @@ steps:
                   echo "##vso[task.complete result=Failed;]Pod not found in any clusters."
               fi
           fi
-        echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
-        echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
+          echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
+          echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
         fi
 
   - task: AzureCLI@1

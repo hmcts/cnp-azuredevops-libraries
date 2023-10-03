@@ -6,7 +6,7 @@ parameters:
   chartReleaseName: ""
   chartNamespace: ""
   chartPath: "./"
-  helmVersion: "3.8.0"
+  helmVersion: "3.13.0"
 
 steps:
   - checkout: self
@@ -44,22 +44,29 @@ steps:
                 return 1
             fi
         }
-        aks_resource_group="cft-preview-00-rg"
-        aks_name="cft-preview-00-aks"
-        if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
-            echo "Pod with the specified argument found in cluster $aks_name."
+
+        if [ ! -z ${{ parameters.aksCluster }} ]
+        then
+          echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]${{ parameters.aksResourceGroup }}"
+          echo "##vso[task.setvariable variable=aksCluster;isOutput=true]${{ parameters.aksCluster }}"
         else
-            aks_resource_group="cft-preview-01-rg"
-            aks_name="cft-preview-01-aks"
-            if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
-                echo "Pod with the specified argument found in cluster $aks_name."
-            else
-                echo "Pod with the specified argument not found in any clusters."
-                echo "##vso[task.complete result=Failed;]Pod not found in any clusters."
-            fi
+          aks_resource_group="cft-preview-00-rg"
+          aks_name="cft-preview-00-aks"
+          if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
+              echo "Pod with the specified argument found in cluster $aks_name."
+          else
+              aks_resource_group="cft-preview-01-rg"
+              aks_name="cft-preview-01-aks"
+              if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
+                  echo "Pod with the specified argument found in cluster $aks_name."
+              else
+                  echo "Pod with the specified argument not found in any clusters."
+                  echo "##vso[task.complete result=Failed;]Pod not found in any clusters."
+              fi
+          fi
+          echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
+          echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
         fi
-        echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
-        echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
 
   - task: AzureCLI@1
     displayName: "AKS Authenticate"
