@@ -217,6 +217,7 @@ steps:
       and(succeeded(), eq(variables['isMain'], true), eq(variables['isAutoTriggered'], true))
       )
     inputs:
+      runAzLogin: true
       command: apply
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
