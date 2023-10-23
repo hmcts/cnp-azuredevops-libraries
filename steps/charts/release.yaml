@@ -24,7 +24,7 @@ steps:
     name: CheckActiveCluster
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
-      scriptType: bash
+      scriptLocation: scriptPath
       scriptPath: ../../scripts/auto-detect-preview-cluster.sh
 
   - task: AzureCLI@1
