@@ -25,12 +25,13 @@ steps:
     inputs:
       helmVersionToInstall: ${{parameters.helmVersion}}
 
-  - task: AzureCLI@1
+  - task: AzureCLI@2
     displayName: "Determine Active Cluster"
     name: CheckActiveCluster
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: scriptPath
+      scriptType: bash
       scriptPath: ../../scripts/auto-detect-preview-cluster.sh
 
   - task: AzureCLI@1
