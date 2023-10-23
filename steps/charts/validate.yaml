@@ -32,7 +32,7 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: scriptPath
       scriptType: bash
-      scriptPath: '$(System.DefaultWorkingDirectory)/scripts/auto-detect-preview-cluster.sh'
+      scriptPath: '$(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/auto-detect-preview-cluster.sh'
 
   - task: AzureCLI@1
     displayName: "AKS Authenticate"
