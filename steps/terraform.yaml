@@ -194,7 +194,7 @@ steps:
         tfcmt --owner hmcts \
           --repo $(buildRepoSuffix) \
           --pr $(System.PullRequest.PullRequestNumber) \
-          --var target:$(tfPlanName) \
+          --var target:$(System.StageName) \
           --var ado_url:$SYSTEM_COLLECTIONURI \
           --var ado_project:"$SYSTEM_TEAMPROJECT" \
           --var build_id:$BUILD_BUILDID \
@@ -217,6 +217,7 @@ steps:
       and(succeeded(), eq(variables['isMain'], true), eq(variables['isAutoTriggered'], true))
       )
     inputs:
+      runAzLogin: true
       command: apply
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
