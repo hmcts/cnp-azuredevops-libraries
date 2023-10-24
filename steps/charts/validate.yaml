@@ -30,7 +30,6 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - checkout: self
-  - clean: true
   
   - task: HelmInstaller@1
     displayName: 'Install Helm ${{parameters.helmVersion}}'
