@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
         az account set --subscription DCD-CFTAPPS-DEV
+        echo 'AKS Cluster is ${{ parameters.aksCluster }}'
+        echo 'AKS RG is ${{ parameters.aksResourceGroup }}'
 
         check_pod_in_cluster() {
             local aks_rg=$1
