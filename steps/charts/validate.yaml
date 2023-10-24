@@ -30,8 +30,10 @@ steps:
     name: CheckActiveCluster
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
-      scriptType: "bash"
-      scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/auto-detect-preview-cluster.sh
+      scriptLocation: scriptPath
+      scriptType: bash
+      scriptPath: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/cnp-azuredevops-libraries/scripts/auto-detect-preview-cluster.sh'
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureCLI@1
     displayName: "AKS Authenticate"
