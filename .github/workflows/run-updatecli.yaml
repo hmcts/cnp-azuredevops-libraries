@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install Updatecli in the runner
         uses: updatecli/updatecli-action@v2
         with:
-          version: v0.53.0
+          version: v0.64.1
       - uses: tibdex/github-app-token@v1
         id: generate-token
         with:
