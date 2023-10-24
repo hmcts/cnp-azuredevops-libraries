@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
         az account set --subscription DCD-CFTAPPS-DEV
-        echo 'AKS Cluster is ${{ parameters.aksCluster }}'
-        echo 'AKS RG is ${{ parameters.aksResourceGroup }}'
 
         check_pod_in_cluster() {
             local aks_rg=$1
@@ -23,11 +21,10 @@ set -e
             fi
         }
 
-        if [ ! -z ${{ parameters.aksCluster }} ]
-        then
-          echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]${{ parameters.aksResourceGroup }}"
-          echo "##vso[task.setvariable variable=aksCluster;isOutput=true]${{ parameters.aksCluster }}"
-        else
+            if [ ! -z "$aksCluster" ]; then
+                echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
+                echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
+            else
           aks_resource_group="cft-preview-00-rg"
           aks_name="cft-preview-00-aks"
           if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
