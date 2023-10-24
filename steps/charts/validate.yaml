@@ -17,14 +17,7 @@ parameters:
   aksCluster: ""
 
 steps:
-  - checkout: self
   - checkout: cnp-azuredevops-libraries
-    clean: true
-
-  - task: HelmInstaller@1
-    displayName: 'Install Helm ${{parameters.helmVersion}}'
-    inputs:
-      helmVersionToInstall: ${{parameters.helmVersion}}
 
   - task: AzureCLI@2
     displayName: "Determine Active Cluster"
@@ -33,8 +26,16 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: scriptPath
       scriptType: bash
-      scriptPath: '$(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/auto-detect-preview-cluster.sh'
+      scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/auto-detect-preview-cluster.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+
+  - checkout: self
+  - clean: true
+  
+  - task: HelmInstaller@1
+    displayName: 'Install Helm ${{parameters.helmVersion}}'
+    inputs:
+      helmVersionToInstall: ${{parameters.helmVersion}}
 
   - task: AzureCLI@1
     displayName: "AKS Authenticate"
