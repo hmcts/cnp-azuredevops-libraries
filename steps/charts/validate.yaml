@@ -28,7 +28,12 @@ steps:
   - task: Bash@3
     displayName: Determine Active Cluster - Bash
     inputs:
-      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/auto-detect-preview-cluster.sh
+      targetType: 'inline'
+      script: |
+        pwd
+        ls -alrt
+
+    # filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/auto-detect-preview-cluster.sh
 
   # - task: AzureCLI@2
   #   displayName: "Determine Active Cluster"
