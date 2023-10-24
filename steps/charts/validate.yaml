@@ -18,6 +18,7 @@ parameters:
 
 steps:
   - checkout: self
+  - checkout: cnp-azuredevops-libraries
     clean: true
 
   - task: HelmInstaller@1
