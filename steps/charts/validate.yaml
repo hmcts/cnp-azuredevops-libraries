@@ -66,6 +66,7 @@ steps:
     displayName: "Wait for previous chart resources to be deprovisioned"
 
   - script: |
+      cd chart-java
       ls -Rla ${{ parameters.chartPath }}${{ parameters.chartName }}
       helm lint ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Helm Lint"
