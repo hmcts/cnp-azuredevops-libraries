@@ -59,7 +59,9 @@ steps:
       helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Retrieve helm dependencies (if any)"
 
-  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
+  - script: |
+      cd chart-java
+      helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
     displayName: "Delete Previous Test Chart"
 
   - script: sleep ${{ parameters.helmDeleteWait }}
@@ -71,14 +73,20 @@ steps:
       helm lint ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Helm Lint"
 
-  - script: helm install ${{ parameters.chartReleaseName }} ${{ parameters.chartPath }}${{ parameters.chartName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s ${{ parameters.additionalHelmArgs }}
+  - script: |
+      cd chart-java
+      helm install ${{ parameters.chartReleaseName }} ${{ parameters.chartPath }}${{ parameters.chartName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s ${{ parameters.additionalHelmArgs }}
     displayName: "Helm Install"
 
   - script: sleep ${{ parameters.helmInstallWait }}
     displayName: "Wait for chart resources to be provisioned"
 
-  - script: helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --logs --timeout ${{ parameters.helmTestTimeout }}s
+  - script: |
+      cd chart-java
+      helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --logs --timeout ${{ parameters.helmTestTimeout }}s
     displayName: "Helm Test"
 
-  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }}
+  - script: |
+      cd chart-java
+      helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }}
     displayName: "Delete test Chart"
