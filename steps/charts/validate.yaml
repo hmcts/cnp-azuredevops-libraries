@@ -53,13 +53,10 @@ steps:
       inlineScript: |
         helm repo remove hmctspublic # workaround expired auth token
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo 
-  
-  - script: |
-      pwd
-      ls -alrt
-    displayName: "Look in dir"
 
-  - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
+  - script: 
+      cd chart-java
+      helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Retrieve helm dependencies (if any)"
 
   - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
