@@ -18,9 +18,7 @@ parameters:
 
 steps:
   - checkout: self
-    clean: false
   - checkout: cnp-azuredevops-libraries
-    clean: false
   
   - task: HelmInstaller@1
     displayName: 'Install Helm ${{parameters.helmVersion}}'
