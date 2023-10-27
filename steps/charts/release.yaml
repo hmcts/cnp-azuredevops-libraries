@@ -10,7 +10,7 @@ parameters:
 
 steps:
 
-  - checkout: cnp-azuredevops-libraries
+  - checkout: cnp-library
     clean: true
   
   - task: AzureCLI@1
@@ -22,7 +22,7 @@ steps:
       scriptType: bash
       scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/auto-detect-preview-cluster.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-
+      
   - checkout: self
     clean: true
 
