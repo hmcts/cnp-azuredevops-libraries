@@ -22,7 +22,7 @@ steps:
       scriptType: bash
       scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/auto-detect-preview-cluster.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      
+
   - checkout: self
     clean: true
 
@@ -44,11 +44,14 @@ steps:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
+        cd ${{ parameters.chartReleaseName }}
         helm repo add bitnami https://charts.bitnami.com/bitnami
         helm repo remove hmctspublic # workaround expired auth token
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo
 
-  - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
+  - script: |
+      cd ${{ parameters.chartReleaseName }}
+      helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Retrieve helm dependencies (if any)"
 
   - task: AzureCLI@1
@@ -57,6 +60,7 @@ steps:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
+        cd ${{ parameters.chartReleaseName }}
         rm -f $(ls ${{ parameters.chartPath }}${{ parameters.chartName }}-[0-9]*)
         echo "Building branch $(Build.SourceBranch)"
         tag=$(echo $(Build.SourceBranch) | cut -d'/' -f 3 | sed 's/v//')
@@ -69,5 +73,6 @@ steps:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
+        cd ${{ parameters.chartReleaseName }}
         CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*)
         az acr helm push --name ${{ parameters.acrName }} $CHART_FILE
