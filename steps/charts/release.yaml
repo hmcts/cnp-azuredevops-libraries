@@ -44,13 +44,13 @@ steps:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        cd ${{ parameters.chartReleaseName }}
+        cd chart-${{ parameters.chartName }}
         helm repo add bitnami https://charts.bitnami.com/bitnami
         helm repo remove hmctspublic # workaround expired auth token
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo
 
   - script: |
-      cd ${{ parameters.chartReleaseName }}
+      cd chart-${{ parameters.chartName }}
       helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Retrieve helm dependencies (if any)"
 
@@ -60,7 +60,7 @@ steps:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        cd ${{ parameters.chartReleaseName }}
+        cd chart-${{ parameters.chartName }}
         rm -f $(ls ${{ parameters.chartPath }}${{ parameters.chartName }}-[0-9]*)
         echo "Building branch $(Build.SourceBranch)"
         tag=$(echo $(Build.SourceBranch) | cut -d'/' -f 3 | sed 's/v//')
@@ -73,6 +73,6 @@ steps:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        cd ${{ parameters.chartReleaseName }}
+        cd chart-${{ parameters.chartName }}
         CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*)
         az acr helm push --name ${{ parameters.acrName }} $CHART_FILE

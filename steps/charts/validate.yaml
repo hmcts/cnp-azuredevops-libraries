@@ -57,12 +57,12 @@ steps:
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo 
 
   - script: |
-      cd ${{ parameters.chartReleaseName }}
+      cd chart-${{ parameters.chartName }}
       helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Retrieve helm dependencies (if any)"
 
   - script: |
-      cd ${{ parameters.chartReleaseName }}
+      cd chart-${{ parameters.chartName }}
       helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
     displayName: "Delete Previous Test Chart"
 
@@ -70,13 +70,13 @@ steps:
     displayName: "Wait for previous chart resources to be deprovisioned"
 
   - script: |
-      cd ${{ parameters.chartReleaseName }}
+      cd chart-${{ parameters.chartName }}
       ls -Rla ${{ parameters.chartPath }}${{ parameters.chartName }}
       helm lint ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Helm Lint"
 
   - script: |
-      cd ${{ parameters.chartReleaseName }}
+      cd chart-${{ parameters.chartName }}
       helm install ${{ parameters.chartReleaseName }} ${{ parameters.chartPath }}${{ parameters.chartName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s ${{ parameters.additionalHelmArgs }}
     displayName: "Helm Install"
 
@@ -84,11 +84,11 @@ steps:
     displayName: "Wait for chart resources to be provisioned"
 
   - script: |
-      cd ${{ parameters.chartReleaseName }}
+      cd chart-${{ parameters.chartName }}
       helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --logs --timeout ${{ parameters.helmTestTimeout }}s
     displayName: "Helm Test"
 
   - script: |
-      cd ${{ parameters.chartReleaseName }}
+      cd chart-${{ parameters.chartName }}
       helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }}
     displayName: "Delete test Chart"
