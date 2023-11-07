@@ -93,7 +93,7 @@ steps:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       inlineScript: |
-        helm repo remove hmctspublic # workaround expired auth token
+        helm repo remove hmctspublic # workaround expired auth token
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo 
 
   - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
