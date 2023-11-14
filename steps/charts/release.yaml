@@ -9,79 +9,58 @@ parameters:
   helmVersion: "3.13.0"
   aksResourceGroup: ""
   aksCluster: ""
-
+  clustersToCheck:
+    - aksResourceGroupName: cft-preview-00-rg
+      aksClusterName: cft-preview-00-aks
+      aksEnvironment: preview
+    - aksResourceGroupName: cft-preview-01-rg
+      aksClusterName: cft-preview-01-aks
+      aksEnvironment: preview
+      
 steps:
+
   - checkout: self
     clean: true
+  
+  - checkout: cnp-azuredevops-libraries
+    clean: true
+
+  - template: ../set-build-repo-suffix-env-var.yaml
 
   - task: HelmInstaller@1
     displayName: 'Install Helm ${{parameters.helmVersion}}'
     inputs:
       helmVersionToInstall: ${{parameters.helmVersion}}
 
-  - task: AzureCLI@1
-    displayName: "Determine Active Cluster"
-    name: CheckActiveCluster
-    inputs:
-      azureSubscription: ${{ parameters.serviceConnection }}
-      scriptLocation: "inlineScript"
-      inlineScript: |
-        set -x
-        az account set --subscription DCD-CFTAPPS-DEV
-        check_pod_in_cluster() {
-            local aks_rg=$1
-            local aks_cluster=$2
-            printf "\n\nTrying cluster $aks_cluster $aks_rg\n"
-            az aks get-credentials \
-                --resource-group "$aks_rg" \
-                --name "$aks_cluster" --admin
-            local pod_exists
-            pod_exists=$(kubectl get pods --context "$aks_cluster-admin" -n admin -o jsonpath='{range .items[*]}{@.metadata.name}{"\t"}{@.spec.containers[0].args}{"\n"}{end}' | grep "external-dns-private" | grep -- "--txt-owner-id=preview-active")
-            if [ -n "$pod_exists" ]; then
-                aksResourceGroup="$aks_rg"
-                aksCluster="$aks_cluster"
-                return 0
-            else
-                echo "Pod with the specified argument not found in cluster $aks_cluster."
-                return 1
-            fi
-        }
+  - ${{ if eq(parameters.aksCluster, '') }}:
+    - ${{ each cluster in parameters.clustersToCheck}} :
+      - task: AzureCLI@2
+        displayName: "Checking if ${{ cluster.aksClusterName }} is Active"
+        name: CheckActiveCluster_${{ replace(cluster.aksClusterName, '-', '_') }}
+        inputs:
+          azureSubscription: ${{ parameters.serviceConnection }}
+          scriptType: bash
+          scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/auto-detect-cluster.sh
+          scriptArguments: -r ${{ cluster.aksResourceGroupName }} -k ${{ cluster.aksClusterName }} -e ${{ cluster.aksEnvironment }}
 
-        if [ ! -z ${{ parameters.aksCluster }} ]
-        then
-          echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]${{ parameters.aksResourceGroup }}"
-          echo "##vso[task.setvariable variable=aksCluster;isOutput=true]${{ parameters.aksCluster }}"
-        else
-          aks_resource_group="cft-preview-00-rg"
-          aks_name="cft-preview-00-aks"
-          if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
-              echo "Pod with the specified argument found in cluster $aks_name."
-          else
-              aks_resource_group="cft-preview-01-rg"
-              aks_name="cft-preview-01-aks"
-              if check_pod_in_cluster "$aks_resource_group" "$aks_name"; then
-                  echo "Pod with the specified argument found in cluster $aks_name."
-              else
-                  echo "Pod with the specified argument not found in any clusters."
-                  echo "##vso[task.complete result=Failed;]Pod not found in any clusters."
-              fi
-          fi
-          echo "##vso[task.setvariable variable=aksResourceGroup;isOutput=true]$aksResourceGroup"
-          echo "##vso[task.setvariable variable=aksCluster;isOutput=true]$aksCluster"
-        fi
-
-  - task: AzureCLI@1
+  - task: AzureCLI@2
     displayName: "AKS Authenticate"
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptLocation: "inlineScript"
-      inlineScript: az aks get-credentials --admin --resource-group $(CheckActiveCluster.aksResourceGroup) --name $(CheckActiveCluster.aksCluster)
+      scriptType: bash
+      ${{ if ne(parameters.aksCluster, '') }}:
+        inlineScript: az aks get-credentials --admin --resource-group ${{ parameters.aksResourceGroup }} --name ${{ parameters.aksCluster }}
+      ${{ else }}:
+        inlineScript: az aks get-credentials --admin --resource-group $(aksResourceGroup) --name $(aksCluster)
 
   - task: AzureCLI@1
     displayName: "Add custom charts repo"
     inputs:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
+      scriptType: bash
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
         helm repo add bitnami https://charts.bitnami.com/bitnami
         helm repo remove hmctspublic # workaround expired auth token
@@ -90,11 +69,13 @@ steps:
   - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
     displayName: "Retrieve helm dependencies (if any)"
 
-  - task: AzureCLI@1
+  - task: AzureCLI@2
     displayName: "Helm Package"
     inputs:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
+      scriptType: bash
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
         rm -f $(ls ${{ parameters.chartPath }}${{ parameters.chartName }}-[0-9]*)
         echo "Building branch $(Build.SourceBranch)"
@@ -102,11 +83,13 @@ steps:
         echo "publishing chart version $tag"
         helm package ${{ parameters.chartPath }}${{ parameters.chartName }} --version ${tag} --app-version ${tag}
 
-  - task: AzureCLI@1
+  - task: AzureCLI@2
     displayName: "Helm Publish"
     inputs:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
+      scriptType: bash
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
         CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*)
         az acr helm push --name ${{ parameters.acrName }} $CHART_FILE
