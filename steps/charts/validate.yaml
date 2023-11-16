@@ -47,7 +47,7 @@ steps:
           azureSubscription: ${{ parameters.serviceConnection }}
           scriptType: bash
           scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/auto-detect-cluster.sh
-          scriptArguments: -r ${{ cluster.aksResourceGroupName }} -k ${{ cluster.aksClusterName }} -e ${{ cluster.aksEnvironment }}
+          scriptArguments: --resourceGroupName ${{ cluster.aksResourceGroupName }} --aksClusterName ${{ cluster.aksClusterName }} --environmentName ${{ cluster.aksEnvironment }}
 
   - task: AzureCLI@2
     displayName: "AKS Authenticate"
