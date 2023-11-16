@@ -40,6 +40,12 @@ steps:
       secretsFilter: ${{ parameters.keyvaultSecret }}
       runAsPreJob: false
 
+  - task: Bash@3
+    displayName: 'Deploy to sandbox'
+    inputs:
+      targetType: 'inline'
+      script: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh $(github-api-token)
+
   - task: PowerShell@2
     displayName: Run tests
     inputs:
