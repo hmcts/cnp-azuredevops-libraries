@@ -40,6 +40,15 @@ steps:
       secretsFilter: ${{ parameters.keyvaultSecret }}
       runAsPreJob: false
 
+  - task: AzureKeyVault@1
+    displayName: 'Get GitHub API token from Keyvault'
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'github-api-token'
+
   - task: Bash@3
     displayName: 'Deploy to sandbox'
     inputs:
