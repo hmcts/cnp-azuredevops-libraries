@@ -36,7 +36,7 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureKeyVault@1
-    displayName: Retrieve keyvault secret for ADO token
+    displayName: 'Retrieve keyvault secret for ADO token'
     inputs:
       ConnectedServiceName: ${{ parameters.serviceConnection }}
       keyVaultName: ${{ parameters.keyvaultName }}
@@ -45,7 +45,6 @@ steps:
 
   - task: AzureKeyVault@1
     displayName: 'Get GitHub API token from Keyvault'
-    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
       runAsPreJob: false
       ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
