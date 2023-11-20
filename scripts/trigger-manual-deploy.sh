@@ -16,8 +16,8 @@
                https://api.github.com/repos/hmcts/auto-shutdown/actions/workflows/manual-start.yaml/dispatches \
                -d '{ "ref": "master",
                           "inputs": {
-                            "PROJECT": "$project",
-                            "SELECTED_ENV": "$env",
+                            "PROJECT": $project,
+                            "SELECTED_ENV": $env,
                             "AKS-INSTANCES": "All"
                           }
                }'
