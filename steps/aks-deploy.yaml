@@ -12,10 +12,10 @@ steps:
     azureSubscription: ${{ parameters.serviceConnection }}
     scriptLocation: 'inlineScript'
     inlineScript: |
-     imageDigest=`az acr repository show --name $(acrName) --image $(Build.Repository.Name):$(imageTag) --query [digest] -otsv`
-     registryHost=`az acr show -n $(acrName) --query loginServer -otsv`
-     echo "##vso[task.setvariable variable=IMAGE_DIGEST]$imageDigest"
-     echo "##vso[task.setvariable variable=REGISTRY_HOST]$registryHost"
+      imageDigest=`az acr repository show --name $(acrName) --image $(Build.Repository.Name):$(imageTag) --query [digest] -otsv`
+      registryHost=`az acr show -n $(acrName) --query loginServer -otsv`
+      echo "##vso[task.setvariable variable=IMAGE_DIGEST]$imageDigest"
+      echo "##vso[task.setvariable variable=REGISTRY_HOST]$registryHost"
 
 - task: AzureCLI@1
   displayName: 'Get Consul IP address'
