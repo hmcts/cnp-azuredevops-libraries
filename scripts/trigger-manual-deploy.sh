@@ -7,7 +7,7 @@ github_token="$1"
 project="$2"
 work_area="$2"
 environment="$3"
-cluster="$4"
+cluster="$4" # e.g. 00, 01, All
 
 # environment list: sbox, ptlsbox, ithc, ptl, stg, demo, test, dev
 
@@ -18,13 +18,8 @@ SBOX_SUBIDs_MAP=(["DTS-SHAREDSERVICES-SBOX"]="a8140a9e-f1b0-481f-a4de-09e2ee23f7
 ITHC_SUBIDs_MAP=(["DTS-SHAREDSERVICES-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df7139"
   ["DCD-CFTAPPS-ITHC"]="62864d44-5da9-4ae9-89e7-0cf33942fa09")
 
-# change work_area from `ss` to `sds`
-if [[ $project == "ss" ]]; then
-  work_area="sds"
-fi
-
-# check work_area needs to be either sds or cft
-if [[ $work_area != "sds" && $work_area != "cft" && $work_area != "All" ]]; then
+# check project needs to be either sds or cft
+if [[ $project != "ss" && $project != "cft" && $project != "All" ]]; then
   echo "[error] work_area must be sds, cft or All"
   exit 1
 fi
@@ -46,7 +41,7 @@ echo "ss-sbox-00-aks status $cluster_status."
          https://api.github.com/repos/hmcts/auto-shutdown/actions/workflows/manual-start.yaml/dispatches \
          -d "{ \"ref\": \"master\",
                 \"inputs\": {
-                  \"PROJECT\": \"$work_area\",
+                  \"PROJECT\": \"$project\",
                   \"SELECTED_ENV\": \"$environment\",
                   \"AKS-INSTANCES\": \"$cluster\"
                 }
