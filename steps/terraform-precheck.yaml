@@ -55,7 +55,7 @@ steps:
     displayName: 'Deploy to sandbox'
     inputs:
       targetType: 'inline'
-      script: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh $(github-api-token) ${{parameters.project}} "sbox" ${{parameters.cluster}}
+      script: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh $(github-api-token) ${{parameters.projectName}} "sbox" ${{parameters.cluster}}
 
   - task: PowerShell@2
     displayName: Run tests
