@@ -28,6 +28,12 @@ parameters:
   - name: projectName
     default: 'ss'
 
+  - name: cluster
+    default: 'All'
+
+  - name: environment
+    default: 'sbox'
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -58,7 +64,7 @@ steps:
     displayName: 'Deploy to sandbox'
     inputs:
       targetType: 'inline'
-      script: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh $(github-api-token) ${{parameters.projectName}} "sbox" ${{parameters.cluster}}
+      script: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh $(github-api-token) ${{parameters.projectName}} ${{parameters.environment}} ${{parameters.cluster}}
 
   - task: PowerShell@2
     displayName: Run tests
