@@ -25,6 +25,9 @@ parameters:
   - name: kvConnectedServiceName
     default: 'azurerm-sandbox'
 
+  - name: projectName
+    default: 'ss'
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
