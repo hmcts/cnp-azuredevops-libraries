@@ -34,8 +34,9 @@ fi
 az account set --subscription a8140a9e-f1b0-481f-a4de-09e2ee23f7ab
 cluster_data=$(az aks show -n ss-sbox-00-aks -g ss-sbox-00-rg -o json)
 cluster_status=$(jq -r '.powerState.code' <<< "$cluster_data")
+echo "ss-sbox-00-aks status $cluster_status."
 # check if cluster is running or not
-if [[ $cluster_status != "Running" ]]; then
+#if [[ $cluster_status != "Running" ]]; then
   echo "[info] Triggering auto manual start workflow for $project in $environment..."
    curl -L \
          -X POST \
@@ -50,6 +51,6 @@ if [[ $cluster_status != "Running" ]]; then
                   \"AKS-INSTANCES\": \"$cluster\"
                 }
               }"
-else
-  echo "Cluster ss-sbox-00-aks is already running."
-fi
+#else
+#  echo "Cluster ss-sbox-00-aks is already running."
+#fi
