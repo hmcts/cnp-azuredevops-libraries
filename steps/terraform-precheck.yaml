@@ -66,7 +66,8 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptType: 'bash'
       scriptLocation: 'scriptPath'
-      scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh $(github-api-token) ${{parameters.projectName}} ${{parameters.environment}} ${{parameters.cluster}}
+      scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh
+      arguments: "$(github-api-token) ${{parameters.projectName}} ${{parameters.environment}} ${{parameters.cluster}}"
 
   - task: PowerShell@2
     displayName: Run PESTER tests
