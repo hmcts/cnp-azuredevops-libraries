@@ -60,14 +60,16 @@ steps:
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'github-api-token'
 
-  - task: Bash@3
-    displayName: 'Deploy to sandbox'
+  - task: AzureCLI@2
+    displayName: Trigger Github Action AKS Manual Start
     inputs:
-      targetType: 'inline'
-      script: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh $(github-api-token) ${{parameters.projectName}} ${{parameters.environment}} ${{parameters.cluster}}
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptType: 'bash'
+      scriptLocation: 'scriptPath'
+      scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh $(github-api-token) ${{parameters.projectName}} ${{parameters.environment}} ${{parameters.cluster}}
 
   - task: PowerShell@2
-    displayName: Run tests
+    displayName: Run PESTER tests
     inputs:
       targetType: 'filePath'
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/pester-tests.ps1
