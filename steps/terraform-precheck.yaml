@@ -29,7 +29,7 @@ parameters:
     default: 'ss'
 
   - name: cluster
-    default: 'All'
+    default: '00'
 
   - name: environment
     default: 'sbox'

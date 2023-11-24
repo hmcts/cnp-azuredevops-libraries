@@ -26,7 +26,7 @@ fi
 
 ## Check if requested clusters under a work area are running or not
 # sds-sbox subscription ID: a8140a9e-f1b0-481f-a4de-09e2ee23f7ab
-az account set --subscription a8140a9e-f1b0-481f-a4de-09e2ee23f7ab
+az account set -n DTS-SHAREDSERVICES-SBOX
 cluster_data=$(az aks show -n ss-sbox-00-aks -g ss-sbox-00-rg -o json)
 cluster_status=$(jq -r '.powerState.code' <<< "$cluster_data")
 echo "ss-sbox-00-aks status $cluster_status."
