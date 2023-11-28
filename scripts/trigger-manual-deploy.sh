@@ -64,7 +64,6 @@ if [[ $cluster == "01" ]] || [[ $cluster == "All" ]]; then
       clustersToStart="All"
     fi
     if [[ $cluster == "All" && $cluster_status_01 != "Running" ]] && [[ $cluster_status_00 == "Running" ]]; then
-      echo "HERE"
       clustersToStart="01"
     fi
     if [[ $cluster == "All" && $cluster_status_01 == "Running" ]] && [[ $cluster_status_00 != "Running" ]]; then
