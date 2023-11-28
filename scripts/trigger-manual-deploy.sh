@@ -56,25 +56,27 @@ if [[ $cluster == "01" ]] || [[ $cluster == "All" ]]; then
   cluster_data_01=$(az aks show -n ss-sbox-01-aks -g ss-sbox-01-rg -o json)
   cluster_status_01=$(jq -r '.powerState.code' <<< "$cluster_data_01")
   echo "ss-sbox-01-aks status $cluster_status_01."
-
     if [[ $cluster_status_01 == "Running" ]] && [[ $cluster_status_00 == "Running" ]]; then
       echo "Both clusters are already running. Exiting..."
       exit;
     fi
-    if [[ $cluster == "ALL" && $cluster_status_01 != "Running" ]] && [[ $cluster_status_00 != "Running" ]]; then
-      clustersToStart="ALL"
+    if [[ $cluster == "All" && $cluster_status_01 != "Running" ]] && [[ $cluster_status_00 != "Running" ]]; then
+      clustersToStart="All"
     fi
-    elif [[ $cluster == "ALL" && $cluster_status_01 != "Running" ]] && [[ $cluster_status_00 == "Running" ]]; then
+    if [[ $cluster == "All" && $cluster_status_01 != "Running" ]] && [[ $cluster_status_00 == "Running" ]]; then
+      echo "HERE"
       clustersToStart="01"
-    elif [[ $cluster == "ALL" && $cluster_status_01 == "Running" ]] && [[ $cluster_status_00 != "Running" ]]; then
+    fi
+    if [[ $cluster == "All" && $cluster_status_01 == "Running" ]] && [[ $cluster_status_00 != "Running" ]]; then
       clustersToStart="00"
-
+    fi
     if [[ $cluster_status_01 != "Running" ]]; then
       clustersToStart="01"
     fi
-    elif [[ $cluster == "01" ]] && [[ $cluster_status_01 == "Running" ]]; then
+    if [[ $cluster == "01" ]] && [[ $cluster_status_01 == "Running" ]]; then
     echo "Cluster 01 is already running. Exiting..."
       exit;
+    fi
 fi
 
 # check if cluster is running or not
