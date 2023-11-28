@@ -35,9 +35,48 @@ ITHC_SUBIDs_MAP=(["DTS-SHAREDSERVICES-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df71
 ## Check if requested clusters under a work area are running or not
 # sds-sbox subscription ID: a8140a9e-f1b0-481f-a4de-09e2ee23f7ab
 az account set -n DTS-SHAREDSERVICES-SBOX
-cluster_data=$(az aks show -n ss-sbox-00-aks -g ss-sbox-00-rg -o json)
-cluster_status=$(jq -r '.powerState.code' <<< "$cluster_data")
-echo "ss-sbox-00-aks status $cluster_status."
+
+#Although we may ask for 'ALL' clusters to be started, we only need to include the ones that are not running in the request
+
+if [[ $cluster == "00" ]] || [[ $cluster == "All" ]]; then
+  echo "Checking ss-sbox-00-aks status..."
+  cluster_data_00=$(az aks show -n ss-sbox-00-aks -g ss-sbox-00-rg -o json)
+  cluster_status_00=$(jq -r '.powerState.code' <<< "$cluster_data_00")
+  echo "ss-sbox-00-aks status $cluster_status_00."
+    if [[ $cluster_status_00 != "Running" ]]; then
+      clustersToStart="00"
+    fi
+    elif [[ $cluster == "00" ]] && [[ $cluster_status_00 == "Running" ]]; then
+    echo "Cluster 00 is already running. Exiting..."
+      exit;
+fi
+
+if [[ $cluster == "01" ]] || [[ $cluster == "All" ]]; then
+  echo "Checking ss-sbox-01-aks status..."
+  cluster_data_01=$(az aks show -n ss-sbox-01-aks -g ss-sbox-01-rg -o json)
+  cluster_status_01=$(jq -r '.powerState.code' <<< "$cluster_data_01")
+  echo "ss-sbox-01-aks status $cluster_status_01."
+
+    if [[ $cluster_status_01 == "Running" ]] && [[ $cluster_status_00 == "Running" ]]; then
+      echo "Both clusters are already running. Exiting..."
+      exit;
+    fi
+    if [[ $cluster == "ALL" && $cluster_status_01 != "Running" ]] && [[ $cluster_status_00 != "Running" ]]; then
+      clustersToStart="ALL"
+    fi
+    elif [[ $cluster == "ALL" && $cluster_status_01 != "Running" ]] && [[ $cluster_status_00 == "Running" ]]; then
+      clustersToStart="01"
+    elif [[ $cluster == "ALL" && $cluster_status_01 == "Running" ]] && [[ $cluster_status_00 != "Running" ]]; then
+      clustersToStart="00"
+
+    if [[ $cluster_status_01 != "Running" ]]; then
+      clustersToStart="01"
+    fi
+    elif [[ $cluster == "01" ]] && [[ $cluster_status_01 == "Running" ]]; then
+    echo "Cluster 01 is already running. Exiting..."
+      exit;
+fi
+
 # check if cluster is running or not
 #if [[ $cluster_status != "Running" ]]; then
   echo "[info] Triggering auto manual start workflow for $project in $environment..."
@@ -53,7 +92,7 @@ echo "ss-sbox-00-aks status $cluster_status."
                 \"inputs\": {
                   \"PROJECT\": \"$work_area\",
                   \"SELECTED_ENV\": \"$environment\",
-                  \"AKS-INSTANCES\": \"$cluster\"
+                  \"AKS-INSTANCES\": \"$clustersToStart\"
                 }
               }"
 #else
