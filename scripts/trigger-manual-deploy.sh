@@ -79,7 +79,7 @@ fi
 
 # check if cluster is running or not
 #if [[ $cluster_status != "Running" ]]; then
-  echo "[info] Triggering auto manual start workflow for $project in $environment..."
+  echo "[info] Triggering auto manual start workflow for $project in $environment with the following cluster: $clustersToStart..."
   # Project: SDS or CFT; SELECTED_ENV: sbox, test/perftest, ptlsbox, ithc, ptl, aat/staging, demo, test, preview/dev;
   # AKS-INSTANCES: 00, 01, All
   curl -L \
