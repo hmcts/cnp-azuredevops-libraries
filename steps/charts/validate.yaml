@@ -71,39 +71,70 @@ steps:
         helm repo remove hmctspublic # workaround expired auth token
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo 
 
-  - script: ls -l
-    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+  - ${{ if eq(parameters.chartPath, './') }}:
+    - script: ls -l
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  - script: helm dependency update ${{ parameters.chartName }}
-    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-    displayName: "Retrieve helm dependencies (if any)"
+    - script: helm dependency update ${{ parameters.chartName }}
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Retrieve helm dependencies (if any)"
 
-  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
-    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-    displayName: "Delete Previous Test Chart"
+    - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Delete Previous Test Chart"
 
-  - script: sleep ${{ parameters.helmDeleteWait }}
-    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-    displayName: "Wait for previous chart resources to be deprovisioned"
+    - script: sleep ${{ parameters.helmDeleteWait }}
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Wait for previous chart resources to be deprovisioned"
 
-  - script: |
-      ls -Rla ${{ parameters.chartPath }}${{ parameters.chartName }}
-      helm lint ${{ parameters.chartPath }}${{ parameters.chartName }}
-    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-    displayName: "Helm Lint"
+    - script: |
+        ls -Rla ${{ parameters.chartName }}
+        helm lint ${{ parameters.chartName }}
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Helm Lint"
 
-  - script: helm install ${{ parameters.chartReleaseName }} ${{ parameters.chartPath }}${{ parameters.chartName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s ${{ parameters.additionalHelmArgs }}
-    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-    displayName: "Helm Install"
+    - script: helm install ${{ parameters.chartReleaseName }} ${{ parameters.chartName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s ${{ parameters.additionalHelmArgs }}
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Helm Install"
 
-  - script: sleep ${{ parameters.helmInstallWait }}
-    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-    displayName: "Wait for chart resources to be provisioned"
+    - script: sleep ${{ parameters.helmInstallWait }}
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Wait for chart resources to be provisioned"
 
-  - script: helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --logs --timeout ${{ parameters.helmTestTimeout }}s
-    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-    displayName: "Helm Test"
+    - script: helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --logs --timeout ${{ parameters.helmTestTimeout }}s
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Helm Test"
 
-  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }}
-    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-    displayName: "Delete test Chart"
+    - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }}
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Delete test Chart"
+
+  - ${{ else }}:
+
+    - script: ls -l
+
+    - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
+      displayName: "Retrieve helm dependencies (if any)"
+
+    - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
+      displayName: "Delete Previous Test Chart"
+
+    - script: sleep ${{ parameters.helmDeleteWait }}
+      displayName: "Wait for previous chart resources to be deprovisioned"
+
+    - script: |
+        ls -Rla ${{ parameters.chartPath }}${{ parameters.chartName }}
+        helm lint ${{ parameters.chartPath }}${{ parameters.chartName }}
+      displayName: "Helm Lint"
+
+    - script: helm install ${{ parameters.chartReleaseName }} ${{ parameters.chartPath }}${{ parameters.chartName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s ${{ parameters.additionalHelmArgs }}
+      displayName: "Helm Install"
+
+    - script: sleep ${{ parameters.helmInstallWait }}
+      displayName: "Wait for chart resources to be provisioned"
+
+    - script: helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --logs --timeout ${{ parameters.helmTestTimeout }}s
+      displayName: "Helm Test"
+
+    - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }}
+      displayName: "Delete test Chart"
