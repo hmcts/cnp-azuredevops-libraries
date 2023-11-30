@@ -3,6 +3,10 @@ steps:
       BUILD_REPOSITORY_SHORTNAME=$(echo $BUILD_REPOSITORY_NAME | cut -d '/' -f2)
       echo $BUILD_REPOSITORY_SHORTNAME
       echo "##vso[task.setvariable variable=buildRepoSuffix;]$BUILD_REPOSITORY_SHORTNAME"
-      echo "buildRepoSuffix set to: $(buildRepoSuffix)"
-      echo "workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)"
+      echo "##vso[task.setvariable variable=buildRepoSuffix;]$BUILD_REPOSITORY_SHORTNAME"
     displayName: Set build repository name suffix env variable
+
+  - bash: |
+      echo "buildRepoSuffix set to: $buildRepoSuffix"
+      echo "workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)"
+    displayName: Check name suffix is set
