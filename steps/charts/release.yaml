@@ -67,6 +67,7 @@ steps:
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo
 
   - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Retrieve helm dependencies (if any)"
 
   - task: AzureCLI@2
