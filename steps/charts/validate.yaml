@@ -74,8 +74,10 @@ steps:
   - ${{ if eq(parameters.chartPath, './') }}:
     - script: |
         echo "Chart Path: ${{ parameters.chartPath }}"
+        echo "Working Dir: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)"
         ls -l
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Provide useful information"
 
     - script: helm dependency update ${{ parameters.chartName }}
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
@@ -115,8 +117,10 @@ steps:
 
     - script: |
         echo "Chart Path: ${{ parameters.chartPath }}"
+        echo "Working Dir: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)"
         ls -l
-        
+      displayName: "Provide useful information"
+
     - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
       displayName: "Retrieve helm dependencies (if any)"
 
