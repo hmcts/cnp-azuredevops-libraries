@@ -72,7 +72,9 @@ steps:
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo 
 
   - ${{ if eq(parameters.chartPath, './') }}:
-    - script: ls -l
+    - script: |
+        echo "Chart Path: ${{ parameters.chartPath }}"
+        ls -l
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
     - script: helm dependency update ${{ parameters.chartName }}
@@ -111,8 +113,10 @@ steps:
 
   - ${{ else }}:
 
-    - script: ls -l
-
+    - script: |
+        echo "Chart Path: ${{ parameters.chartPath }}"
+        ls -l
+        
     - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
       displayName: "Retrieve helm dependencies (if any)"
 
