@@ -49,33 +49,30 @@ if [[ $cluster == "00" ]] || [[ $cluster == "All" ]]; then
     #TEST_URL="https://$(serviceName).service.core-compute-saat.internal/health"
 
     #Need to determine for which cluster we are checking the status
-    serviceName='##vso[task.setvariable variable=serviceName]$(projectName)-$(imageTag)'
-    TEST_URL="https://$serviceName.service.core-compute-saat.internal"
-
+  serviceName='##vso[task.setvariable variable=serviceName]$(projectName)-$(imageTag)'
+  TEST_URL="https://$serviceName.service.core-compute-saat.internal"
+  echo "TEST URL IS $TEST_URL"
+  MAX_ATTEMPTS=20
+  SLEEP_TIME=5
+  #!/bin/bash
+  attempts=1
+  echo "Trying $TEST_URL\n"
+  while (( attempts <= $MAX_ATTEMPTS ))
+  do
+    echo "Attempt #$attempts\n"
     echo "TEST URL IS $TEST_URL"
-    MAX_ATTEMPTS=20
-    SLEEP_TIME=5
-
-    #!/bin/bash
-    attempts=1
-    printf "Trying $TEST_URL\n"
-    while (( attempts <= $MAX_ATTEMPTS ))
-    do
-      printf "Attempt #$attempts\n"
-      echo "TEST URL IS $TEST_URL"
-      printf "TEST URL IS $TEST_URL"
-      response=`curl -sk -o /dev/null -w "%{http_code}" $TEST_URL`
-      ((attempts++))
-      if (( response >= 200 && response <= 399 )); then
-        printf "Service is healthy, returned HTTP $response\n"
-        exit 0
-      else
-        printf "Returned HTTP $response, retrying...\n"
-        sleep $SLEEP_TIME
-      fi
-    done
-    printf "Service not healthy, giving up.\n"
-
+    echo "TEST URL IS $TEST_URL"
+    response=`curl -sk -o /dev/null -w "%{http_code}" $TEST_URL`
+    ((attempts++))
+    if (( response >= 200 && response <= 399 )); then
+      echo "Service is healthy, returned HTTP $response\n"
+      exit 0
+    else
+      echo "Returned HTTP $response, retrying...\n"
+      sleep $SLEEP_TIME
+    fi
+  done
+  echo "Service not healthy, giving up.\n"
   echo "ss-sbox-00-aks status $cluster_status_00."
     if [[ $cluster_status_00 != "Running" ]]; then
       clustersToStart="00"
