@@ -74,7 +74,7 @@ steps:
   - script: ls -l
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
+  - script: helm dependency update ${{ parameters.chartName }}
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Retrieve helm dependencies (if any)"
 
