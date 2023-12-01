@@ -36,8 +36,8 @@ ITHC_SUBIDs_MAP=(["DTS-SHAREDSERVICES-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df71
 # sds-sbox subscription ID: a8140a9e-f1b0-481f-a4de-09e2ee23f7ab
 az account set -n DTS-SHAREDSERVICES-SBOX
 
-TEST_URL_CFT="plum.$environment.platform.hmcts.net"
-TEST_URL_SDS="toffee.$environment.platform.hmcts.net"
+TEST_URL_CFT="https://plum.sandbox.platform.hmcts.net/health"
+TEST_URL_SDS="https://toffee.sandbox.platform.hmcts.net/health"
 
 MAX_ATTEMPTS=20
 SLEEP_TIME=5
