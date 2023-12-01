@@ -36,97 +36,43 @@ ITHC_SUBIDs_MAP=(["DTS-SHAREDSERVICES-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df71
 # sds-sbox subscription ID: a8140a9e-f1b0-481f-a4de-09e2ee23f7ab
 az account set -n DTS-SHAREDSERVICES-SBOX
 
-#Although we may ask for 'ALL' clusters to be started, we only need to include the ones that are not running in the request
+TEST_URL_CFT="plum.$environment.platform.hmcts.net"
+TEST_URL_SDS="toffee.$environment.platform.hmcts.net"
 
-if [[ $cluster == "00" ]] || [[ $cluster == "All" ]]; then
-  echo "Checking ss-sbox-00-aks status..."
+MAX_ATTEMPTS=20
+SLEEP_TIME=5
+attempts=1
+while (( attempts <= MAX_ATTEMPTS ))
+do
+  printf "Attempt #$attempts\n"
+  if [[ $work_area == "CFT" ]]; then
+  response=`curl -sk -o /dev/null -w "%{http_code}" $TEST_URL_CFT`
+  else
+  response=`curl -sk -o /dev/null -w "%{http_code}" $TEST_URL_SDS`
+  fi
+  ((attempts++))
+  if (( response >= 200 && response <= 399 )); then
+    printf "Service is healthy, returned HTTP $response\n"
+    exit 0
+  else
+    printf "Returned HTTP $response, retrying...\n"
+    sleep $SLEEP_TIME
+  fi
+done
 
-    #check plum/toffee status of each cluster
-
-
-#  cluster_data_00=$(az aks show -n ss-sbox-00-aks -g ss-sbox-00-rg -o json)
-#  cluster_status_00=$(jq -r '.powerState.code' <<< "$cluster_data_00")
-    #TEST_URL="https://$(serviceName).service.core-compute-saat.internal/health"
-
-    #Need to determine for which cluster we are checking the status
-  serviceName='##vso[task.setvariable variable=serviceName]$(projectName)-$(imageTag)'
-  TEST_URL="https://$serviceName.service.core-compute-saat.internal"
-  echo "TEST URL IS $TEST_URL"
-  MAX_ATTEMPTS=20
-  SLEEP_TIME=5
-  #!/bin/bash
-  attempts=1
-  echo "Trying $TEST_URL\n"
-  while (( attempts <= $MAX_ATTEMPTS ))
-  do
-    echo "Attempt #$attempts\n"
-    echo "TEST URL IS $TEST_URL"
-    echo "TEST URL IS $TEST_URL"
-    response=`curl -sk -o /dev/null -w "%{http_code}" $TEST_URL`
-    ((attempts++))
-    if (( response >= 200 && response <= 399 )); then
-      echo "Service is healthy, returned HTTP $response\n"
-      exit 0
-    else
-      echo "Returned HTTP $response, retrying...\n"
-      sleep $SLEEP_TIME
-    fi
-  done
-  echo "Service not healthy, giving up.\n"
-  echo "ss-sbox-00-aks status $cluster_status_00."
-    if [[ $cluster_status_00 != "Running" ]]; then
-      clustersToStart="00"
-    fi
-    elif [[ $cluster == "00" ]] && [[ $cluster_status_00 == "Running" ]]; then
-    echo "Cluster 00 is already running. Exiting..."
-      exit;
-fi
-
-if [[ $cluster == "01" ]] || [[ $cluster == "All" ]]; then
-  echo "Checking ss-sbox-01-aks status..."
-  cluster_data_01=$(az aks show -n ss-sbox-01-aks -g ss-sbox-01-rg -o json)
-  cluster_status_01=$(jq -r '.powerState.code' <<< "$cluster_data_01")
-  echo "ss-sbox-01-aks status $cluster_status_01."
-    if [[ $cluster_status_01 == "Running" ]] && [[ $cluster_status_00 == "Running" ]]; then
-      echo "Both clusters are already running. Exiting..."
-      exit;
-    fi
-    if [[ $cluster == "All" && $cluster_status_01 != "Running" ]] && [[ $cluster_status_00 != "Running" ]]; then
-      clustersToStart="All"
-    fi
-    if [[ $cluster == "All" && $cluster_status_01 != "Running" ]] && [[ $cluster_status_00 == "Running" ]]; then
-      clustersToStart="01"
-    fi
-    if [[ $cluster == "All" && $cluster_status_01 == "Running" ]] && [[ $cluster_status_00 != "Running" ]]; then
-      clustersToStart="00"
-    fi
-    if [[ $cluster_status_01 != "Running" ]]; then
-      clustersToStart="01"
-    fi
-    if [[ $cluster == "01" ]] && [[ $cluster_status_01 == "Running" ]]; then
-    echo "Cluster 01 is already running. Exiting..."
-      exit;
-    fi
-fi
-
-# check if cluster is running or not
-#if [[ $cluster_status != "Running" ]]; then
-  echo "[info] Triggering auto manual start workflow for $project in $environment with the following cluster: $clustersToStart..."
+echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster 00"
   # Project: SDS or CFT; SELECTED_ENV: sbox, test/perftest, ptlsbox, ithc, ptl, aat/staging, demo, test, preview/dev;
   # AKS-INSTANCES: 00, 01, All
-#  curl -L \
-#         -X POST \
-#         -H "Accept: application/vnd.github+json" \
-#         -H "Authorization: Bearer $github_token" \
-#         -H "X-GitHub-Api-Version: 2022-11-28" \
-#         https://api.github.com/repos/hmcts/auto-shutdown/actions/workflows/manual-start.yaml/dispatches \
-#         -d "{ \"ref\": \"master\",
-#                \"inputs\": {
-#                  \"PROJECT\": \"$work_area\",
-#                  \"SELECTED_ENV\": \"$environment\",
-#                  \"AKS-INSTANCES\": \"$clustersToStart\"
-#                }
-#              }"
-#else
-#  echo "Cluster ss-sbox-00-aks is already running."
-#fi
+  curl -L \
+         -X POST \
+         -H "Accept: application/vnd.github+json" \
+         -H "Authorization: Bearer $github_token" \
+         -H "X-GitHub-Api-Version: 2022-11-28" \
+         https://api.github.com/repos/hmcts/auto-shutdown/actions/workflows/manual-start.yaml/dispatches \
+         -d "{ \"ref\": \"master\",
+                \"inputs\": {
+                  \"PROJECT\": \"$work_area\",
+                  \"SELECTED_ENV\": \"$environment\",
+                  \"AKS-INSTANCES\": \"00\"
+                }
+              }"
