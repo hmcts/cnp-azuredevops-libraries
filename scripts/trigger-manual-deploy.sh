@@ -44,18 +44,18 @@ SLEEP_TIME=5
 attempts=1
 while (( attempts <= MAX_ATTEMPTS ))
 do
-  printf "Attempt #$attempts\n"
+  echo "Attempt #$attempts"
   if [[ $work_area == "CFT" ]]; then
-  response=`curl -sk -o /dev/null -w "%{http_code}" $TEST_URL_CFT`
+  response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL_CFT")
   else
-  response=`curl -sk -o /dev/null -w "%{http_code}" $TEST_URL_SDS`
+  response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL_SDS")
   fi
   ((attempts++))
   if (( response >= 200 && response <= 399 )); then
-    printf "Service is healthy, returned HTTP $response\n"
+    echo "Service is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
     exit 0
   else
-    printf "Returned HTTP $response, retrying...\n"
+    echo "Returned HTTP $response, retrying..."
     sleep $SLEEP_TIME
   fi
 done
