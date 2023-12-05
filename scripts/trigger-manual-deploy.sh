@@ -54,7 +54,7 @@ do
   fi
   ((attempts++))
   if (( response >= 200 && response <= 399 )); then
-    health=true;
+    healthy=true;
     break;
   else
     echo "Returned HTTP $response, retrying..."
@@ -62,7 +62,7 @@ do
   fi
 done
 
-if [[ $health == true ]]; then
+if [[ $healthy == true ]]; then
   echo "Service is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
 else
 echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster 00"
@@ -108,8 +108,8 @@ if [[ $environment == "sbox" ]]; then
     else
     az account set -n DCD-CFTAPPS-ITHC
 fi
-echo "PROJECT NAME: $project"
-if [[ $project == "hub-panorama" ]]; then
+
+if [[ $environment == "All" ]]; then
   echo "Triggering auto manual start workflow for all projects in $environment for cluster $cluster"
   trigger_workflow "$github_token" "SDS" "$environment"
   trigger_workflow "$github_token" "CFT" "$environment"
