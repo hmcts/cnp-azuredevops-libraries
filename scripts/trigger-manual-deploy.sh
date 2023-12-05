@@ -9,6 +9,67 @@ work_area="$2"
 environment="$3"
 cluster="$4" # e.g. 00, 01, All
 
+# github token is $1 and work_area is $2 and environment is $3
+function trigger_workflow() {
+  # Project: SDS or CFT; SELECTED_ENV: sbox, test/perftest, ptlsbox, ithc, ptl, aat/staging, demo, test, preview/dev;
+  # AKS-INSTANCES: 00, 01, All
+  curl -L \
+         -X POST \
+         -H "Accept: application/vnd.github+json" \
+         -H "Authorization: Bearer $1" \
+         -H "X-GitHub-Api-Version: 2022-11-28" \
+         https://api.github.com/repos/hmcts/auto-shutdown/actions/workflows/manual-start.yaml/dispatches \
+         -d "{ \"ref\": \"master\",
+                \"inputs\": {
+                  \"PROJECT\": \"$2\",
+                  \"SELECTED_ENV\": \"$3\",
+                  \"AKS-INSTANCES\": \"00\"
+                }
+              }"
+}
+
+# github token is $1 and work_area is $2 and environment is $3
+function check_health_and_start_environment() {
+
+TEST_URL_CFT="https://plum.sandbox.platform.hmcts.net/health"
+TEST_URL_SDS="https://toffee.sandbox.platform.hmcts.net/health"
+
+if [[ $environment == "ithc" ]]; then
+  TEST_URL_CFT="https://plum.ithc.platform.hmcts.net/health"
+else
+  TEST_URL_SDS="https://toffee.ithc.platform.hmcts.net/health"
+fi
+
+MAX_ATTEMPTS=20
+SLEEP_TIME=5
+attempts=1
+healthy=false
+while (( attempts <= MAX_ATTEMPTS ))
+do
+  echo "Attempt #$attempts"
+  if [[ $work_area == "CFT" ]]; then
+  response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL_CFT")
+  else
+  response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL_SDS")
+  fi
+  ((attempts++))
+  if (( response >= 200 && response <= 399 )); then
+    health=true;
+    break;
+  else
+    echo "Returned HTTP $response, retrying..."
+    sleep $SLEEP_TIME
+  fi
+done
+
+if [[ $health == true ]]; then
+  echo "Service is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
+else
+echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster 00"
+trigger_workflow "$github_token" "$work_area" "$environment"
+fi
+}
+
 # check project needs to be either sds, cft, or All
 if [[ $project != "ss" && $project != "cft" && $project != "All" ]]; then
   echo "[error] project must be sds, cft or All. received $project."
@@ -34,45 +95,25 @@ ITHC_SUBIDs_MAP=(["DTS-SHAREDSERVICES-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df71
 
 ## Check if requested clusters under a work area are running or not
 # sds-sbox subscription ID: a8140a9e-f1b0-481f-a4de-09e2ee23f7ab
-az account set -n DTS-SHAREDSERVICES-SBOX
 
-TEST_URL_CFT="https://plum.sandbox.platform.hmcts.net/health"
-TEST_URL_SDS="https://toffee.sandbox.platform.hmcts.net/health"
-
-MAX_ATTEMPTS=20
-SLEEP_TIME=5
-attempts=1
-while (( attempts <= MAX_ATTEMPTS ))
-do
-  echo "Attempt #$attempts"
-  if [[ $work_area == "CFT" ]]; then
-  response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL_CFT")
-  else
-  response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL_SDS")
+if [[ $work_area == "SDS" ]]; then
+  if [[ $environment == "sbox" ]]; then
+    az account set -n DTS-SHAREDSERVICES-SBOX
+    else
+    az account set -n DTS-SHAREDSERVICES-ITHC
   fi
-  ((attempts++))
-  if (( response >= 200 && response <= 399 )); then
-    echo "Service is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
-    exit 0
-  else
-    echo "Returned HTTP $response, retrying..."
-    sleep $SLEEP_TIME
-  fi
-done
+fi
+if [[ $environment == "sbox" ]]; then
+    az account set -n DCD-CFTAPPS-SBOX
+    else
+    az account set -n DCD-CFTAPPS-ITHC
+fi
+echo "PROJECT NAME: $project"
+if [[ $project == "hub-panorama" ]]; then
+  echo "Triggering auto manual start workflow for all projects in $environment for cluster $cluster"
+  trigger_workflow "$github_token" "SDS" "$environment"
+  trigger_workflow "$github_token" "CFT" "$environment"
+  exit 0
+fi
 
-echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster 00"
-  # Project: SDS or CFT; SELECTED_ENV: sbox, test/perftest, ptlsbox, ithc, ptl, aat/staging, demo, test, preview/dev;
-  # AKS-INSTANCES: 00, 01, All
-  curl -L \
-         -X POST \
-         -H "Accept: application/vnd.github+json" \
-         -H "Authorization: Bearer $github_token" \
-         -H "X-GitHub-Api-Version: 2022-11-28" \
-         https://api.github.com/repos/hmcts/auto-shutdown/actions/workflows/manual-start.yaml/dispatches \
-         -d "{ \"ref\": \"master\",
-                \"inputs\": {
-                  \"PROJECT\": \"$work_area\",
-                  \"SELECTED_ENV\": \"$environment\",
-                  \"AKS-INSTANCES\": \"00\"
-                }
-              }"
+check_health_and_start_environment "$github_token" "$work_area" "$environment"
