@@ -71,15 +71,15 @@ fi
 }
 
 # check project needs to be either sds, cft, or All
-if [[ $project != "ss" && $project != "cft" && $project != "All" ]]; then
-  echo "[error] project must be sds, cft or All. received $project."
-  exit 1
-fi
+#if [[ $project != "ss" && $project != "cft" && $project != "All" ]]; then
+#  echo "[error] project must be sds, cft or All. received $project."
+#  exit 1
+#fi
 
 # check work_area needs to be set to sds when project is ss
-if [[ $project == "ss" ]]; then
-  work_area="sds"
-fi
+#if [[ $project == "ss" ]]; then
+#  work_area="sds"
+#fi
 
 # set work_area to upper case i.e. SDS, CFT
 work_area=$(echo "$work_area" | tr '[:lower:]' '[:upper:]')
