@@ -102,8 +102,7 @@ if [[ $work_area == "SDS" ]]; then
     else
     az account set -n DTS-SHAREDSERVICES-ITHC
   fi
-fi
-if [[ $environment == "sbox" ]]; then
+elif [[ $environment == "sbox" ]]; then
     az account set -n DCD-CFTAPPS-SBOX
     else
     az account set -n DCD-CFTAPPS-ITHC
