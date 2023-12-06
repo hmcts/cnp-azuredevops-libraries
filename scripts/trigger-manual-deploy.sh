@@ -88,7 +88,7 @@ if [[ $project == "SDS" ]]; then
   if [[ $environment == "sbox" ]]; then
     az account set -n "${SBOX_SUBIDs_MAP["DTS-SHAREDSERVICES-SBOX"]}"
     else
-    az account set -n "${ITHC_SUBIDs_MAP["DTS-SHAREDSERVICES-ITHC"]}" #this should
+    az account set -n "${ITHC_SUBIDs_MAP["DTS-SHAREDSERVICES-ITHC"]}"
   fi
 fi
 
@@ -96,7 +96,7 @@ if [[ $project == "CFT" ]]; then
   if [[ $environment == "sbox" ]]; then
     az account set -n "${SBOX_SUBIDs_MAP["DCD-CFTAPPS-SBOX"]}"
     else
-    az account set -n "${ITHC_SUBIDs_MAP["DCD-CFTAPPS-ITHC"]}" #this triggeers but should not
+    az account set -n "${ITHC_SUBIDs_MAP["DCD-CFTAPPS-ITHC"]}"
   fi
 fi
 
