@@ -83,16 +83,21 @@ SBOX_SUBIDs_MAP=(["DTS-SHAREDSERVICES-SBOX"]="a8140a9e-f1b0-481f-a4de-09e2ee23f7
 ITHC_SUBIDs_MAP=(["DTS-SHAREDSERVICES-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df7139"
   ["DCD-CFTAPPS-ITHC"]="62864d44-5da9-4ae9-89e7-0cf33942fa09")
 
+echo "project is $project and environment is $environment"
 if [[ $project == "SDS" ]]; then
   if [[ $environment == "sbox" ]]; then
     az account set -n "${SBOX_SUBIDs_MAP["DTS-SHAREDSERVICES-SBOX"]}"
     else
     az account set -n "${ITHC_SUBIDs_MAP["DTS-SHAREDSERVICES-ITHC"]}"
   fi
-elif [[ $environment == "sbox" ]]; then
+fi
+
+if [[ $project == "CFT" ]]; then
+  if [[ $environment == "sbox" ]]; then
     az account set -n SBOX_SUBIDs_MAP["DCD-CFTAPPS-SBOX"]
     else
     az account set -n ITHC_SUBIDs_MAP["DCD-CFTAPPS-ITHC"]
+  fi
 fi
 
 if [[ $project == "PANORAMA" ]]; then
