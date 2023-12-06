@@ -77,10 +77,10 @@ fi
 }
 
 # define corresponding subscription IDs for each environment
-SBOX_SUBIDs_MAP=(["DTS-SHAREDSERVICES-SBOX"]="a8140a9e-f1b0-481f-a4de-09e2ee23f7ab"
+declare -a SBOX_SUBIDs_MAP=(["DTS-SHAREDSERVICES-SBOX"]="a8140a9e-f1b0-481f-a4de-09e2ee23f7ab"
   ["DCD-CFTAPPS-SBOX"]="b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb")
 
-ITHC_SUBIDs_MAP=(["DTS-SHAREDSERVICES-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df7139"
+declare -a ITHC_SUBIDs_MAP=(["DTS-SHAREDSERVICES-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df7139"
   ["DCD-CFTAPPS-ITHC"]="62864d44-5da9-4ae9-89e7-0cf33942fa09")
 
 echo "project is $project and environment is $environment"
@@ -88,7 +88,7 @@ if [[ $project == "SDS" ]]; then
   if [[ $environment == "sbox" ]]; then
     az account set -n "${SBOX_SUBIDs_MAP["DTS-SHAREDSERVICES-SBOX"]}"
     else
-    az account set -n "${ITHC_SUBIDs_MAP["DTS-SHAREDSERVICES-ITHC"]}"
+    az account set -n "${ITHC_SUBIDs_MAP["DTS-SHAREDSERVICES-ITHC"]}" #this should
   fi
 fi
 
@@ -96,7 +96,7 @@ if [[ $project == "CFT" ]]; then
   if [[ $environment == "sbox" ]]; then
     az account set -n "${SBOX_SUBIDs_MAP["DCD-CFTAPPS-SBOX"]}"
     else
-    az account set -n "${ITHC_SUBIDs_MAP["DCD-CFTAPPS-ITHC"]}"
+    az account set -n "${ITHC_SUBIDs_MAP["DCD-CFTAPPS-ITHC"]}" #this triggeers but should not
   fi
 fi
 
