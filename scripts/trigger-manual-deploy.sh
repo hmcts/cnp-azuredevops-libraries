@@ -5,7 +5,11 @@ github_token="$1"
 # three parameters are required to trigger the workflow: work area (sds, cft),
 # environment(sandbox, aat/staging, demo, ithc, ptl, etc), and cluster (e.g. 00, 01, All)
 project="$2"
+
 project=$(echo "project" | tr '[:lower:]' '[:upper:]')
+if [[ $project == "ss" ]]; then
+  project="SDS"
+fi
 
 environment="$3"
 cluster="$4" # e.g. 00, 01, All
@@ -78,11 +82,7 @@ fi
 #fi
 
 # check work_area needs to be set to sds when project is ss
-if [[ $project == "ss" ]]; then
-  work_area="sds"
-fi
 
-# set work_area to upper case i.e. SDS, CFT
 
 # environment list: sbox, ptlsbox, ithc, ptl, stg, demo, test, dev
 
