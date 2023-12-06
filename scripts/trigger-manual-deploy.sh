@@ -94,9 +94,9 @@ fi
 
 if [[ $project == "CFT" ]]; then
   if [[ $environment == "sbox" ]]; then
-    az account set -n SBOX_SUBIDs_MAP["DCD-CFTAPPS-SBOX"]
+    az account set -n "${SBOX_SUBIDs_MAP["DCD-CFTAPPS-SBOX"]}"
     else
-    az account set -n ITHC_SUBIDs_MAP["DCD-CFTAPPS-ITHC"]
+    az account set -n "${ITHC_SUBIDs_MAP["DCD-CFTAPPS-ITHC"]}"
   fi
 fi
 
