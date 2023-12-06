@@ -2,8 +2,7 @@
 echo "Starting Auto Manual Start workflows ..."
 
 github_token="$1"
-# three parameters are required to trigger the workflow: work area (sds, cft),
-# environment(sandbox, aat/staging, demo, ithc, ptl, etc), and cluster (e.g. 00, 01, All)
+
 project="$2"
 
 project=$(echo "$project" | tr '[:lower:]' '[:upper:]')
@@ -11,13 +10,15 @@ if [[ $project == "SS" ]]; then
   project="SDS"
 fi
 
+# environment list: sbox, ptlsbox, ithc, ptl, stg, demo, test, dev
 environment="$3"
-cluster="$4" # e.g. 00, 01, All
+
+# three parameters are required to trigger the workflow: github token, work area (sds, cft),
+# environment(sandbox, aat/staging, demo, ithc, ptl, etc). The cluster is set 00.
 
 # github token is $1 and work_area is $2 and environment is $3
 function trigger_workflow() {
-  # Project: SDS or CFT; SELECTED_ENV: sbox, test/perftest, ptlsbox, ithc, ptl, aat/staging, demo, test, preview/dev;
-  # AKS-INSTANCES: 00, 01, All
+  # Project: SDS or CFT or PANORAMA; SELECTED_ENV: sbox, test/perftest, ptlsbox, ithc, ptl, aat/staging, demo, test, preview/dev;
   curl -L \
          -X POST \
          -H "Accept: application/vnd.github+json" \
@@ -34,7 +35,7 @@ function trigger_workflow() {
 }
 
 # github token is $1 and work_area is $2 and environment is $3
-function check_health_and_start_environment() {
+function start_unhealthy_environments() {
 
 TEST_URL_CFT="https://plum.sandbox.platform.hmcts.net/health"
 TEST_URL_SDS="https://toffee.sandbox.platform.hmcts.net/health"
@@ -70,21 +71,10 @@ done
 if [[ $healthy == true ]]; then
   echo "Service is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
 else
-echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster 00"
-trigger_workflow "$github_token" "$project" "$environment"
+  echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster 00"
+  trigger_workflow "$github_token" "$project" "$environment"
 fi
 }
-
-# check project needs to be either sds, cft, or All
-#if [[ $project != "ss" && $project != "cft" && $project != "All" ]]; then
-#  echo "[error] project must be sds, cft or All. received $project."
-#  exit 1
-#fi
-
-# check work_area needs to be set to sds when project is ss
-
-
-# environment list: sbox, ptlsbox, ithc, ptl, stg, demo, test, dev
 
 # define corresponding subscription IDs for each environment
 SBOX_SUBIDs_MAP=(["DTS-SHAREDSERVICES-SBOX"]="a8140a9e-f1b0-481f-a4de-09e2ee23f7ab"
@@ -93,27 +83,23 @@ SBOX_SUBIDs_MAP=(["DTS-SHAREDSERVICES-SBOX"]="a8140a9e-f1b0-481f-a4de-09e2ee23f7
 ITHC_SUBIDs_MAP=(["DTS-SHAREDSERVICES-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df7139"
   ["DCD-CFTAPPS-ITHC"]="62864d44-5da9-4ae9-89e7-0cf33942fa09")
 
-## Check if requested clusters under a work area are running or not
-# sds-sbox subscription ID: a8140a9e-f1b0-481f-a4de-09e2ee23f7ab
-echo "HERE $project"
 if [[ $project == "SDS" ]]; then
   if [[ $environment == "sbox" ]]; then
-    az account set -n DTS-SHAREDSERVICES-SBOX
+    az account set -n "${SBOX_SUBIDs_MAP["DTS-SHAREDSERVICES-SBOX"]}"
     else
-    az account set -n DTS-SHAREDSERVICES-ITHC
+    az account set -n "${ITHC_SUBIDs_MAP["DTS-SHAREDSERVICES-ITHC"]}"
   fi
 elif [[ $environment == "sbox" ]]; then
-    az account set -n DCD-CFTAPPS-SBOX
+    az account set -n SBOX_SUBIDs_MAP["DCD-CFTAPPS-SBOX"]
     else
-    az account set -n DCD-CFTAPPS-ITHC
+    az account set -n ITHC_SUBIDs_MAP["DCD-CFTAPPS-ITHC"]
 fi
 
-echo "HERE env is $environment"
-if [[ $environment == "All" ]]; then
+if [[ $project == "PANORAMA" ]]; then
   echo "Triggering auto manual start workflow for all projects in $environment for cluster $cluster"
   trigger_workflow "$github_token" "SDS" "$environment"
   trigger_workflow "$github_token" "CFT" "$environment"
   exit 0
 fi
 
-check_health_and_start_environment "$github_token" "$project" "$environment"
+start_unhealthy_environments "$github_token" "$project" "$environment"
