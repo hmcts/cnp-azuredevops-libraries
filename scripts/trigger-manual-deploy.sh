@@ -5,7 +5,8 @@ github_token="$1"
 # three parameters are required to trigger the workflow: work area (sds, cft),
 # environment(sandbox, aat/staging, demo, ithc, ptl, etc), and cluster (e.g. 00, 01, All)
 project="$2"
-work_area="$2"
+project=$(echo "project" | tr '[:lower:]' '[:upper:]')
+
 environment="$3"
 cluster="$4" # e.g. 00, 01, All
 
@@ -77,12 +78,11 @@ fi
 #fi
 
 # check work_area needs to be set to sds when project is ss
-#if [[ $project == "ss" ]]; then
-#  work_area="sds"
-#fi
+if [[ $project == "ss" ]]; then
+  work_area="sds"
+fi
 
 # set work_area to upper case i.e. SDS, CFT
-work_area=$(echo "$work_area" | tr '[:lower:]' '[:upper:]')
 
 # environment list: sbox, ptlsbox, ithc, ptl, stg, demo, test, dev
 
@@ -96,13 +96,13 @@ ITHC_SUBIDs_MAP=(["DTS-SHAREDSERVICES-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df71
 ## Check if requested clusters under a work area are running or not
 # sds-sbox subscription ID: a8140a9e-f1b0-481f-a4de-09e2ee23f7ab
 
-if [[ $work_area == "SDS" ]]; then
+if [[ $project == "SDS" ]]; then
   if [[ $environment == "sbox" ]]; then
     az account set -n DTS-SHAREDSERVICES-SBOX
     else
     az account set -n DTS-SHAREDSERVICES-ITHC
   fi
-elif [[ $environment == "sbox" ]]; then
+elif [[ $project == "sbox" ]]; then
     az account set -n DCD-CFTAPPS-SBOX
     else
     az account set -n DCD-CFTAPPS-ITHC
@@ -115,4 +115,4 @@ if [[ $environment == "All" ]]; then
   exit 0
 fi
 
-check_health_and_start_environment "$github_token" "$work_area" "$environment"
+check_health_and_start_environment "$github_token" "$project" "$environment"
