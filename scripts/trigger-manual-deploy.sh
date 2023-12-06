@@ -108,6 +108,7 @@ elif [[ $environment == "sbox" ]]; then
     az account set -n DCD-CFTAPPS-ITHC
 fi
 
+echo "HERE env is $environment"
 if [[ $environment == "All" ]]; then
   echo "Triggering auto manual start workflow for all projects in $environment for cluster $cluster"
   trigger_workflow "$github_token" "SDS" "$environment"
