@@ -101,9 +101,9 @@ if [[ $project == "CFT" ]]; then
 fi
 
 if [[ $project == "PANORAMA" ]]; then
-  echo "Triggering auto manual start workflow for all projects in $environment for cluster $cluster"
-  trigger_workflow "$github_token" "SDS" "$environment"
-  trigger_workflow "$github_token" "CFT" "$environment"
+  echo "Triggering auto manual start workflow for all projects in $environment"
+  start_unhealthy_environments "$github_token" "SDS" "$environment"
+  start_unhealthy_environments "$github_token" "CFT" "$environment"
   exit 0
 fi
 
