@@ -52,7 +52,7 @@ healthy=false
 while (( attempts <= MAX_ATTEMPTS ))
 do
   echo "Attempt #$attempts"
-  if [[ $work_area == "CFT" ]]; then
+  if [[ $projectName == "CFT" ]]; then
   response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL_CFT")
   else
   response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL_SDS")
