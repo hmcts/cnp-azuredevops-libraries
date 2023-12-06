@@ -7,7 +7,7 @@ github_token="$1"
 project="$2"
 
 project=$(echo "$project" | tr '[:lower:]' '[:upper:]')
-if [[ $project == "ss" ]]; then
+if [[ $project == "SS" ]]; then
   project="SDS"
 fi
 
@@ -71,7 +71,7 @@ if [[ $healthy == true ]]; then
   echo "Service is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
 else
 echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster 00"
-trigger_workflow "$github_token" "$work_area" "$environment"
+trigger_workflow "$github_token" "$project" "$environment"
 fi
 }
 
