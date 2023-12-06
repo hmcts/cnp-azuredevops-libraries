@@ -52,7 +52,7 @@ healthy=false
 while (( attempts <= MAX_ATTEMPTS ))
 do
   echo "Attempt #$attempts"
-  if [[ $projectName == "CFT" ]]; then
+  if [[ $project == "CFT" ]]; then
   response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL_CFT")
   else
   response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL_SDS")
@@ -95,14 +95,14 @@ ITHC_SUBIDs_MAP=(["DTS-SHAREDSERVICES-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df71
 
 ## Check if requested clusters under a work area are running or not
 # sds-sbox subscription ID: a8140a9e-f1b0-481f-a4de-09e2ee23f7ab
-
+echo "HERE $project"
 if [[ $project == "SDS" ]]; then
   if [[ $environment == "sbox" ]]; then
     az account set -n DTS-SHAREDSERVICES-SBOX
     else
     az account set -n DTS-SHAREDSERVICES-ITHC
   fi
-elif [[ $project == "sbox" ]]; then
+elif [[ $environment == "sbox" ]]; then
     az account set -n DCD-CFTAPPS-SBOX
     else
     az account set -n DCD-CFTAPPS-ITHC
