@@ -6,7 +6,7 @@ github_token="$1"
 # environment(sandbox, aat/staging, demo, ithc, ptl, etc), and cluster (e.g. 00, 01, All)
 project="$2"
 
-project=$(echo "project" | tr '[:lower:]' '[:upper:]')
+project=$(echo "$project" | tr '[:lower:]' '[:upper:]')
 if [[ $project == "ss" ]]; then
   project="SDS"
 fi
