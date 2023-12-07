@@ -54,9 +54,9 @@ while (( attempts <= MAX_ATTEMPTS ))
 do
   echo "Attempt #$attempts"
   if [[ $project == "CFT" ]]; then
-  response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL_CFT")
+  response=$(curl -v -sk -w "%{http_code}" "$TEST_URL_CFT")
   else
-  response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL_SDS")
+  response=$(curl -v -sk -w "%{http_code}" "$TEST_URL_SDS")
   fi
   ((attempts++))
   if (( response >= 200 && response <= 399 )); then
