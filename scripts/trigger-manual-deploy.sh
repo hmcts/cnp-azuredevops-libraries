@@ -18,6 +18,8 @@ environment="$3"
 
 # github token is $1 and work_area is $2 and environment is $3
 function trigger_workflow() {
+  echo "Workflow params: $1 $2 $3"
+
   # Project: SDS or CFT or PANORAMA; SELECTED_ENV: sbox, test/perftest, ptlsbox, ithc, ptl, aat/staging, demo, test, preview/dev;
   curl -L \
          -X POST \
@@ -37,7 +39,8 @@ function trigger_workflow() {
 # github token is $1 and work_area is $2 and environment is $3
 function start_unhealthy_environments() {
 project_url="plum" && [[ "${project}" == "SDS" ]] && project_url="toffee"
-TEST_URL="https://${project_url}.${environment}.platform.hmcts.net/health"
+env="sandbox" && [[ "${environment}" != "sbox" ]] && env="ithc"
+TEST_URL="https://${project_url}.${env}.platform.hmcts.net/health"
 
 MAX_ATTEMPTS=20
 SLEEP_TIME=5
