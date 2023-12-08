@@ -64,13 +64,13 @@ function start_unhealthy_environments() {
 
 # define corresponding subscription IDs for each environment
 declare -A subscription_id_map=(
-  ["DCD-SBOX"]="b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
-  ["DCD-ITHC"]="62864d44-5da9-4ae9-89e7-0cf33942fa09"
-  ["DTS-SBOX"]="a8140a9e-f1b0-481f-a4de-09e2ee23f7ab"
-  ["DTS-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df7139"
+  ["CFT-SBOX"]="b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
+  ["CFT-ITHC"]="62864d44-5da9-4ae9-89e7-0cf33942fa09"
+  ["SDS-SBOX"]="a8140a9e-f1b0-481f-a4de-09e2ee23f7ab"
+  ["SDS-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df7139"
 )
 
-subscription_id="${subscription_id_map["DCD-${environment^^}"]}" && [[ "${project}" == "SDS" ]] && subscription_id="${subscription_id_map["DTS-${environment^^}"]}"
+subscription_id="${subscription_id_map["${project}-${environment^^}"]}"
 
 echo "The project is $project and the environment is $environment"
 az account set -n "$subscription_id"
