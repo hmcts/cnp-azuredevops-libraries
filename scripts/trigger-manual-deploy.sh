@@ -39,7 +39,7 @@ function trigger_workflow() {
 # github token is $1 and work_area is $2 and environment is $3
 function start_unhealthy_environments() {
 project_url="plum" && [[ "${project}" == "SDS" ]] && project_url="toffee"
-env="sandbox" && [[ "${environment}" != "sbox" ]] && env="ithc"
+env="sandbox" && [[ "${environment}" != "sbox" ]] && env=$environment
 TEST_URL="https://${project_url}.${env}.platform.hmcts.net/health"
 
 MAX_ATTEMPTS=20
@@ -50,7 +50,7 @@ healthy=false
 while (( attempts <= MAX_ATTEMPTS ))
 do
   echo "Attempt #$attempts"
-  response=$(curl -v -sk -w "%{http_code}" "$TEST_URL")
+  response=$(curl -sk -w "%{http_code}" "$TEST_URL")
   ((attempts++))
   if (( response >= 200 && response <= 399 )); then
     healthy=true;
