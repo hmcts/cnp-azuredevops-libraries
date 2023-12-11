@@ -48,7 +48,6 @@ function check_environment_health() {
   MAX_ATTEMPTS=5
   SLEEP_TIME=3
   attempts=1
-  healthy=false
 
   while (( attempts <= MAX_ATTEMPTS ))
   do
@@ -82,11 +81,13 @@ function start_unhealthy_environments() {
     sleep 180
     MAX_ATTEMPTS=5
     attempts=1
+    healthy=false
 
     while (( attempts <= MAX_ATTEMPTS ))
     do
       if check_environment_health $project $environment; then
         echo "Service is healthy, continue with build"
+        healthy=true
         break
       else  
         echo "Service remains unhealthy, trying again.."
@@ -94,7 +95,7 @@ function start_unhealthy_environments() {
       fi
       ((attempts++))
     done
-    if [[ attempts >= MAX_ATTEMPTS ]]; then
+    if ! $healthy; then
       echo "[error] There was a problem starting the environment, please reach out in #platops-help"
       exit 1
     fi
