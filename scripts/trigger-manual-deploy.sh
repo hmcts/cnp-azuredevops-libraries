@@ -6,6 +6,9 @@ environment="$3"
 cluster="$4"
 on_demand_environments=("sbox")
 
+# Default to 00 if cluster is passed as all - point is only one cluster started in the env for cost-saving
+cluster=$cluster && [[ "${cluster}" == "All" ]] && cluster=00
+
 # Only run for currently approved on demand environments
 if [[ ! " ${on_demand_environments[@]} " =~ " ${environment}" ]]; then
     # Add your script logic here
@@ -75,8 +78,8 @@ function start_unhealthy_environments() {
     echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster $cluster"
     trigger_workflow "$github_token" "$project" "$environment" "$cluster"
     echo "[info] Manual start workflow for $project in $environment for cluster $cluster triggered.. waiting 5 minutes for environment to start"
-    # Wait 5 minutes for environment to start
-    sleep 300
+    # Wait 3 minutes for environment to start
+    sleep 180
     MAX_ATTEMPTS=5
     attempts=1
 
@@ -91,8 +94,10 @@ function start_unhealthy_environments() {
       fi
       ((attempts++))
     done
-    echo "[error] There was a problem starting the environment, please reach out in #platops-help"
-    exit 1
+    if [[ attempts >= MAX_ATTEMPTS ]]; then
+      echo "[error] There was a problem starting the environment, please reach out in #platops-help"
+      exit 1
+    fi
   fi
 }
 
