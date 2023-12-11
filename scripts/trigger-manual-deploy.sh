@@ -38,9 +38,9 @@ function trigger_workflow() {
 function start_unhealthy_environments() {
   project_url="plum" && [[ "${project}" == "SDS" ]] && project_url="toffee"
   env="sandbox" && [[ "${environment}" != "sbox" ]] && env=$environment
-  TEST_URL="https://${project_url}.${environment}.platform.hmcts.net/health"
+  TEST_URL="https://${project_url}.${env}.platform.hmcts.net/health"
 
-  MAX_ATTEMPTS=20
+  MAX_ATTEMPTS=10
   SLEEP_TIME=5
   attempts=1
   healthy=false
@@ -48,7 +48,7 @@ function start_unhealthy_environments() {
   while (( attempts <= MAX_ATTEMPTS ))
   do
     echo "Attempt #$attempts"
-    response=$(curl -sk -w "%{http_code}" "$TEST_URL")
+    response=$(curl -v -sk -w "%{http_code}" "$TEST_URL")
     ((attempts++))
     if (( response >= 200 && response <= 399 )); then
       healthy=true;
