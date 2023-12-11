@@ -92,4 +92,4 @@ if [[ $project == "PANORAMA" ]]; then
   exit 0
 fi
 
-start_unhealthy_environments "$github_token" "SDS" "$environment" "$cluster"
+start_unhealthy_environments "$github_token" "$project" "$environment" "$cluster"
