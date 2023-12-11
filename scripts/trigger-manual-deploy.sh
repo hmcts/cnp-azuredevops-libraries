@@ -42,8 +42,8 @@ function check_environment_health() {
   env="sandbox" && [[ "${environment}" != "sbox" ]] && env=$environment
   TEST_URL="https://${project_url}.${env}.platform.hmcts.net/health"
 
-  MAX_ATTEMPTS=10
-  SLEEP_TIME=5
+  MAX_ATTEMPTS=5
+  SLEEP_TIME=3
   attempts=1
   healthy=false
 
@@ -59,7 +59,7 @@ function check_environment_health() {
       sleep $SLEEP_TIME
     fi
   done
-  return false
+  false
 }
 
 # Function that will trigger workflow if environment is not up, to start it
@@ -74,7 +74,7 @@ function start_unhealthy_environments() {
   else
     echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster $cluster"
     trigger_workflow "$github_token" "$project" "$environment" "$cluster"
-    echo "[info] Manual start workflow for $project in $environment for cluster $cluster triggered.. waiting for environment to start"
+    echo "[info] Manual start workflow for $project in $environment for cluster $cluster triggered.. waiting 5 minutes for environment to start"
     # Wait 5 minutes for environment to start
     sleep 300
     MAX_ATTEMPTS=5
