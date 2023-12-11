@@ -87,7 +87,7 @@ function start_unhealthy_environments() {
         break
       else  
         echo "Service remains unhealthy, trying again.."
-        sleep 30
+        sleep 60
       fi
       ((attempts++))
     done
