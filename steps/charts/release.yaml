@@ -66,9 +66,13 @@ steps:
         helm repo remove hmctspublic # workaround expired auth token
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo
 
-  - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
-    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-    displayName: "Retrieve helm dependencies (if any)"
+  - ${{ if eq(parameters.chartPath, './') }}:
+    - script: helm dependency update ${{ parameters.chartName }}
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Retrieve helm dependencies (if any)"
+  - ${{ else }}:
+    - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
+      displayName: "Retrieve helm dependencies (if any)"
 
   - task: AzureCLI@2
     displayName: "Helm Package"
