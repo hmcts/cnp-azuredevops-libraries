@@ -16,6 +16,7 @@ if [ $PRODUCT = 'cft-platform' ]; then
         DNS_ENVIRONMENT='.perftest'
     fi
     APP_NAME=plum
+    APIM_NAME=cft-api-mgmt
 fi
 
 if [ $PRODUCT = 'sds-platform' ]; then
@@ -25,7 +26,9 @@ if [ $PRODUCT = 'sds-platform' ]; then
         DNS_ENVIRONMENT='.test'
     fi
     APP_NAME=toffee
+    APIM_NAME=sds-api-mgmt
 fi
 
 echo "##vso[task.setvariable variable=DNS_ENVIRONMENT]$DNS_ENVIRONMENT"
 echo "##vso[task.setvariable variable=APP_NAME]$APP_NAME"
+echo "##vso[task.setvariable variable=APP_NAME]$APIM_NAME"
