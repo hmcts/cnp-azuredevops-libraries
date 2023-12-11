@@ -85,13 +85,13 @@ function start_unhealthy_environments() {
 
     while (( attempts <= MAX_ATTEMPTS ))
     do
-      ((attempts++))
       if check_environment_health $project $environment; then
         echo "Service is healthy, continue with build"
         healthy=true
         break
       else  
         echo "Service remains unhealthy, trying again.."
+        ((attempts++))
         sleep 60
       fi
     done
