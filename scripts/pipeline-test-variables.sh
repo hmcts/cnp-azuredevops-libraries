@@ -31,4 +31,4 @@ fi
 
 echo "##vso[task.setvariable variable=DNS_ENVIRONMENT]$DNS_ENVIRONMENT"
 echo "##vso[task.setvariable variable=APP_NAME]$APP_NAME"
-echo "##vso[task.setvariable variable=APP_NAME]$APIM_NAME"
+echo "##vso[task.setvariable variable=APIM_NAME]$APIM_NAME"
