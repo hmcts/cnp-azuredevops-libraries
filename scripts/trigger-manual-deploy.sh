@@ -18,6 +18,8 @@ if [[ $project == "SS" ]]; then
   project="SDS"
 fi
 
+project="CFT"
+
 function trigger_workflow() {
   curl -L \
          -X POST \
@@ -36,6 +38,11 @@ function trigger_workflow() {
 
 # github token is $1 and work_area is $2 and environment is $3
 function start_unhealthy_environments() {
+  github_token="$1"
+  project="$2"
+  environment="$3"
+  cluster="$4"
+
   project_url="plum" && [[ "${project}" == "SDS" ]] && project_url="toffee"
   env="sandbox" && [[ "${environment}" != "sbox" ]] && env=$environment
   TEST_URL="https://${project_url}.${env}.platform.hmcts.net/health"
@@ -82,9 +89,9 @@ az account set -n "$subscription_id"
 
 if [[ $project == "PANORAMA" ]]; then
   echo "Triggering auto manual start workflow for all projects in $environment"
-  start_unhealthy_environments "$github_token" "SDS" "$environment"
-  start_unhealthy_environments "$github_token" "CFT" "$environment"
+  start_unhealthy_environments "$github_token" "SDS" "$environment" "$cluster"
+  start_unhealthy_environments "$github_token" "CFT" "$environment" "$cluster"
   exit 0
 fi
 
-start_unhealthy_environments
+start_unhealthy_environments "$github_token" "$project" "$environment" "$cluster"
