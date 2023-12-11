@@ -34,13 +34,10 @@ function trigger_workflow() {
               }"
 }
 
-# github token is $1 and work_area is $2 and environment is $3
-function start_unhealthy_environments() {
-  github_token="$1"
-  project="$2"
-  environment="$3"
-  cluster="$4"
-
+# Function to check if a given endpoint for an environment is up
+function check_environment_health() {
+  project="$1"
+  environment="$2"
   project_url="plum" && [[ "${project}" == "SDS" ]] && project_url="toffee"
   env="sandbox" && [[ "${environment}" != "sbox" ]] && env=$environment
   TEST_URL="https://${project_url}.${env}.platform.hmcts.net/health"
@@ -56,19 +53,46 @@ function start_unhealthy_environments() {
     response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL")
     ((attempts++))
     if (( response >= 200 && response <= 399 )); then
-      healthy=true;
-      break;
+      return
     else
       echo "Returned HTTP $response, retrying..."
       sleep $SLEEP_TIME
     fi
   done
+  return false
+}
 
-  if [[ $healthy == true ]]; then
+# Function that will trigger workflow if environment is not up, to start it
+function start_unhealthy_environments() {
+  github_token="$1"
+  project="$2"
+  environment="$3"
+  cluster="$4"
+
+  if check_environment_health $project $environment; then
     echo "Service is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
   else
     echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster $cluster"
     trigger_workflow "$github_token" "$project" "$environment" "$cluster"
+    echo "[info] Manual start workflow for $project in $environment for cluster $cluster triggered.. waiting for environment to start"
+    # Wait 5 minutes for environment to start
+    sleep 300
+    MAX_ATTEMPTS=5
+    attempts=1
+
+    while (( attempts <= MAX_ATTEMPTS ))
+    do
+      if check_environment_health $project $environment; then
+        echo "Service is healthy, continue with build"
+        break
+      else  
+        echo "Service remains unhealthy, trying again.."
+        sleep 30
+      fi
+      ((attempts++))
+    done
+    echo "[error] There was a problem starting the environment, please reach out in #platops-help"
+    exit 1
   fi
 }
 
