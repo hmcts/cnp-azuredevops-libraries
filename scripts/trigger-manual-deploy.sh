@@ -29,7 +29,7 @@ function trigger_workflow() {
                 \"inputs\": {
                   \"PROJECT\": \"$2\",
                   \"SELECTED_ENV\": \"$3\",
-                  \"AKS-INSTANCES\": \"$4\"\"
+                  \"AKS-INSTANCES\": \"$4\"
                 }
               }"
 }
@@ -48,7 +48,7 @@ function start_unhealthy_environments() {
   while (( attempts <= MAX_ATTEMPTS ))
   do
     echo "Attempt #$attempts"
-    response=$(curl -v -sk -w "%{http_code}" "$TEST_URL")
+    response=$(curl -sk -w "%{http_code}" "$TEST_URL")
     ((attempts++))
     if (( response >= 200 && response <= 399 )); then
       healthy=true;
