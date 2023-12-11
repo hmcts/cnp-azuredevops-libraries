@@ -77,14 +77,15 @@ function start_unhealthy_environments() {
     echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster $cluster"
     trigger_workflow "$github_token" "$project" "$environment" "$cluster"
     echo "[info] Manual start workflow for $project in $environment for cluster $cluster triggered.. waiting 5 minutes for environment to start"
-    # Wait 3 minutes for environment to start
-    sleep 180
+    # Wait 5 minutes for environment to start
+    sleep 300
     MAX_ATTEMPTS=5
     attempts=1
     healthy=false
 
     while (( attempts <= MAX_ATTEMPTS ))
     do
+      ((attempts++))
       if check_environment_health $project $environment; then
         echo "Service is healthy, continue with build"
         healthy=true
@@ -93,7 +94,6 @@ function start_unhealthy_environments() {
         echo "Service remains unhealthy, trying again.."
         sleep 60
       fi
-      ((attempts++))
     done
     if ! $healthy; then
       echo "[error] There was a problem starting the environment, please reach out in #platops-help"
