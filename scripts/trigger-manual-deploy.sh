@@ -18,8 +18,6 @@ if [[ $project == "SS" ]]; then
   project="SDS"
 fi
 
-project="CFT"
-
 function trigger_workflow() {
   curl -L \
          -X POST \
@@ -94,4 +92,4 @@ if [[ $project == "PANORAMA" ]]; then
   exit 0
 fi
 
-start_unhealthy_environments "$github_token" "$project" "$environment" "$cluster"
+start_unhealthy_environments "$github_token" "SDS" "$environment" "$cluster"
