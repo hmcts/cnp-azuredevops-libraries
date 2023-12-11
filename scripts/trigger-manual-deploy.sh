@@ -48,7 +48,7 @@ function start_unhealthy_environments() {
   while (( attempts <= MAX_ATTEMPTS ))
   do
     echo "Attempt #$attempts"
-    response=$(curl -sk -w "%{http_code}" "$TEST_URL")
+    response=$(curl -sk -o /dev/null -w "%{http_code}" "$TEST_URL")
     ((attempts++))
     if (( response >= 200 && response <= 399 )); then
       healthy=true;
