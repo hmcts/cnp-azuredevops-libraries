@@ -72,9 +72,9 @@ function start_unhealthy_environments() {
   cluster="$4"
 
   if check_environment_health $project $environment; then
-    echo "Service is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
+    echo "$project in $environment is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
   else
-    echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster $cluster"
+    echo "[info] $project in $environment not healthy, triggering auto manual start workflow for $project in $environment for cluster $cluster"
     trigger_workflow "$github_token" "$project" "$environment" "$cluster"
     echo "[info] Manual start workflow for $project in $environment for cluster $cluster triggered.. waiting 5 minutes for environment to start"
     # Wait 5 minutes for environment to start
@@ -86,11 +86,11 @@ function start_unhealthy_environments() {
     while (( attempts <= MAX_ATTEMPTS ))
     do
       if check_environment_health $project $environment; then
-        echo "Service is healthy, continue with build"
+        echo "$project in $environment healthy, continue with build"
         healthy=true
         break
       else  
-        echo "Service remains unhealthy, trying again.."
+        echo "$project in $environment remains unhealthy, trying again.."
         ((attempts++))
         sleep 60
       fi
@@ -101,19 +101,6 @@ function start_unhealthy_environments() {
     fi
   fi
 }
-
-# define corresponding subscription IDs for each environment
-declare -A subscription_id_map=(
-  ["CFT-SBOX"]="b72ab7b7-723f-4b18-b6f6-03b0f2c6a1bb"
-  ["CFT-ITHC"]="62864d44-5da9-4ae9-89e7-0cf33942fa09"
-  ["SDS-SBOX"]="a8140a9e-f1b0-481f-a4de-09e2ee23f7ab"
-  ["SDS-ITHC"]="ba71a911-e0d6-4776-a1a6-079af1df7139"
-)
-
-subscription_id="${subscription_id_map["${project}-${environment^^}"]}"
-
-echo "The project is $project and the environment is $environment"
-az account set -n "$subscription_id"
 
 if [[ $project == "PANORAMA" ]]; then
   echo "Triggering auto manual start workflow for all projects in $environment"
