@@ -2,18 +2,25 @@
 echo "Starting Auto Manual Start workflows ..."
 github_token="$1"
 project="$2"
+environment="$3"
+cluster="$4"
+# Substitute for SDS where it's passed as sandbox
+environment="sbox" && [[ "${environment}" != "sbox" ]] && env=$environment
+on_demand_environments=("sbox")
+
+# Only run for currently approved on demand environments
+if [[ ! " ${on_demand_environments[@]} " =~ " ${environment}" ]]; then
+    # Add your script logic here
+    echo "Not checking environment as not included in on demand list"
+    exit 1
+fi
 
 project=$(echo "$project" | tr '[:lower:]' '[:upper:]')
 if [[ $project == "SS" ]]; then
   project="SDS"
 fi
 
-# environment list: sbox, ptlsbox, ithc, ptl, stg, demo, test, dev
-environment="$3"
-
-# github token is $1 and work_area is $2 and environment is $3
 function trigger_workflow() {
-  # Project: SDS or CFT or PANORAMA; SELECTED_ENV: sbox, test/perftest, ptlsbox, ithc, ptl, aat/staging, demo, test, preview/dev;
   curl -L \
          -X POST \
          -H "Accept: application/vnd.github+json" \
@@ -24,7 +31,7 @@ function trigger_workflow() {
                 \"inputs\": {
                   \"PROJECT\": \"$2\",
                   \"SELECTED_ENV\": \"$3\",
-                  \"AKS-INSTANCES\": \"00\"
+                  \"AKS-INSTANCES\": \"$4\"\"
                 }
               }"
 }
@@ -32,8 +39,7 @@ function trigger_workflow() {
 # github token is $1 and work_area is $2 and environment is $3
 function start_unhealthy_environments() {
   project_url="plum" && [[ "${project}" == "SDS" ]] && project_url="toffee"
-  env="sandbox" && [[ "${environment}" != "sbox" ]] && env=$environment
-  TEST_URL="https://${project_url}.${env}.platform.hmcts.net/health"
+  TEST_URL="https://${project_url}.${environment}.platform.hmcts.net/health"
 
   MAX_ATTEMPTS=20
   SLEEP_TIME=5
@@ -57,8 +63,8 @@ function start_unhealthy_environments() {
   if [[ $healthy == true ]]; then
     echo "Service is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
   else
-    echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster 00"
-    trigger_workflow "$github_token" "$project" "$environment"
+    echo "[info] Service not healthy, triggering auto manual start workflow for $project in $environment for cluster $cluster"
+    trigger_workflow "$github_token" "$project" "$environment" "$cluster"
   fi
 }
 
