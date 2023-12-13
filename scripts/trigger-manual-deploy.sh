@@ -13,7 +13,7 @@ cluster=$cluster && [[ "${cluster}" == "All" ]] && cluster=00
 if [[ ! " ${on_demand_environments[@]} " =~ " ${environment}" ]]; then
     # Add your script logic here
     echo "Not checking environment as not included in on demand list"
-    exit 1
+    exit 0
 fi
 
 project=$(echo "$project" | tr '[:lower:]' '[:upper:]')
