@@ -22,6 +22,18 @@ parameters:
     type: boolean
     default: false
 
+  - name: kvConnectedServiceName
+    default: 'azurerm-sandbox'
+
+  - name: projectName
+    default: 'ss'
+
+  - name: cluster
+    default: '00'
+
+  - name: environment
+    default: 'sbox'
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -33,15 +45,32 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureKeyVault@1
-    displayName: Retrieve keyvault secret for ADO token
+    displayName: 'Retrieve keyvault secret for ADO token'
     inputs:
       ConnectedServiceName: ${{ parameters.serviceConnection }}
       keyVaultName: ${{ parameters.keyvaultName }}
       secretsFilter: ${{ parameters.keyvaultSecret }}
       runAsPreJob: false
 
+  - task: AzureKeyVault@1
+    displayName: 'Get GitHub API token from Keyvault'
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'github-api-token'
+
+  - task: AzureCLI@2
+    displayName: Trigger Github Action AKS Manual Start
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptType: 'bash'
+      scriptLocation: 'scriptPath'
+      scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh
+      arguments: "$(github-api-token) ${{parameters.projectName}} ${{parameters.environment}} ${{parameters.cluster}}"
+
   - task: PowerShell@2
-    displayName: Run tests
+    displayName: Run PESTER tests
     inputs:
       targetType: 'filePath'
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/pester-tests.ps1
