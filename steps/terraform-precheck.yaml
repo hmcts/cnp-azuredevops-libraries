@@ -34,6 +34,10 @@ parameters:
   - name: environment
     default: 'sbox'
 
+  - name: runManualStart
+    type: boolean
+    default: false
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -68,6 +72,7 @@ steps:
       scriptLocation: 'scriptPath'
       scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh
       arguments: "$(github-api-token) ${{parameters.projectName}} ${{parameters.environment}} ${{parameters.cluster}}"
+    condition: ${{ eq(parameters.runManualStart, true) }}
 
   - task: PowerShell@2
     displayName: Run PESTER tests
