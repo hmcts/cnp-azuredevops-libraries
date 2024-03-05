@@ -250,6 +250,12 @@ steps:
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
+          ${{ elseif eq(parameters['tfJsonFile'], '') }}:
+            commandOptions: >
+              -var env=${{ parameters.environment }}
+              -var builtFrom=$(Build.Repository.Name)
+              -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
+              -json > ".${{ parameters.tfJsonFile }}"
           ${{ else }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
