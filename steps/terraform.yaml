@@ -163,7 +163,7 @@ steps:
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       publishPlanResults: "$(tfPlanName)"
-      ${{ if eq(parameters['tfVarsFile'], '') }}:
+      ${{ if and(eq(parameters['tfVarsFile'], ''), eq(parameters['tfJsonFile'], ''))  }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
