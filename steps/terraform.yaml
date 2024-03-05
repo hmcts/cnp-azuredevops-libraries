@@ -178,6 +178,14 @@ steps:
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -lock=false
+      ${{ elseif ne(parameters['tfJsonFile'], '') }}: 
+        commandOptions: >
+          -out tfplan-$(tfPlanName)
+          -var env=${{ parameters.environment }}
+          -var builtFrom=$(Build.Repository.Name)
+          -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
+          -lock=false
+          -json > ".${{ parameters.tfJsonFile }}"
       ${{ else }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
@@ -253,12 +261,6 @@ steps:
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-          ${{ elseif ne(parameters['tfJsonFile'], '') }}:
-            commandOptions: >
-              -var env=${{ parameters.environment }}
-              -var builtFrom=$(Build.Repository.Name)
-              -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-              -json > ".${{ parameters.tfJsonFile }}"
           ${{ else }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
