@@ -171,7 +171,7 @@ steps:
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
           -lock=false
-      ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
+      ${{ elseif and(eq(parameters['tfVarsFile'], 'NULL'), eq(parameters['tfJsonFile'], '')) }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
