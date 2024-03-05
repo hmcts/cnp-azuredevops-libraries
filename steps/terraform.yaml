@@ -55,6 +55,9 @@ parameters:
   - name: tfVarsFile
     default: ''
 
+  - name: tfJsonFile
+    default: ''
+
   - name: terraformEnvironmentVariables
     type: object
     default: null
@@ -250,7 +253,7 @@ steps:
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
-          ${{ elseif eq(parameters['tfJsonFile'], 'tfplan.txt') }}:
+          ${{ elseif ne(parameters['tfJsonFile'], '') }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
