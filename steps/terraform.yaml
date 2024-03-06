@@ -205,7 +205,6 @@ steps:
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -lock=false
-        #-json > ".${{ parameters.tfJsonFile }}"
         -json
         
   - task: Bash@3
