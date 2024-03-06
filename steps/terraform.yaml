@@ -163,7 +163,7 @@ steps:
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       publishPlanResults: "$(tfPlanName)"
-      ${{ if and(eq(parameters['tfVarsFile'], ''), eq(parameters['tfJsonFile'], ''))  }}:
+      ${{ if and(eq(parameters['tfVarsFile'], '')  }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
@@ -171,7 +171,7 @@ steps:
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
           -lock=false
-      ${{ elseif and(eq(parameters['tfVarsFile'], 'NULL'), eq(parameters['tfJsonFile'], '')) }}:
+      ${{ elseif and(eq(parameters['tfVarsFile'], 'NULL')}}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
@@ -201,7 +201,6 @@ steps:
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       commandOptions: >
-        -out tfplan-$(tfPlanName)
         -var env=${{ parameters.environment }}
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
