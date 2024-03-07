@@ -205,8 +205,9 @@ steps:
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -lock=false
-        -json
-        
+        -chdir .
+        -no-color
+        -json > .tfPlan.json
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
