@@ -205,7 +205,7 @@ steps:
         -var builtFrom=$(Build.Repository.Name)
         -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
         -lock=false
-        -chdir .
+        -chdir=.
         -no-color
         -json > .tfPlan.json
   - task: Bash@3
