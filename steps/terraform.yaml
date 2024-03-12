@@ -216,9 +216,9 @@ steps:
     inputs:
       command: show
       ${{ if eq( parameters['baseDirectory'], '') }}:
-        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+        inputTargetPlanOrStateFilePath: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName)'
       ${{ else }}:
-        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+        inputTargetPlanOrStateFilePath: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}/tfplan-$(tfPlanName)'
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       commandOptions: >
