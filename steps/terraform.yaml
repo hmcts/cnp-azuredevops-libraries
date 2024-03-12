@@ -190,6 +190,8 @@ steps:
   - task: Bash@3
     displayName: Terraform show and output ${{ parameters.component }} to parsable JSON
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne('${{parameters.tfJsonFile}}', '')) 
+    env:
+      GITHUB_TOKEN: $(github-api-token)
     inputs:
       targetType: 'inline'
       script: |
