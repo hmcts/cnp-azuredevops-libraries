@@ -186,27 +186,6 @@ steps:
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -var-file "${{ parameters.tfVarsFile }}"
           -lock=false
-          
-  # - task: TerraformCLI@1
-  #   displayName: Terraform plan ${{ parameters.component }} to JSON
-  #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne('${{parameters.tfJsonFile}}', '')) 
-  #   ${{ if parameters.terraformEnvironmentVariables }}:
-  #     env: ${{ parameters.terraformEnvironmentVariables  }}
-  #   inputs:
-  #     command: plan
-  #     ${{ if eq( parameters['baseDirectory'], '') }}:
-  #       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-  #     ${{ else }}:
-  #       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-  #     environmentServiceName: ${{ parameters.serviceConnection }}
-  #     runAzLogin: true
-  #     commandOptions: >
-  #       -out=.tfplan.json
-  #       -var env=${{ parameters.environment }}
-  #       -var builtFrom=$(Build.Repository.Name)
-  #       -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
-  #       -lock=false
-  #       -json
 
   - task: Bash@3
     displayName: Terraform show and output ${{ parameters.component }} to parsable JSON
@@ -215,6 +194,20 @@ steps:
       targetType: 'inline'
       script: |
         terraform show -json tfplan-$(tfPlanName) > .tfplan.json
+        prod_readers=$(cat .tfplan.json | jq -r '.resource_changes[] | select(.change.actions[] == "create") | select(.address | contains("production readers")) | .module_address')
+        if [ -n "$prod_readers" ]; then
+          tfcmt --owner hmcts \
+          --repo $(buildRepoSuffix) \
+          --pr $(System.PullRequest.PullRequestNumber) \
+          --var target:$(System.StageName) \
+          --var ado_url:$SYSTEM_COLLECTIONURI \
+          --var ado_project:"$SYSTEM_TEAMPROJECT" \
+          --var build_id:$BUILD_BUILDID \
+          --var sensitive:${{ parameters.sensitive }} \
+          --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
+          plan -patch -- \
+          "We have detected that this pull request is going to add someone to a production reader group. Please check that the person being added is security cleared. The person being added is\n$prod_readers"
+        fi
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
