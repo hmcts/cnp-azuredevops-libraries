@@ -187,26 +187,26 @@ steps:
           -var-file "${{ parameters.tfVarsFile }}"
           -lock=false
           
-  - task: TerraformCLI@1
-    displayName: Terraform plan ${{ parameters.component }} to JSON
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne('${{parameters.tfJsonFile}}', '')) 
-    ${{ if parameters.terraformEnvironmentVariables }}:
-      env: ${{ parameters.terraformEnvironmentVariables  }}
-    inputs:
-      command: plan
-      ${{ if eq( parameters['baseDirectory'], '') }}:
-        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      ${{ else }}:
-        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      environmentServiceName: ${{ parameters.serviceConnection }}
-      runAzLogin: true
-      commandOptions: >
-        -out=.tfplan.json
-        -var env=${{ parameters.environment }}
-        -var builtFrom=$(Build.Repository.Name)
-        -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
-        -lock=false
-        -json
+  # - task: TerraformCLI@1
+  #   displayName: Terraform plan ${{ parameters.component }} to JSON
+  #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne('${{parameters.tfJsonFile}}', '')) 
+  #   ${{ if parameters.terraformEnvironmentVariables }}:
+  #     env: ${{ parameters.terraformEnvironmentVariables  }}
+  #   inputs:
+  #     command: plan
+  #     ${{ if eq( parameters['baseDirectory'], '') }}:
+  #       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+  #     ${{ else }}:
+  #       workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+  #     environmentServiceName: ${{ parameters.serviceConnection }}
+  #     runAzLogin: true
+  #     commandOptions: >
+  #       -out=.tfplan.json
+  #       -var env=${{ parameters.environment }}
+  #       -var builtFrom=$(Build.Repository.Name)
+  #       -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
+  #       -lock=false
+  #       -json
 
   - task: TerraformCLI@1
     displayName: Terraform show and output ${{ parameters.component }} to parsable JSON
@@ -222,7 +222,7 @@ steps:
       environmentServiceName: ${{ parameters.serviceConnection }}
       runAzLogin: true
       commandOptions: >
-        -json .tfplan.json > .tfplan_parsed.json
+        -json tfplan-$(tfPlanName) > .tfplan.json
         
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
