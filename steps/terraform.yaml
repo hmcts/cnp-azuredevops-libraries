@@ -208,21 +208,17 @@ steps:
   #       -lock=false
   #       -json
 
-  - task: TerraformCLI@1
+  - task: Bash@3
     displayName: Terraform show and output ${{ parameters.component }} to parsable JSON
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne('${{parameters.tfJsonFile}}', '')) 
-    ${{ if parameters.terraformEnvironmentVariables }}:
-      env: ${{ parameters.terraformEnvironmentVariables  }}
     inputs:
-      command: show
+      targetType: 'inline'
+      script: |
+        terraform show -json tfplan-$(tfPlanName) > .tfplan.json
       ${{ if eq( parameters['baseDirectory'], '') }}:
-        inputTargetPlanOrStateFilePath: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName)'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
-        inputTargetPlanOrStateFilePath: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}/tfplan-$(tfPlanName)'
-      environmentServiceName: ${{ parameters.serviceConnection }}
-      runAzLogin: true
-      commandOptions: >
-        -json tfplan-$(tfPlanName) > .tfplan.json
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
         
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
