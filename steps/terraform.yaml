@@ -196,7 +196,7 @@ steps:
       targetType: 'inline'
       script: |
         terraform show -json tfplan-$(tfPlanName) > .tfplan.json
-        prod_readers=$(cat .tfplan.json | jq -r '.resource_changes[] | select(.change.actions[] == "create") | select(.address | contains("production readers")) | .module_address| .module_address | sub("module.ad_group_members"; "") | sub(".dts cft production readers"; "") | sub(".dts sds production readers"; "")' | jq -r '.[]')
+        prod_readers=$(cat .tfplan.json | jq -r '.resource_changes[] | select(.change.actions[] == "create") | select(.address | contains("production readers")) | .module_address | sub("module.ad_group_members"; "") | sub(".dts cft production readers"; "") | sub(".dts sds production readers"; "")' | jq -r '.[]')
         if [ -n "$prod_readers" ]; then
           for prod_reader in $prod_readers; 
           do 
