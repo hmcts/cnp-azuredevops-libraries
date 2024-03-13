@@ -207,13 +207,14 @@ steps:
                message="$prod_reader is a NOT a member of the DTS CFT SC group. This person should not be granted the access being requested."
              fi
           done 
+          body="{\"body\": \"${message}\"}"
           curl -L \
           -X POST \
           -H "Accept: application/vnd.github+json" \
           -H "Authorization: Bearer $GITHUB_TOKEN" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
           https://api.github.com/repos/hmcts/$(buildRepoSuffix)/issues/$(System.PullRequest.PullRequestNumber)/comments \
-          -d '{"body": "$message"}'
+          -d "${body}"
         fi
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
