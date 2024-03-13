@@ -205,6 +205,7 @@ steps:
                message="$prod_reader is a member of the DTS CFT SC group and is deemed to be security cleared."
              else
                message="$prod_reader is a NOT a member of the DTS CFT SC group. This person should not be granted the access being requested."
+             fi
           done 
           curl -L \
           -X POST \
