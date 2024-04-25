@@ -20,8 +20,8 @@ steps:
         set -x
         # Make sure ~/.local/bin is set for both root and non-root based agents (self-hosted etc)
         # Prepend PATH for other ADO tasks
-        echo '##vso[task.prependpath]$(HOME)/.local/bin'
+        echo "##vso[task.prependpath]${{ parameters.tfswitchPath }}"
         # Prepend PATH for current ADO task
-        export PATH=$HOME/.local/bin:$PATH
+        export PATH=${{ parameters.tfswitchPath }}:$PATH
         tfswitch ${{ parameters.tfswitchArgs }}
       workingDirectory: ${{ parameters.workingDirectory}}
