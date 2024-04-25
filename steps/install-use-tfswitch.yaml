@@ -7,12 +7,12 @@ parameters:
   - name: tfswitchVersion
     default: "1.1.0"
   - name: tfswitchPath
-    default: "/home/vsts/.local/bin"  # Replace "~" with "/home/vsts"
+    default: "/home/vsts/.local/bin"
 steps:
   - task: Bash@3
     displayName: Terraform install (tfswitch)
     env:
-      BINDIR: /home/vsts/.local/bin  # Replace "~" with "/home/vsts"
+      BINDIR: /home/vsts/.local/bin
     inputs:
       targetType: "inline"
       script: |
