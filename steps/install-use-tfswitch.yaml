@@ -3,22 +3,22 @@ parameters:
   - name: workingDirectory
     default: $(System.DefaultWorkingDirectory)
   - name: tfswitchArgs
-    default: ""
+    default: ''
   - name: tfswitchVersion
-    default: "1.1.0"
+    default: '0.13.1300'
   - name: tfswitchPath
-    default: "/home/vsts/.local/bin"
+    default: '~/.local/bin'
 steps:
   - task: Bash@3
     displayName: Terraform install (tfswitch)
     env:
-      BINDIR: /home/vsts/.local/bin
+      BINDIR: ~/.local/bin
     inputs:
-      targetType: "inline"
+      targetType: 'inline'
       script: |
         curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | bash -s -- -b  ${{ parameters.tfswitchPath }} ${{ parameters.tfswitchVersion }}
         set -x
-        # Make sure /home/vsts/.local/bin is set for both root and non-root based agents (self-hosted etc)
+        # Make sure ~/.local/bin is set for both root and non-root based agents (self-hosted etc)
         # Prepend PATH for other ADO tasks
         echo "##vso[task.prependpath]${{ parameters.tfswitchPath }}"
         # Prepend PATH for current ADO task
