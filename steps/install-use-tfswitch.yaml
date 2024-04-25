@@ -5,7 +5,7 @@ parameters:
   - name: tfswitchArgs
     default: ''
   - name: tfswitchVersion
-    default: 'v1.1.0'  # Update the version here
+    default: 'v1.1.0'
   - name: tfswitchPath
     default: '~/.local/bin'
 steps:
@@ -20,8 +20,8 @@ steps:
         set -x
         # Make sure ~/.local/bin is set for both root and non-root based agents (self-hosted etc)
         # Prepend PATH for other ADO tasks
-        echo "##vso[task.prependpath]${{ parameters.tfswitchPath }}"
+        echo '##vso[task.prependpath]$(HOME)/.local/bin'
         # Prepend PATH for current ADO task
-        export PATH=${{ parameters.tfswitchPath }}:$PATH
+        export PATH=$HOME/.local/bin:$PATH
         tfswitch ${{ parameters.tfswitchArgs }}
       workingDirectory: ${{ parameters.workingDirectory}}
