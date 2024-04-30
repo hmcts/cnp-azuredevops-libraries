@@ -4,6 +4,10 @@ parameters:
   - name: workingDirectory
     default: $(System.DefaultWorkingDirectory)
 steps:
+  - checkout: self
+  - checkout: cnp-azuredevops-libraries
+  - template: ./set-build-repo-suffix-env-var.yaml
+  
   - task: AzureKeyVault@1
     displayName: 'Retrieve slack webhook URL from Keyvault'
     inputs:
