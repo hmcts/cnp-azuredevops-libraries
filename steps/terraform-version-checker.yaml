@@ -1,8 +1,16 @@
 ---
+resources:
+  repositories:
+  - repository: cnp-depreciation-map
+    type: github
+    endpoint: hmcts (1)
+    name: HMCTS/cnp-depreciation-map
+
 parameters:
   - name: kvConnectedServiceName
   - name: workingDirectory
     default: $(System.DefaultWorkingDirectory)
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
