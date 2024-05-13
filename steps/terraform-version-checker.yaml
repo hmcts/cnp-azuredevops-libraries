@@ -7,9 +7,12 @@ parameters:
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
-  - checkout: git://hmcts/cnp-depreciation-map
   - template: ./set-build-repo-suffix-env-var.yaml
 
+  - script: |
+      git clone https://github.com/hmcts/cnp-depreciation-map.git
+    displayName: Clone Depreciation Map
+  
   - task: AzureKeyVault@1
     displayName: 'Retrieve slack webhook URL from Keyvault'
     inputs:
