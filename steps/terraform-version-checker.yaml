@@ -1,11 +1,4 @@
 ---
-resources:
-  repositories:
-  - repository: cnp-depreciation-map
-    type: github
-    endpoint: hmcts (1)
-    name: HMCTS/cnp-depreciation-map
-
 parameters:
   - name: kvConnectedServiceName
   - name: workingDirectory
@@ -14,7 +7,7 @@ parameters:
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
-  - checkout: cnp-depreciation-map
+  - checkout: git://hmcts/cnp-depreciation-map
   - template: ./set-build-repo-suffix-env-var.yaml
 
   - task: AzureKeyVault@1
