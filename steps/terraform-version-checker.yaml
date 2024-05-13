@@ -6,8 +6,9 @@ parameters:
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
+  - checkout: cnp-depreciation-map
   - template: ./set-build-repo-suffix-env-var.yaml
-  
+
   - task: AzureKeyVault@1
     displayName: 'Retrieve slack webhook URL from Keyvault'
     inputs:
@@ -21,7 +22,8 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py
+        python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
+        -f $(System.DefaultWorkingDirectory)/cnp-depreciation-map/nagger-versions.json
       workingDirectory: ${{ parameters.workingDirectory}}
     env:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)

@@ -25,6 +25,13 @@ parser.add_argument(
     const=logging.DEBUG,
     default=logging.INFO,
 )
+parser.add_argument(
+    "-f",
+    "--filepath",
+    help="Filepath to nagger-versions.json",
+    dest="filepath",
+    required=True,
+)
 args = parser.parse_args()
 
 logging.basicConfig(
@@ -277,7 +284,7 @@ def extract_version(text, regex):
 def terraform_version_checker(terraform_version):
     # Load config file with pre-defined versions
     try:
-        filename = "ado-terraform-nagger-versions.json"
+        filename = args.filepath
         global config
         config = json.loads(load_file(filename))
     except json.JSONDecodeError:
