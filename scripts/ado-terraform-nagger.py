@@ -100,8 +100,7 @@ def load_file(filename):
     try:
         with open(file_path, "r") as f:
             yaml_data = yaml.safe_load(f)
-            json_data = json.dumps(yaml_data)
-            contents = json.loads()
+            contents = json.dumps(yaml_data)
             return contents
     except FileNotFoundError:
         raise FileNotFoundError(f"The file '{filename}' does not exist.")
@@ -109,6 +108,7 @@ def load_file(filename):
         raise yaml.YAMLError(f"Error parsing YAML data: {e}")
     except Exception as e:
         logger.error(f"Error loading {filename}: {e}")
+
 
 def send_slack_message(webhook, channel, username, text, icon_emoji):
     """
