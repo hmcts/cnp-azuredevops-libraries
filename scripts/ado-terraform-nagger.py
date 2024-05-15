@@ -290,6 +290,7 @@ def extract_version(text, regex):
 
 def terraform_version_checker(terraform_version, config, current_date):
     # Get the date after which Terraform versions are no longer supported
+    print(config)
     end_support_date_str = config["terraform"]["terraform"]["date_deadline"]
     end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
 
@@ -359,9 +360,6 @@ def main():
 
         # Load deprecation map
         config = load_file(args.filepath)
-
-        pretty_json = json.dumps(config, indent=4)
-        print(pretty_json)
 
         # Handle terraform versions
         terraform_version_checker(terraform_version, config, current_date)
