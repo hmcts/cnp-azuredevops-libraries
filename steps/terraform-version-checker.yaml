@@ -27,7 +27,7 @@ steps:
       targetType: 'inline'
       script: |
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
-        -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.json
+        -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml
       workingDirectory: ${{ parameters.workingDirectory}}
     env:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
