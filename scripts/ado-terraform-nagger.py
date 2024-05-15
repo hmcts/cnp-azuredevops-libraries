@@ -360,6 +360,9 @@ def main():
         # Load deprecation map
         config = load_file(args.filepath)
 
+        pretty_json = json.dumps(config, indent=4)
+        print(pretty_json)
+
         # Handle terraform versions
         terraform_version_checker(terraform_version, config, current_date)
 
