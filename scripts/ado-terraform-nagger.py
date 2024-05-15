@@ -100,13 +100,15 @@ def load_file(filename):
     try:
         with open(file_path, "r") as f:
             yaml_data = yaml.safe_load(f)
-            contents = json.dumps(yaml_data)
+            json_data = json.dumps(yaml_data)
+            contents = json.loads()
             return contents
     except FileNotFoundError:
         raise FileNotFoundError(f"The file '{filename}' does not exist.")
     except yaml.YAMLError as e:
         raise yaml.YAMLError(f"Error parsing YAML data: {e}")
-
+    except Exception as e:
+        logger.error(f"Error loading {filename}: {e}")
 
 def send_slack_message(webhook, channel, username, text, icon_emoji):
     """
@@ -286,17 +288,7 @@ def extract_version(text, regex):
         return None
 
 
-def terraform_version_checker(terraform_version, current_date):
-    # Load config file with pre-defined versions
-    try:
-        filename = args.filepath
-        global config
-        config = json.loads(load_file(filename))
-    except json.JSONDecodeError:
-        logger.error(f"{filename} contains invalid JSON")
-    except Exception as e:
-        logger.error(f"Error loading {filename}: {e}")
-
+def terraform_version_checker(terraform_version, config, current_date):
     # Get the date after which Terraform versions are no longer supported
     end_support_date_str = config["terraform"]["terraform"]["date_deadline"]
     end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
@@ -365,8 +357,11 @@ def main():
                 f"Detected outdated terraform version: {terraform_version}",
             )
 
+        # Load deprecation map
+        config = load_file(args.filepath)
+
         # Handle terraform versions
-        terraform_version_checker(terraform_version, current_date)
+        terraform_version_checker(terraform_version, config, current_date)
 
         # Handle providers
         terraform_providers = result["provider_selections"]
