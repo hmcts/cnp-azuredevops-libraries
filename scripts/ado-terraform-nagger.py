@@ -286,7 +286,7 @@ def extract_version(text, regex):
         return None
 
 
-def terraform_version_checker(terraform_version):
+def terraform_version_checker(terraform_version, current_date):
     # Load config file with pre-defined versions
     try:
         filename = args.filepath
@@ -301,10 +301,7 @@ def terraform_version_checker(terraform_version):
     end_support_date_str = config["terraform"]["terraform"]["date_deadline"]
     end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
 
-    # Get the current date
-    current_date = datetime.date.today()
-
-    # Warn if terraform version is lower or equal than specified within config.
+    # Warn if terraform version is lower than specified & not past deadline.
     if version.parse(terraform_version) < version.parse(
         config["terraform"]["terraform"]["version"]
     ) and current_date <= end_support_date:
@@ -317,7 +314,7 @@ def terraform_version_checker(terraform_version):
             f"Please upgrade before date deadline {end_support_date_str}...",
         )
 
-     # If the current date is after the end support date, log an error
+    # Error if terraform version lower than specified & passed deadline.
     if version.parse(terraform_version) < version.parse(
         config["terraform"]["terraform"]["version"]
     ) and current_date > end_support_date:
@@ -332,6 +329,8 @@ def terraform_version_checker(terraform_version):
 
 def main():
 
+    # Get the current date
+    current_date = datetime.date.today()
     # Retrieve HMCTS github to slack user mappings
     hmcts_github_slack_user_mappings = get_hmcts_github_slack_user_mappings()
     # Attempt to retrieve github username
@@ -367,7 +366,7 @@ def main():
             )
 
         # Handle terraform versions
-        terraform_version_checker(terraform_version)
+        terraform_version_checker(terraform_version, current_date)
 
         # Handle providers
         terraform_providers = result["provider_selections"]
@@ -384,25 +383,14 @@ def main():
                 )
             else:
                 # Handle providers
-                # Error if provider version is lower than specified within config.
-                if version.parse(terraform_providers[provider]) < version.parse(
-                    config["terraform"]["providers"][provider]["version"]
-                ):
-                    log_message(
-                        slack_user_id,
-                        slack_webhook_url,
-                        "error",
-                        f"Detected provider {provider} version "
-                        f"{terraform_providers[provider]} "
-                        "is lower than "
-                        f'{config["terraform"]["providers"][provider]["version"]}. '
-                        "This is no longer allowed, please upgrade...",
-                    )
+                # Get the date after which Terraform versions are no longer supported
+                end_support_date_str = config["terraform"]["providers"][provider]["date_deadline"]
+                end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
 
-                # Warn if provider version is lower than specified within config.
+                # Warn if terraform provider version is lower than specified & not past deadline.
                 if version.parse(terraform_providers[provider]) < version.parse(
                     config["terraform"]["providers"][provider]["version"]
-                ):
+                ) and current_date <= end_support_date:
                     log_message(
                         slack_user_id,
                         slack_webhook_url,
@@ -411,6 +399,22 @@ def main():
                         f"{terraform_providers[provider]} "
                         "is lower than "
                         f'{config["terraform"]["providers"][provider]["version"]}. '
+                        f"Please upgrade before date deadline {end_support_date_str}...",
+                    )
+
+                # Error if terraform provider version lower than specified & passed deadline.
+                if version.parse(terraform_providers[provider]) < version.parse(
+                    config["terraform"]["providers"][provider]["version"]
+                ) and current_date > end_support_date:
+                    log_message(
+                        slack_user_id,
+                        slack_webhook_url,
+                        "error",
+                        f"Detected provider {provider} version "
+                        f"{terraform_providers[provider]} "
+                        "is lower than "
+                        f'{config["terraform"]["providers"][provider]["version"]}. '
+                        f"This is no longer supported after {end_support_date_str}. " 
                         "Please upgrade...",
                     )
 
