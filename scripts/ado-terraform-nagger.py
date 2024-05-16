@@ -99,8 +99,7 @@ def load_file(filename):
     # Open and read the file
     try:
         with open(file_path, "r") as f:
-            yaml_data = yaml.safe_load(f)
-            contents = json.dumps(yaml_data)
+            contents = yaml.safe_load(f)
             return contents
     except FileNotFoundError:
         raise FileNotFoundError(f"The file '{filename}' does not exist.")
