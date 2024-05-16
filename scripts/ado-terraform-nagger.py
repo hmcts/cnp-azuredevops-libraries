@@ -302,7 +302,7 @@ def terraform_version_checker(terraform_version, config, current_date):
             "warning",
             f"Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["terraform"]["version"]}. '
-            f"Please upgrade before date deadline {end_support_date_str}...",
+            f"Please upgrade before deprecation deadline {end_support_date_str}...",
         )
 
     # Error if terraform version lower than specified & passed deadline.
@@ -313,7 +313,7 @@ def terraform_version_checker(terraform_version, config, current_date):
             slack_user_id,
             slack_webhook_url,
             "error",
-            f"Terraform version {terraform_version} is no longer supported after {end_support_date_str}. "
+            f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
             "Please upgrade...",
         )
 
@@ -397,7 +397,7 @@ def main():
                         f"{terraform_providers[provider]} "
                         "is lower than "
                         f'{config["terraform"]["providers"][provider]["version"]}. '
-                        f"Please upgrade before date deadline {end_support_date_str}...",
+                        f"Please upgrade before deprecation deadline {end_support_date_str}...",
                     )
 
                 # Error if terraform provider version lower than specified & passed deadline.
@@ -412,7 +412,7 @@ def main():
                         f"{terraform_providers[provider]} "
                         "is lower than "
                         f'{config["terraform"]["providers"][provider]["version"]}. '
-                        f"This is no longer supported after {end_support_date_str}. " 
+                        f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
                         "Please upgrade...",
                     )
 
