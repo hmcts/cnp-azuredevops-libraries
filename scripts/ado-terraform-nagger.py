@@ -326,18 +326,22 @@ def main():
     hmcts_github_slack_user_mappings = get_hmcts_github_slack_user_mappings()
     # Attempt to retrieve github username
     github_user = os.getenv("BUILD_SOURCEVERSIONAUTHOR")
+    
     # Attempt to map github user to slack username
     global slack_user_id
     slack_user_id = get_github_slack_user_mapping(
         hmcts_github_slack_user_mappings, github_user
     )
     if not slack_user_id:
-        log_message(None, None, "warning", "Missing slack user ID from github mapping")
+        log_message(None, None, "error", "Missing Slack user ID from github mapping. \
+                    Please add yourself to the repo at https://github.com/hmcts/github-slack-user-mappings \
+                    to proceed")
+    
     # Atempt to retrieve slack webhook URL
     global slack_webhook_url
     slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL")
     if not slack_webhook_url:
-        log_message(None, None, "warning", "Missing slack webhook URL")
+        log_message(None, None, "error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
 
     command = ["terraform", "version", "--json"]
 
@@ -353,7 +357,7 @@ def main():
                 None,
                 None,
                 "warning",
-                f"Detected outdated terraform version: {terraform_version}",
+                f"Detected outdated terraform version: {terraform_version}. Newer version is available.",
             )
 
         # Load deprecation map
