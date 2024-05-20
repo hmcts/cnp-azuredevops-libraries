@@ -109,7 +109,7 @@ def load_file(filename):
         logger.error(f"Error loading {filename}: {e}")
 
 
-def send_slack_message(webhook, channel, username, text, icon_emoji):
+def send_slack_message(webhook, channel, username, text, message_type, icon_emoji):
     """
     Sends a message to a Slack channel using a webhook.
 
@@ -131,6 +131,7 @@ def send_slack_message(webhook, channel, username, text, icon_emoji):
         "username": username,
         "text": text,
         "icon_emoji": f":{icon_emoji}:",
+        "color": message_type,
     }
     response = requests.post(webhook, json=slack_data)
     if response.status_code:
@@ -228,10 +229,6 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
             build_origin_url = f"{repository}/tree/{source_branch_name}" # https://github.com/hmcts/cnp-dummy-library-test/tree/dtspo-17345-reinstate-nagger
             build_origin = f"<{build_origin_url}|{repository_name}/tree/{source_branch_name}>"
         
-        # Attachment
-        attachment = [{
-            "color": "warning"
-        }]
 
         # Format message with useful information to quickly identify the stage,
         # component, repository and its branch.
@@ -245,8 +242,10 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
             + f"MESSAGE: {message}\n"
         )
         slack_icon = "warning"
+        message_type = "warning"
+
         send_slack_message(
-            slack_webhook_url, slack_recipient, slack_sender, slack_message, attachment, slack_icon
+            slack_webhook_url, slack_recipient, slack_sender, slack_message, message_type, slack_icon
         )
 
 
