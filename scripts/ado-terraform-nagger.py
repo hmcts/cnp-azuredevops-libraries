@@ -131,7 +131,7 @@ def send_slack_message(webhook, channel, username, text, message_type, icon_emoj
         "username": username,
         "text": text,
         "icon_emoji": f":{icon_emoji}:",
-        "color": message_type,
+        "color": "warning",
     }
     response = requests.post(webhook, json=slack_data)
     if response.status_code:
