@@ -109,7 +109,7 @@ def load_file(filename):
         logger.error(f"Error loading {filename}: {e}")
 
 
-def send_slack_message(webhook, channel, username, text, icon_emoji, colour=None):
+def send_slack_message(webhook, channel, username, text, icon_emoji, color=None):
     """
     Sends a message to a Slack channel using a webhook.
 
