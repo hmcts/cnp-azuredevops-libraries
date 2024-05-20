@@ -204,28 +204,36 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
     - None
     """
     if slack_recipient and slack_webhook_url:
+        # https://dev.azure.com/hmcts/PlatformOperations/_build/results?buildId=579391
         build_url = f'{os.getenv("SYSTEM_COLLECTIONURI")}{os.getenv("SYSTEM_TEAMPROJECT")}/_build/results?buildId={os.getenv("BUILD_BUILDID")}'
         repository = os.getenv("BUILD_REPOSITORY_URI")
+        repository_name = repository.split("/")[-1]
         source_branch = os.getenv("BUILD_SOURCEBRANCH")
+        source_branch_name = os.getenv("BUILD_SOURCEBRANCHNAME")
+        build_id = os.getenv("BUILD_BUILDID")
 
         default_workdir = os.getenv("SYSTEM_DEFAULTWORKINGDIRECTORY")
         workdir = os.getenv("WORKDIR").replace(default_workdir + "/", "")
         stage = os.getenv("SYSTEM_STAGEDISPLAYNAME")
         slack_sender = "cnp-azuredevops-libraries - terraform version nagger"
 
+        # Differentiate PR from branch
         if source_branch.startswith("refs/pull"):
-            # It's a pull request
-            # Extract the pull request number from the source branch        
+            # It's a pull request. Extract the pull request number       
             pull_request_number = source_branch.split("/")[2]
-            build_origin = f"{repository}/pull/{pull_request_number}"
+            build_origin_url = f"{repository}/pull/{pull_request_number}" # https://github.com/hmcts/cnp-dummy-library-test/pull/37
+            build_origin = f"<{build_origin_url}|{repository_name}/pull/{pull_request_number}>"
         else:
             # It's a branch
-            build_origin = f'{repository}/tree/{os.getenv("BUILD_SOURCEBRANCHNAME")}'
+            build_origin_url = f"{repository}/tree/{source_branch_name}" # https://github.com/hmcts/cnp-dummy-library-test/tree/dtspo-17345-reinstate-nagger
+            build_origin = f"<{build_origin_url}|{repository_name}/tree/{source_branch_name}>"
         
         # Format message with useful information to quickly identify the stage,
         # component, repository and its branch.
         slack_message = (
-            f"\nREPOSITORY: {build_origin}\n"
+            f"\n"
+            + f"We have noticed deprecated configuration in {build_origin}: <{build_url}|Build {build_id}>"
+            f"\nREPOSITORY: {build_origin_url}\n"
             + f"BUILD: {build_url}\n"
             + f"STAGE: {stage}\n"
             + f"WORKDIR: {workdir}\n"
