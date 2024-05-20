@@ -204,7 +204,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
     - None
     """
     if slack_recipient and slack_webhook_url:
-        build_url = f'{os.getenv("SYSTEM_COLLECTIONURL")}{os.getenv("SYSTEM_TEAMPROJECT")}/_build/results?buildId={os.getenv("BUILD_BUILDID")}'
+        build_url = f'{os.getenv("SYSTEM_COLLECTIONURI")}{os.getenv("SYSTEM_TEAMPROJECT")}/_build/results?buildId={os.getenv("BUILD_BUILDID")}'
         repository = os.getenv("BUILD_REPOSITORY_URI")
         branch = os.getenv("BUILD_SOURCEBRANCHNAME")
         default_workdir = os.getenv("SYSTEM_DEFAULTWORKINGDIRECTORY")
