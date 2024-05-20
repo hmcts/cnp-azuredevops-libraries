@@ -206,15 +206,26 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
     if slack_recipient and slack_webhook_url:
         build_url = f'{os.getenv("SYSTEM_COLLECTIONURI")}{os.getenv("SYSTEM_TEAMPROJECT")}/_build/results?buildId={os.getenv("BUILD_BUILDID")}'
         repository = os.getenv("BUILD_REPOSITORY_URI")
-        branch = os.getenv("BUILD_SOURCEBRANCHNAME")
+        source_branch = os.getenv("BUILD_SOURCEBRANCHNAME")
+
         default_workdir = os.getenv("SYSTEM_DEFAULTWORKINGDIRECTORY")
         workdir = os.getenv("WORKDIR").replace(default_workdir + "/", "")
         stage = os.getenv("SYSTEM_STAGEDISPLAYNAME")
         slack_sender = "cnp-azuredevops-libraries - terraform version nagger"
+
+        if source_branch.startswith("refs/pull"):
+            # It's a pull request
+            # Extract the pull request number from the source branch
+            pull_request_number = source_branch.split("/")[2]
+            build_origin = f"{repository}/pull/{pull_request_number}"
+        else:
+            # It's a branch
+            build_origin = f"{repository}/tree/{source_branch}"
+        
         # Format message with useful information to quickly identify the stage,
         # component, repository and its branch.
         slack_message = (
-            f"\nREPOSITORY: {repository}/tree/{branch}\n"
+            f"\nREPOSITORY: {build_origin}\n"
             + f"BUILD: {build_url}\n"
             + f"STAGE: {stage}\n"
             + f"WORKDIR: {workdir}\n"
