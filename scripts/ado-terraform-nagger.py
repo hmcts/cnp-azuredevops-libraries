@@ -225,7 +225,8 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         # Format message with useful information to quickly identify the stage,
         # component, repository and its branch.
         slack_message = (
-            f"\nREPOSITORY: {build_origin}\n"
+            f"\nBRANCH: {source_branch}"
+            f"REPOSITORY: {build_origin}\n"
             + f"BUILD: {build_url}\n"
             + f"STAGE: {stage}\n"
             + f"WORKDIR: {workdir}\n"
