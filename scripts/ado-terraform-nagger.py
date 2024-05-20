@@ -130,11 +130,50 @@ def send_slack_message(webhook, channel, username, text, icon_emoji, color=None)
         "channel": channel,
         "username": username,
         "icon_emoji": f":{icon_emoji}:",
-        "attachments": [
-        {
-            "color": "warning",
-            "text": text,
-        }
+        "blocks": 
+        [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Deprecated Config",
+                    "emoji": true
+                }
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Source:*\n<https://google.com|hmcts/cnp-plum-frontend/>"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Build:*\n<https://google.com|Build 1000>"
+                    }
+                ]
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Warning:*\nTerraform version 1.3.0 is no longer supported after deprecation deadline 30/05/2024. Please upgrade."
+                    }
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Stages:*\n16.0 (2 days)\n12\n15\n16\n17"
+                    }
+                ]
+            }
         ]
     }
 
@@ -240,14 +279,10 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         slack_message = (
             f"\n"
             + f"We have noticed deprecated configuration in {build_origin}: <{build_url}|Build {build_id}>"
-            f"\nREPOSITORY: {build_origin_url}\n"
-            + f"BUILD: {build_url}\n"
             + f"STAGE: {stage}\n"
-            + f"WORKDIR: {workdir}\n"
             + f"MESSAGE: {message}\n"
         )
         slack_icon = "warning"
-        message_type = "warning"
 
         send_slack_message(
             slack_webhook_url, slack_recipient, slack_sender, slack_message, slack_icon, color="warning"
