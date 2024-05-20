@@ -129,6 +129,7 @@ def send_slack_message(webhook, channel, username, text, icon_emoji, color=None)
     slack_data = {
         "channel": channel,
         "username": username,
+        "text": 'hello',
         "blocks": 
         [
             {
