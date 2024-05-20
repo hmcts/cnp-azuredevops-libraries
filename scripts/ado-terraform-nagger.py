@@ -109,7 +109,7 @@ def load_file(filename):
         logger.error(f"Error loading {filename}: {e}")
 
 
-def send_slack_message(webhook, channel, username, text, message_type, icon_emoji):
+def send_slack_message(webhook, channel, username, text, icon_emoji, colour=None):
     """
     Sends a message to a Slack channel using a webhook.
 
@@ -129,10 +129,15 @@ def send_slack_message(webhook, channel, username, text, message_type, icon_emoj
     slack_data = {
         "channel": channel,
         "username": username,
-        "text": text,
         "icon_emoji": f":{icon_emoji}:",
-        "color": "warning",
+        "attachments": [
+        {
+            "color": "warning",
+            "text": text,
+        }
+        ]
     }
+
     response = requests.post(webhook, json=slack_data)
     if response.status_code:
         return True
@@ -245,7 +250,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         message_type = "warning"
 
         send_slack_message(
-            slack_webhook_url, slack_recipient, slack_sender, slack_message, message_type, slack_icon
+            slack_webhook_url, slack_recipient, slack_sender, slack_message, slack_icon, color="warning"
         )
 
 
