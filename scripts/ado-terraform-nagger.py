@@ -220,7 +220,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
             build_origin = f"{repository}/pull/{pull_request_number}"
         else:
             # It's a branch
-            build_origin = f"{repository}/tree/{os.getenv("BUILD_SOURCEBRANCHNAME")}"
+            build_origin = f'{repository}/tree/{os.getenv("BUILD_SOURCEBRANCHNAME")}'
         
         # Format message with useful information to quickly identify the stage,
         # component, repository and its branch.
