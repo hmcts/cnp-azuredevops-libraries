@@ -129,7 +129,6 @@ def send_slack_message(webhook, channel, username, text, icon_emoji, color=None)
     slack_data = {
         "channel": channel,
         "username": username,
-        "icon_emoji": f":{icon_emoji}:",
         "blocks": 
         [
             {
@@ -137,7 +136,7 @@ def send_slack_message(webhook, channel, username, text, icon_emoji, color=None)
                 "text": {
                     "type": "plain_text",
                     "text": "Deprecated Config",
-                    "emoji": true
+                    "emoji": f":{icon_emoji}:",
                 }
             },
             {
