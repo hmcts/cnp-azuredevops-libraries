@@ -204,6 +204,8 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
     - None
     """
     if slack_recipient and slack_webhook_url:
+        Full Build URL: $(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)
+        build_url = f'{os.getenv("SYSTEM_COLLECTIONURL")}{os.getenv("SYSTEM_TEAMPROJECT")}/_build/results?buildId={os.getenv("BUILD_BUILDID")}'
         repository = os.getenv("BUILD_REPOSITORY_URI")
         branch = os.getenv("BUILD_SOURCEBRANCHNAME")
         default_workdir = os.getenv("SYSTEM_DEFAULTWORKINGDIRECTORY")
@@ -214,6 +216,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         # component, repository and its branch.
         slack_message = (
             f"\nREPOSITORY: {repository}/tree/{branch}\n"
+            + f"BUILD: {build_url}\n"
             + f"STAGE: {stage}\n"
             + f"WORKDIR: {workdir}\n"
             + f"MESSAGE: {message}\n"
