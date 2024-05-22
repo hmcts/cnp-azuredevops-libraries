@@ -1,6 +1,7 @@
 ---
 parameters:
   - name: kvConnectedServiceName
+  - name: component
   - name: workingDirectory
     default: $(System.DefaultWorkingDirectory)
 
@@ -15,7 +16,7 @@ steps:
   
   - script: |
       echo "Saving output"
-      echo "output data" > test_result_data.txt
+      echo "output data of failed versions" > test_result_${{ parameters.kvConnectedServiceName }}.txt
     displayName: Fake File
   
   - task: AzureKeyVault@1

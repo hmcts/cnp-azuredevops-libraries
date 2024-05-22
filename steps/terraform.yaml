@@ -108,7 +108,8 @@ steps:
 
   - template: ./terraform-version-checker.yaml
     parameters:
-      kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }} 
+      component: ${{ parameters.component }}
 
   - task: Bash@3
     displayName: Build resource values
