@@ -13,6 +13,11 @@ steps:
       git clone https://github.com/hmcts/cnp-deprecation-map.git
     displayName: Clone Depreciation Map
   
+  - script: |
+      echo "Saving output"
+      echo "output data" > test_result_data.txt
+    displayName: Fake File
+  
   - task: AzureKeyVault@1
     displayName: 'Retrieve slack webhook URL from Keyvault'
     inputs:
@@ -33,10 +38,7 @@ steps:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
       WORKDIR: ${{ parameters.workingDirectory}}
 
-  - script: |
-    echo "Saving output"
-    echo "output data" > test_result_data.txt
-    
+
   - task: PublishPipelineArtifact@1
     displayName: 'Publish pipeline artifact'
     inputs:
