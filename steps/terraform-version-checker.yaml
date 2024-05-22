@@ -34,10 +34,9 @@ steps:
       WORKDIR: ${{ parameters.workingDirectory}}
 
   - script: |
-    echo "Saving output:"
+    echo "Saving output"
     echo "output data" > test_result_data.txt
-  displayName: 'Save output to file'
-
+    
   - task: PublishPipelineArtifact@1
     displayName: 'Publish pipeline artifact'
     inputs:
