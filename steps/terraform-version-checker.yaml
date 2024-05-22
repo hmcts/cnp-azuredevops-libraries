@@ -33,6 +33,11 @@ steps:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
       WORKDIR: ${{ parameters.workingDirectory}}
 
+  - script: |
+    echo "Saving output:"
+    echo "output data" > test_result_data.txt
+  displayName: 'Save output to file'
+
   - task: PublishPipelineArtifact@1
     displayName: 'Publish pipeline artifact'
     inputs:
