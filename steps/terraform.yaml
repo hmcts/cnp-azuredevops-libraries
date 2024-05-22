@@ -110,6 +110,7 @@ steps:
     parameters:
       kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }} 
       component: ${{ parameters.component }}
+      environment: ${{ parameters.environment }}
 
   - task: Bash@3
     displayName: Build resource values

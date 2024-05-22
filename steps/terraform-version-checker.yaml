@@ -2,6 +2,7 @@
 parameters:
   - name: kvConnectedServiceName
   - name: component
+  - name: environment
   - name: workingDirectory
     default: $(System.DefaultWorkingDirectory)
 
@@ -36,7 +37,7 @@ steps:
 
   - script: |
       echo "Saving output"
-      echo "output data of failed versions" > test_result_${{ parameters.component}}.txt
+      echo "output data of failed versions" > test_result_${{ parameters.component}}_${{ parameters.environment }}.txt
     displayName: Fake File Creation
 
   - task: PublishPipelineArtifact@1
