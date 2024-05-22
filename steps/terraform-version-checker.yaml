@@ -44,5 +44,5 @@ steps:
     displayName: 'Publish pipeline artifact'
     inputs:
       targetPath: '$(Pipeline.Workspace)'
-      artifact: 'testing'
+      artifact: 'testing_${{ parameters.component }}_${{ parameters.environment}}'
       publishLocation: 'pipeline'
