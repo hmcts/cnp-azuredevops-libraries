@@ -32,3 +32,10 @@ steps:
     env:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
       WORKDIR: ${{ parameters.workingDirectory}}
+
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish pipeline artifact'
+    inputs:
+      targetPath: '$(Pipeline.Workspace)'
+      artifact: 'testing'
+      publishLocation: 'pipeline'
