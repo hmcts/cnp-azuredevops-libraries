@@ -362,30 +362,35 @@ def terraform_version_checker(terraform_version, config, current_date):
     if version.parse(terraform_version) < version.parse(
         config["terraform"]["terraform"]["version"]
     ) and current_date <= end_support_date:
-        log_message(
-            slack_user_id,
-            slack_webhook_url,
-            "warning",
-            f"Detected terraform version {terraform_version} "
-            f'is lower than {config["terraform"]["terraform"]["version"]}. '
-            f"Please upgrade before deprecation deadline {end_support_date_str}...",
-        )
+        # log_message(
+        #     slack_user_id,
+        #     slack_webhook_url,
+        #     "warning",
+        #     f"Detected terraform version {terraform_version} "
+        #     f'is lower than {config["terraform"]["terraform"]["version"]}. '
+        #     f"Please upgrade before deprecation deadline {end_support_date_str}...",
+        # )
+        return f"Terraform version {terraform_version} is lower than {config["terraform"]["terraform"]["version"]}. \
+            Please upgrade before eprecation deadline {end_support_date_str}."
 
     # Error if terraform version lower than specified & passed deadline.
     if version.parse(terraform_version) < version.parse(
         config["terraform"]["terraform"]["version"]
     ) and current_date > end_support_date:
-        log_message(
-            slack_user_id,
-            slack_webhook_url,
-            "error",
-            f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
-            "Please upgrade...",
-        )
+        # log_message(
+        #     slack_user_id,
+        #     slack_webhook_url,
+        #     "error",
+        #     f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
+        #     "Please upgrade...",
+        # )
+        return f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade."
 
 
 def main():
-
+    # initialise array of warnings/errors
+    warning_error_array = []
+    warning_error_file = f"output/output.json"
     # Get the current date
     current_date = datetime.date.today()
     # Retrieve HMCTS github to slack user mappings
@@ -430,7 +435,11 @@ def main():
         config = load_file(args.filepath)
 
         # Handle terraform versions
-        terraform_version_checker(terraform_version, config, current_date)
+        warning_error_array.append(terraform_version_checker(terraform_version, config, current_date))
+
+        # output to warning_error_file
+        with open(file_path, "w") as json_file:
+            json.dump(warning_error_array, json_file)
 
         # Handle providers
         terraform_providers = result["provider_selections"]

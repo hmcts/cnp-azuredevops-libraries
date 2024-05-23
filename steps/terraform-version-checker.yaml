@@ -1,6 +1,7 @@
 ---
 parameters:
   - name: kvConnectedServiceName
+  - name: environment_components
   - name: workingDirectory
     default: $(System.DefaultWorkingDirectory)
 
@@ -20,15 +21,29 @@ steps:
       ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'registry-slack-webhook'
+  
+  - ${{ each deployment in parameters.environment_components }}:
+    - template: ./install-use-tfswitch.yaml
+      parameters:
+        tfswitchArgs: -b ~/.local/bin/terraform
+        ${{ if eq( parameters['baseDirectory'], '') }}:
+          workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ deployment.component }}'
+        ${{ else }}:
+          workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ deployment.component }}'
 
-  - task: Bash@3
-    displayName: Terraform version nagger
-    inputs:
-      targetType: 'inline'
-      script: |
-        python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
-        -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml
-      workingDirectory: ${{ parameters.workingDirectory}}
-    env:
-      SLACK_WEBHOOK_URL: $(registry-slack-webhook)
-      WORKDIR: ${{ parameters.workingDirectory}}
+    - task: Bash@3
+      displayName: Terraform version nagger
+      inputs:
+        targetType: 'inline'
+        script: |
+          python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
+          -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml
+        workingDirectory: ${{ parameters.workingDirectory }}
+      env:
+        SLACK_WEBHOOK_URL: $(registry-slack-webhook)
+        WORKDIR: ${{ parameters.workingDirectory }}
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: 'output/output.json'
+        artifactName: '${{ build.buildId }}_${{ deployment.environment }}_${{ deployment.component }}.json'
