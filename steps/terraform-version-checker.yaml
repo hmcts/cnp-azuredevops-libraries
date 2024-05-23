@@ -47,4 +47,4 @@ steps:
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: 'output/output.json'
-        artifactName: '${{ build.buildId }}_${{ deployment.environment }}_${{ deployment.component }}.json'
+        artifactName: '$(build.buildId)_${{ deployment.environment }}_${{ deployment.component }}.json'
