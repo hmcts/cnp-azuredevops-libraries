@@ -25,7 +25,6 @@ steps:
   
   - ${{ each deployment in parameters.environment_components }}:
     - template: ./install-use-tfswitch.yaml
-      displayName: TFSwitch - ${{ deployment.deployment }}
       parameters:
         tfswitchArgs: -b ~/.local/bin/terraform
         ${{ if eq( parameters['baseDirectory'], '') }}:
