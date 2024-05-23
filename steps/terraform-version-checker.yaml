@@ -25,6 +25,7 @@ steps:
   
   - ${{ each deployment in parameters.environment_components }}:
     - template: ./install-use-tfswitch.yaml
+      displayName: TFSwitch - ${{ deployment.deployment }}
       parameters:
         tfswitchArgs: -b ~/.local/bin/terraform
         ${{ if eq( parameters['baseDirectory'], '') }}:
@@ -33,7 +34,7 @@ steps:
           workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ deployment.component }}'
 
     - task: Bash@3
-      displayName: Terraform version nagger
+      displayName: TF nagger - ${{ deployment.deployment }}
       inputs:
         targetType: 'inline'
         script: |
