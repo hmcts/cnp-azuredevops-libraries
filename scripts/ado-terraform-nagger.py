@@ -390,7 +390,7 @@ def terraform_version_checker(terraform_version, config, current_date):
 def main():
     # initialise array of warnings/errors
     warning_error_array = []
-    warning_error_file = f"./output/output.json"
+    warning_error_file = f"output.json"
     # Get the current date
     current_date = datetime.date.today()
     # Retrieve HMCTS github to slack user mappings
