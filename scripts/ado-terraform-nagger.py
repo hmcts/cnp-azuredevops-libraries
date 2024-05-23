@@ -389,8 +389,7 @@ def terraform_version_checker(terraform_version, config, current_date):
 
 def main():
     # initialise array of warnings/errors
-    warning_error_array = []
-    warning_error_file = f"output.json"
+    output_file = "nagger_output.json"
     # Get the current date
     current_date = datetime.date.today()
     # Retrieve HMCTS github to slack user mappings
@@ -434,12 +433,21 @@ def main():
         # Load deprecation map
         config = load_file(args.filepath)
 
-        # Handle terraform versions
-        warning_error_array.append(terraform_version_checker(terraform_version, config, current_date))
+        # Check if the file exists
+        if os.path.exists(output_file):
+            # Read existing data from the file
+            with open(output_file, 'r') as file:
+                output_array = json.load(file)
+        else:
+            # If file does not exist, start with an empty list
+            output_array = []
 
-        # output to warning_error_file
-        with open(warning_error_file, "w") as json_file:
-            json.dump(warning_error_array, json_file)
+        # Append warning/error if flagged
+        output_array.append(terraform_version_checker(terraform_version, config, current_date))
+
+        # Write the updated data back to the file
+        with open(output_file, 'w') as file:
+            json.dump(output_array, file, indent=4)
 
         # Handle providers
         terraform_providers = result["provider_selections"]
