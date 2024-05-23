@@ -438,7 +438,7 @@ def main():
         warning_error_array.append(terraform_version_checker(terraform_version, config, current_date))
 
         # output to warning_error_file
-        with open(file_path, "w") as json_file:
+        with open(warning_error_file, "w") as json_file:
             json.dump(warning_error_array, json_file)
 
         # Handle providers
