@@ -43,8 +43,3 @@ steps:
       env:
         SLACK_WEBHOOK_URL: $(registry-slack-webhook)
         WORKDIR: ${{ parameters.workingDirectory }}
-
-    - task: PublishPipelineArtifact@1
-      inputs:
-        targetPath: 'output/output.json'
-        artifactName: '$(build.buildId)_${{ deployment.environment }}_${{ deployment.component }}.json'
