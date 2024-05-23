@@ -2,6 +2,7 @@
 parameters:
   - name: kvConnectedServiceName
   - name: environment_components
+    type: object
   - name: workingDirectory
     default: $(System.DefaultWorkingDirectory)
 

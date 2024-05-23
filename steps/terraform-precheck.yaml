@@ -39,7 +39,7 @@ parameters:
     default: false
 
   - name: environment_components
-    default: ''
+    type: object
 
 steps:
   - checkout: self
