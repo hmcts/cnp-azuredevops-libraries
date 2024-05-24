@@ -42,7 +42,7 @@ steps:
       workingDirectory: ${{ parameters.workingDirectory }}
 
   - task: Bash@3
-    displayName: TF nagger - ${{ deployment.deployment }}
+    displayName: Terraform Nagger
     inputs:
       targetType: 'inline'
       script: |
