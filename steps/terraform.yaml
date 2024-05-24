@@ -106,12 +106,6 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  - template: ./terraform-version-checker.yaml
-    parameters:
-      kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }} 
-      component: ${{ parameters.component }}
-      environment: ${{ parameters.environment }}
-
   - task: Bash@3
     displayName: Build resource values
     env:

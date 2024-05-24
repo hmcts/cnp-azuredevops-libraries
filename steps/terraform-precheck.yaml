@@ -38,6 +38,9 @@ parameters:
     type: boolean
     default: false
 
+  - name: environment_components
+    type: object
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -127,3 +130,8 @@ steps:
         --organization "hmcts" \
         --project "$(System.TeamProject)" \
         --pipelineid "$(System.DefinitionId)"
+
+  - template: ./terraform-version-checker.yaml
+    parameters:
+      kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      environment_components: ${{ parameters.environment_components }}

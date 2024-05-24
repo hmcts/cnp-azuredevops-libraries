@@ -1,8 +1,8 @@
 ---
 parameters:
   - name: kvConnectedServiceName
-  - name: component
-  - name: environment
+  - name: environment_components
+    type: object
   - name: workingDirectory
     default: $(System.DefaultWorkingDirectory)
 
@@ -24,25 +24,17 @@ steps:
       secretsFilter: 'registry-slack-webhook'
 
   - task: Bash@3
-    displayName: Terraform version nagger
+    displayName: Terraform Nagger
     inputs:
       targetType: 'inline'
       script: |
+        echo "${{ parameters.environment_components }}"
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
-        -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml
-      workingDirectory: ${{ parameters.workingDirectory}}
+        -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml \
+        -e ${{ convertToJson(parameters.environment_components) }}
+      workingDirectory: ${{ parameters.workingDirectory }}
     env:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
-      WORKDIR: ${{ parameters.workingDirectory}}
-
-  - script: |
-      echo "Saving output"
-      echo "output data of failed versions" > test_result_${{ parameters.component}}_${{ parameters.environment }}.txt
-    displayName: Fake File Creation
-
-  - task: PublishPipelineArtifact@1
-    displayName: 'Publish pipeline artifact'
-    inputs:
-      targetPath: '$(Pipeline.Workspace)'
-      artifact: 'testing_${{ parameters.component }}_${{ parameters.environment}}'
-      publishLocation: 'pipeline'
+      WORKDIR: ${{ parameters.workingDirectory }}
+      SYSTEM_DEFAULT_WORKING_DIRECTORY: $(System.DefaultWorkingDirectory)
+      BUILD_REPO_SUFFIX: $(buildRepoSuffix)
