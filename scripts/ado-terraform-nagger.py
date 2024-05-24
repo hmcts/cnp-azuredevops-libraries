@@ -482,6 +482,8 @@ def main():
 
             # Load deprecation map
             config = load_file(args.filepath)
+            print('config:')
+            print(config)
 
             # Check if the file exists
             if os.path.exists(output_file):
@@ -493,6 +495,7 @@ def main():
                 output_array = {}
 
             # Append warning/error if flagged
+            output_array[deployment['component']] = {}
             output_array[deployment['component']]['terraform_version'] = (terraform_version_checker(terraform_version, config, current_date))
 
             # Write the updated data back to the file
