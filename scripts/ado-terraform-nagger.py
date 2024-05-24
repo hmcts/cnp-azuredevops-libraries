@@ -448,13 +448,23 @@ def main():
         #         f"Detected outdated terraform version: {terraform_version}. Newer version is available.",
         #     )
 
-        # Parse the JSON string into a Python object
-        environment_components = json.loads(args.environment_components)
+
+        try:
+            with open(args.environment_components, "r") as f:
+                environment_components = json.loads(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"The file '{args.environment_components}' does not exist.")
+        except yaml.YAMLError as e:
+            raise yaml.YAMLError(f"Error parsing YAML data: {e}")
+        except Exception as e:
+            logger.error(f"Error loading {args.environment_components}: {e}")
+
+
         # Retrieve the environment variables
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
-        for deployment in environment_components:
+        for deployment in environment_components['environment_components']:
             # Construct the working directory path
             base_directory = os.getenv('WORKDIR')
             if not base_directory or base_directory == '':
