@@ -483,31 +483,29 @@ def main():
             terraform_version = result["terraform_version"]
             print(f'tf version: {terraform_version}')
 
-            # jsonOut = json.dumps(result)
-
-            # print(f'json data is = {jsonOut}')
-            # result = json.loads(run_command(command, working_directory))
-            # terraform_version = result["terraform_version"]
-            # print(f'current tf version = {terraform_version}')
-            
             # Load deprecation map
-            # config = load_file(args.filepath)
+            config = load_file(args.filepath)
 
-            # # Check if the file exists
-            # if os.path.exists(output_file):
-            #     # Read existing data from the file
-            #     with open(output_file, 'r') as file:
-            #         output_array = json.load(file)
-            # else:
-            #     # If file does not exist, start with an empty list
-            #     output_array = []
+            # Check if the file exists
+            if os.path.exists(output_file):
+                # Read existing data from the file
+                with open(output_file, 'r') as file:
+                    output_array = json.load(file)
+            else:
+                # If file does not exist, start with an empty list
+                output_array = []
 
-            # # Append warning/error if flagged
-            # output_array.append(terraform_version_checker(terraform_version, config, current_date))
+            # Append warning/error if flagged
+            output_array.append(terraform_version_checker(terraform_version, config, current_date))
 
-            # # Write the updated data back to the file
-            # with open(output_file, 'w') as file:
-            #     json.dump(output_array, file, indent=4)
+            # Write the updated data back to the file
+            with open(output_file, 'w') as file:
+                json.dump(output_array, file, indent=4)
+
+        with open(output_file, 'r') as file:
+            complete_file = json.load(file)
+            print(complete_file)
+
 
         # # Handle providers
         # terraform_providers = result["provider_selections"]
