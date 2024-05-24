@@ -432,10 +432,8 @@ def main():
     # Need to DD $HOME or /home/vsts
     home_dir = os.path.expanduser('~')
     terraform_binary_path = os.path.join(home_dir, '.local', 'bin')
-    print("Updated PATH for testing:", terraform_binary_path)
 
-
-    command = ["tfswitch", "-b", "/home/vsts/.local/bin/terraform", ">", "/dev/null", "&&", "terraform", "version", "--json"]
+    command = ["tfswitch", "-b", terraform_binary_path, ">", "/dev/null", "&&", "terraform", "version", "--json"]
 
     try:
         # # Try to run `version --json` which is present in tf versions >= 0.13.0
