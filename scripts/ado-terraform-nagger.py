@@ -273,8 +273,6 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         source_branch_name = os.getenv("BUILD_SOURCEBRANCHNAME")
         build_id = os.getenv("BUILD_BUILDID")
 
-        default_workdir = os.getenv("SYSTEM_DEFAULTWORKINGDIRECTORY")
-        workdir = os.getenv("WORKDIR").replace(default_workdir + "/", "")
         stage = os.getenv("SYSTEM_STAGEDISPLAYNAME")
         slack_sender = "cnp-azuredevops-libraries - terraform version nagger"
 
