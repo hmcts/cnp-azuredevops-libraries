@@ -451,11 +451,9 @@ def main():
 
         try:
             with open(args.environment_components, "r") as f:
-                environment_components = json.loads(f)
+                environment_components = json.load(f)
         except FileNotFoundError:
             raise FileNotFoundError(f"The file '{args.environment_components}' does not exist.")
-        except yaml.YAMLError as e:
-            raise yaml.YAMLError(f"Error parsing YAML data: {e}")
         except Exception as e:
             logger.error(f"Error loading {args.environment_components}: {e}")
 
