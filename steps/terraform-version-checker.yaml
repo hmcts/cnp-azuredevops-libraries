@@ -39,7 +39,7 @@ steps:
       script: |
         $environmentComponents = $(ConvertTo-Json -InputObject ${{ parameters.environment_components }} -Compress)
         $environmentComponents | Out-File -FilePath "$(Pipeline.Workspace)/environment_components.json"
-    workingDirectory: $(Pipeline.Workspace)
+      workingDirectory: $(Pipeline.Workspace)
 
   - task: Bash@3
     displayName: Terraform Nagger
