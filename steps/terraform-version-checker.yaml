@@ -37,7 +37,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        echo $(environment_components) > environment_components.json
+        echo ${{ parameters.environment_components }} > environment_components.json
         cat environment_components.json
       workingDirectory: ${{ parameters.workingDirectory }}
 
@@ -48,7 +48,7 @@ steps:
       script: |
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
         -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml \
-        -e "$(cat environment_components.json)"
+        -e environment_components.json
       workingDirectory: ${{ parameters.workingDirectory }}
     env:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
