@@ -37,7 +37,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        $environmentComponents = $(ConvertTo-Json -InputObject ${{ parameters.environment_components }} -Compress)
+        $environmentComponents = ${{ toJson(parameters.environment_components) }}
         $environmentComponents | Out-File -FilePath "$(Pipeline.Workspace)/environment_components.json"
       workingDirectory: $(Pipeline.Workspace)
 
