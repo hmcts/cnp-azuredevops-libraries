@@ -476,7 +476,7 @@ def main():
             print(f'working_directory = {working_directory}')
             print(f'build repo suffix = {build_repo_suffix}')
   
-            # Try to run `version --json` which is present in tf versions >= 0.13.0
+            # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
             result = json.loads(run_command(command, working_directory))
             terraform_version = result["terraform_version"]
             print(f'current tf version = {terraform_version}')
@@ -551,7 +551,7 @@ def main():
 
     except JSONDecodeError:
         # Fallback to regex when terraform version <= 0.13.0
-        result = run_command(command)
+        result = run_command(command, working_directory)
         terraform_regex = f"^([Tt]erraform(\\s))(?P<semver>{semver_regex})"
         terraform_version = extract_version(result, terraform_regex)
         log_message(
