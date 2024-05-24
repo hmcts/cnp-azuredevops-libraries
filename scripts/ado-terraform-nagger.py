@@ -429,6 +429,7 @@ def main():
     if not slack_webhook_url:
         log_message(None, None, "error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
 
+    # Need to DD $HOME or /home/vsts
     command = ["tfswitch", "-b", "~/.local/bin/terraform", ">", "/dev/null", "&&", "terraform", "version", "--json"]
 
     try:
