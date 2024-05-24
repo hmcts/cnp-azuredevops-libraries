@@ -32,14 +32,14 @@ steps:
   #       ${{ else }}:
   #         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ deployment.component }}'
 
-  - task: Bash@3
+  - task: PowerShell@2
     displayName: Serialize environment_components to JSON
     inputs:
       targetType: 'inline'
       script: |
-        echo ${{ parameters.environment_components }} | jq -c . > environment_components.json
-        cat environment_components.json
-      workingDirectory: ${{ parameters.workingDirectory }}
+        $environmentComponents = $(ConvertTo-Json -InputObject ${{ parameters.environment_components }} -Compress)
+        $environmentComponents | Out-File -FilePath "${{ parameters.workingDirectory }})/environment_components.json"
+    workingDirectory: ${{ parameters.workingDirectory }}
 
   - task: Bash@3
     displayName: Terraform Nagger
