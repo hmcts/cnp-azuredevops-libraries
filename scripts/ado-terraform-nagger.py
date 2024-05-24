@@ -368,14 +368,6 @@ def extract_version(text, regex):
         return None
 
 
-def tfswitch_activation(working_directory, tfswitch_args="-b ~/.local/bin/terraform"):
-    # Change to the target working directory
-    os.chdir(working_directory)
-    
-    # Run tfswitch command
-    subprocess.run(f"tfswitch {tfswitch_args}", shell=True)
-
-
 def terraform_version_checker(terraform_version, config, current_date):
     # Get the date after which Terraform versions are no longer supported
     end_support_date_str = config["terraform"]["terraform"]["date_deadline"]
@@ -437,7 +429,7 @@ def main():
     if not slack_webhook_url:
         log_message(None, None, "error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
 
-    command = ["tfswitch", ">", "/dev/null", "&&", "terraform", "version", "--json"]
+    command = ["tfswitch", "-b", "~/.local/bin/terraform", ">", "/dev/null", "&&", "terraform", "version", "--json"]
 
     try:
         # # Try to run `version --json` which is present in tf versions >= 0.13.0
@@ -475,9 +467,6 @@ def main():
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{deployment['component']}"
             else:
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{deployment['component']}"
-
-            # # Run tfswitch activation for the current deployment component
-            # tfswitch_activation(working_directory)
 
             # debug
             print(f'working_directory = {working_directory}')
