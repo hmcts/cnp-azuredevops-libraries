@@ -57,9 +57,8 @@ steps:
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
         -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml \
         -e environment_components.json
-      workingDirectory: ${{ parameters.workingDirectory }}
     env:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
-      WORKDIR: ${{ parameters.workingDirectory }}
+      BASE_DIRECTORY: ${{ parameters.baseDirectory }}
       SYSTEM_DEFAULT_WORKING_DIRECTORY: $(System.DefaultWorkingDirectory)
       BUILD_REPO_SUFFIX: $(buildRepoSuffix)

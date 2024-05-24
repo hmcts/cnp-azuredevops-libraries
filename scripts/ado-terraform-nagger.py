@@ -464,17 +464,19 @@ def main():
 
         for deployment in environment_components['environment_components']:
             # Construct the working directory path
-            base_directory = os.getenv('WORKDIR')
+            base_directory = os.getenv('BASE_DIRECTORY')
             if not base_directory or base_directory == '':
-                working_directory = f"/{system_default_working_directory}/{build_repo_suffix}/components/{deployment['component']}"
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{deployment['component']}"
             else:
-                working_directory = f"/{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{deployment['component']}"
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{deployment['component']}"
 
             # # Run tfswitch activation for the current deployment component
             # tfswitch_activation(working_directory)
 
             # debug
             print(f'working_directory = {working_directory}')
+            print(f'build repo suffix = {build_repo_suffix}')
+  
             # Try to run `version --json` which is present in tf versions >= 0.13.0
             result = json.loads(run_command(command, working_directory))
             terraform_version = result["terraform_version"]

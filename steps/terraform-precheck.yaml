@@ -41,6 +41,9 @@ parameters:
   - name: environment_components
     type: object
 
+  - name: baseDirectory
+    default: ''
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -135,3 +138,4 @@ steps:
     parameters:
       kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
       environment_components: ${{ parameters.environment_components }}
+      baseDirectory: ${{ parameters.baseDirectory }}
