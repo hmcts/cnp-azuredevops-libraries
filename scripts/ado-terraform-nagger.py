@@ -383,8 +383,7 @@ def terraform_version_checker(terraform_version, config, current_date):
             f'is lower than {config["terraform"]["terraform"]["version"]}. '
             f"Please upgrade before deprecation deadline {end_support_date_str}...",
         )
-        return f'Terraform version {terraform_version} is lower than {config["terraform"]["terraform"]["version"]}. \
-            Please upgrade before eprecation deadline {end_support_date_str}.'
+        return f'Terraform version {terraform_version} is lower than {config["terraform"]["terraform"]["version"]}. Please upgrade before deprecation deadline {end_support_date_str}.'
 
     # Error if terraform version lower than specified & passed deadline.
     if version.parse(terraform_version) < version.parse(
@@ -491,10 +490,10 @@ def main():
                     output_array = json.load(file)
             else:
                 # If file does not exist, start with an empty list
-                output_array = []
+                output_array = {}
 
             # Append warning/error if flagged
-            output_array.append(terraform_version_checker(terraform_version, config, current_date))
+            output_array[deployment['component']]['terraform_version'] = (terraform_version_checker(terraform_version, config, current_date))
 
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
