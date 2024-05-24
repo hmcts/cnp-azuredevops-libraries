@@ -51,7 +51,9 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        echo $(echo ${{ convertToJson(parameters.environment_components) }} | jq --compact-output '.')
+        json=$(echo '${{ convertToJson(parameters.environment_components) }}')
+        echo "$json" | jq --compact-output '.'
+        # echo "${{ convertToJson(parameters.environment_components) }}"
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
         -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml \
         -e ${{ convertToJson(parameters.environment_components) }}
