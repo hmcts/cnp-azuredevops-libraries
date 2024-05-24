@@ -432,8 +432,6 @@ def main():
     # Build correct path to terraform binary
     home_dir = os.path.expanduser('~')
     terraform_binary_path = os.path.join(home_dir, '.local', 'bin', 'terraform')
-    # I think we need to await the result of this
-    command = ["tfswitch", "-b", terraform_binary_path, ">", "/dev/null", "&&", "terraform", "version", "--json"]
 
     try:
         # # Try to run `version --json` which is present in tf versions >= 0.13.0
@@ -478,7 +476,7 @@ def main():
   
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
             command = ["terraform", "version", "--json"]
-            # run_command(["tfswitch", "-b", terraform_binary_path], working_directory)
+            run_command(["tfswitch", "-b", terraform_binary_path], working_directory)
             result = run_command(command, working_directory)
             # result = json.loads(run_command(command, working_directory))
             # terraform_version = result["terraform_version"]
