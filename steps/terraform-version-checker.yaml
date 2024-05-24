@@ -32,19 +32,19 @@ steps:
   #       ${{ else }}:
   #         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ deployment.component }}'
 
-  - task: Bash@3
-    displayName: Serialize environment_components to JSON
-    inputs:
-      targetType: 'inline'
-      script: |
-        # Remove newlines from the object string
-        environment_components_no_newlines=$(echo "$(parameters.environment_components)" | tr -d '\n')
+  # - task: Bash@3
+  #   displayName: Serialize environment_components to JSON
+  #   inputs:
+  #     targetType: 'inline'
+  #     script: |
+  #       # Remove newlines from the object string
+  #       environment_components_no_newlines=$(echo "$(parameters.environment_components)" | tr -d '\n')
 
-        # Convert the modified object string to JSON
-        environment_components_json=$(echo "$environment_components_no_newlines" | jq -c .)
+  #       # Convert the modified object string to JSON
+  #       environment_components_json=$(echo "$environment_components_no_newlines" | jq -c .)
 
-        # Output the JSON
-        echo "$environment_components_json"
+  #       # Output the JSON
+  #       echo "$environment_components_json"
 
   - task: Bash@3
     displayName: Terraform Nagger
@@ -53,7 +53,7 @@ steps:
       script: |
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
         -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml \
-        -e $(Pipeline.Workspace)/environment_components.json
+        -e $( echo "${{ convertToJson(parameters.environment_components) }}" )
       workingDirectory: ${{ parameters.workingDirectory }}
     env:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
