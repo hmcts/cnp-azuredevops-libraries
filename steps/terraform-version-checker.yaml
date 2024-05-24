@@ -52,11 +52,11 @@ steps:
       targetType: 'inline'
       script: |
         json=$(echo '${{ convertToJson(parameters.environment_components) }}')
-        echo "$json" | jq --compact-output '.'
+        echo "$json" | jq --compact-output '.' > environment_components.json
         # echo "${{ convertToJson(parameters.environment_components) }}"
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
         -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml \
-        -e ${{ convertToJson(parameters.environment_components) }}
+        -e environment_components.json
       workingDirectory: ${{ parameters.workingDirectory }}
     env:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
