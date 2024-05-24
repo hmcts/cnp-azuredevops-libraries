@@ -37,8 +37,8 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        echo \'${{ convertToJson(parameters.environment_components) }}\'
-        echo '$(parameters.environment_components)' | jq -c '.' > $(Pipeline.Workspace)/environment_components.json
+        echo ${{ convertToJson(parameters.environment_components) }}
+      # echo '$(parameters.environment_components)' | jq -c '.' > $(Pipeline.Workspace)/environment_components.json
 
   - task: Bash@3
     displayName: Terraform Nagger
