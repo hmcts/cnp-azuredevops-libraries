@@ -37,8 +37,14 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        echo ${{ convertToJson(parameters.environment_components) }}
-      # echo '$(parameters.environment_components)' | jq -c '.' > $(Pipeline.Workspace)/environment_components.json
+        # Remove newlines from the object string
+        environment_components_no_newlines=$(echo "${{ parameters.environment_components }}" | tr -d '\n')
+
+        # Convert the modified object string to JSON
+        environment_components_json=$(echo "$environment_components_no_newlines" | jq -c .)
+
+        # Output the JSON
+        echo "$environment_components_json"
 
   - task: Bash@3
     displayName: Terraform Nagger
