@@ -475,9 +475,15 @@ def main():
             print(f'build repo suffix = {build_repo_suffix}')
   
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
+            command = ["tfswitch", "-b", terraform_binary_path]
+            run_command(command, working_directory)
+
             command = ["terraform", "version", "--json"]
-            run_command(["tfswitch", "-b", terraform_binary_path], working_directory)
             result = run_command(command, working_directory)
+
+            json = json.dumps(result)
+
+            print(f'json data is = {json}')
             # result = json.loads(run_command(command, working_directory))
             # terraform_version = result["terraform_version"]
             # print(f'current tf version = {terraform_version}')
