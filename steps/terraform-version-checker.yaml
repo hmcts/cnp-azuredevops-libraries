@@ -38,8 +38,8 @@ steps:
       targetType: 'inline'
       script: |
         $environmentComponents = $(ConvertTo-Json -InputObject ${{ parameters.environment_components }} -Compress)
-        $environmentComponents | Out-File -FilePath "${{ parameters.workingDirectory }})/environment_components.json"
-    workingDirectory: ${{ parameters.workingDirectory }}
+        $environmentComponents | Out-File -FilePath "$(Pipeline.Workspace)/environment_components.json"
+    workingDirectory: $(Pipeline.Workspace)
 
   - task: Bash@3
     displayName: Terraform Nagger
@@ -48,7 +48,7 @@ steps:
       script: |
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
         -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml \
-        -e environment_components.json
+        -e $(Pipeline.Workspace)/environment_components.json
       workingDirectory: ${{ parameters.workingDirectory }}
     env:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
