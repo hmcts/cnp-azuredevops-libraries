@@ -431,7 +431,7 @@ def main():
 
     # Need to DD $HOME or /home/vsts
     home_dir = os.path.expanduser('~')
-    terraform_binary_path = os.path.join(home_dir, '.local', 'bin')
+    terraform_binary_path = os.path.join(home_dir, '.local', 'bin', 'terraform')
 
     command = ["tfswitch", "-b", terraform_binary_path, ">", "/dev/null", "&&", "terraform", "version", "--json"]
 
