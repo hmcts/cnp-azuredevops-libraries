@@ -53,7 +53,7 @@ steps:
       script: |
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
         -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml \
-        -e $( echo \"${{ convertToJson(parameters.environment_components) }}\" )
+        -e ${{ convertToJson(parameters.environment_components) }}
       workingDirectory: ${{ parameters.workingDirectory }}
     env:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
