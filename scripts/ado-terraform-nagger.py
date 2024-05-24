@@ -479,27 +479,30 @@ def main():
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
             command = ["terraform", "version", "--json"]
             run_command(["tfswitch", "-b", terraform_binary_path], working_directory)
-            result = json.loads(run_command(command, working_directory))
-            terraform_version = result["terraform_version"]
-            print(f'current tf version = {terraform_version}')
+            result = run_command(command, working_directory)
+            print(f'output from command= {result}')
+            # result = json.loads(run_command(command, working_directory))
+            # terraform_version = result["terraform_version"]
+            # print(f'current tf version = {terraform_version}')
+            
             # Load deprecation map
-            config = load_file(args.filepath)
+            # config = load_file(args.filepath)
 
-            # Check if the file exists
-            if os.path.exists(output_file):
-                # Read existing data from the file
-                with open(output_file, 'r') as file:
-                    output_array = json.load(file)
-            else:
-                # If file does not exist, start with an empty list
-                output_array = []
+            # # Check if the file exists
+            # if os.path.exists(output_file):
+            #     # Read existing data from the file
+            #     with open(output_file, 'r') as file:
+            #         output_array = json.load(file)
+            # else:
+            #     # If file does not exist, start with an empty list
+            #     output_array = []
 
-            # Append warning/error if flagged
-            output_array.append(terraform_version_checker(terraform_version, config, current_date))
+            # # Append warning/error if flagged
+            # output_array.append(terraform_version_checker(terraform_version, config, current_date))
 
-            # Write the updated data back to the file
-            with open(output_file, 'w') as file:
-                json.dump(output_array, file, indent=4)
+            # # Write the updated data back to the file
+            # with open(output_file, 'w') as file:
+            #     json.dump(output_array, file, indent=4)
 
         # # Handle providers
         # terraform_providers = result["provider_selections"]
