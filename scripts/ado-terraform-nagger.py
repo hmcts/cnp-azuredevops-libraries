@@ -431,7 +431,7 @@ def main():
     if not slack_webhook_url:
         log_message(None, None, "error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
 
-    command = ["tfswitch", "-b", "~/.local/bin/terraform" ">/dev/null" "&&" "terraform", "version", "--json"]
+    command = ["tfswitch", "-b", "~/.local/bin/terraform" ">", "/dev/null" "&&" "terraform", "version", "--json"]
 
     try:
         # # Try to run `version --json` which is present in tf versions >= 0.13.0
