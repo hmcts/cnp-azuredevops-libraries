@@ -5,6 +5,8 @@ parameters:
     type: object
   - name: workingDirectory
     default: $(System.DefaultWorkingDirectory)
+  - name: baseDirectory
+    default: ''
 
 steps:
   - checkout: self
