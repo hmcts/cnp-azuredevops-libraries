@@ -79,11 +79,17 @@ def run_command(command, working_directory):
     os.chdir(working_directory)
     try:
         run_command = subprocess.run(command, capture_output=True)
+        # debug with 2 lines
+        output = run_command.stdout.decode("utf-8")
+        print("Command output:", output)
         return run_command.stdout.decode("utf-8")
     except TypeError:
         run_command = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
+        # debug with 2 lines
+        output = run_command.stdout.decode("utf-8")
+        print("Command output:", output)
         return run_command.stdout.decode("utf-8")
     except subprocess.CalledProcessError as e:
         raise subprocess.CalledProcessError(e.returncode, e.cmd, e.output, e.stderr)
