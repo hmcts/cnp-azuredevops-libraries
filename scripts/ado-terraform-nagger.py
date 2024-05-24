@@ -479,7 +479,9 @@ def main():
             run_command(command, working_directory)
 
             command = ["terraform", "version", "--json"]
-            result = run_command(command, working_directory)
+            result = json.loads(run_command(command, working_directory))
+            terraform_version = result["terraform_version"]
+            print(f'tf version: {terraform_version}')
 
             # jsonOut = json.dumps(result)
 
