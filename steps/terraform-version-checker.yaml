@@ -37,7 +37,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        echo ${{ parameters.environment_components }} > environment_components.json
+        echo ${{ parameters.environment_components }} | jq -c . > environment_components.json
         cat environment_components.json
       workingDirectory: ${{ parameters.workingDirectory }}
 
