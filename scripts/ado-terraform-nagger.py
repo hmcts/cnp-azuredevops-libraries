@@ -430,7 +430,7 @@ def main():
         log_message(None, None, "error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
 
     # Need to DD $HOME or /home/vsts
-    command = ["tfswitch", "-b", "~/.local/bin/terraform", ">", "/dev/null", "&&", "terraform", "version", "--json"]
+    command = ["tfswitch", "-b", "/home/vsts/.local/bin/terraform", ">", "/dev/null", "&&", "terraform", "version", "--json"]
 
     try:
         # # Try to run `version --json` which is present in tf versions >= 0.13.0
