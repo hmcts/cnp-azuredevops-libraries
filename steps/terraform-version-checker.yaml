@@ -38,7 +38,7 @@ steps:
       targetType: 'inline'
       script: |
         # Remove newlines from the object string
-        environment_components_no_newlines=$(echo "${{ parameters.environment_components }}" | tr -d '\n')
+        environment_components_no_newlines=$(echo "$(parameters.environment_components)" | tr -d '\n')
 
         # Convert the modified object string to JSON
         environment_components_json=$(echo "$environment_components_no_newlines" | jq -c .)
