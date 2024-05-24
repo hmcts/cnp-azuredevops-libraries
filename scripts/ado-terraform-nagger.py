@@ -37,9 +37,10 @@ parser.add_argument(
 parser.add_argument(
     "-e",
     "--environment_components",
+    help="JSON string of environment components",
+    dest="environment_components",
     type=str,
     required=True,
-    help="JSON string of environment components"
 )
 args = parser.parse_args()
 
