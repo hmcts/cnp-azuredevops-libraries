@@ -429,7 +429,9 @@ def main():
     if not slack_webhook_url:
         log_message(None, None, "error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
 
-    command = ["tfswitch", "-b", "~/.local/bin/terraform", ">", "/dev/null", "&&", "terraform", "version", "--json"]
+    # Build correct path to terraform binary
+    home_dir = os.path.expanduser('~')
+    terraform_binary_path = os.path.join(home_dir, '.local', 'bin', 'terraform')
 
     try:
         # # Try to run `version --json` which is present in tf versions >= 0.13.0
@@ -472,28 +474,38 @@ def main():
             print(f'working_directory = {working_directory}')
             print(f'build repo suffix = {build_repo_suffix}')
   
-            # Try to run `version --json` which is present in tf versions >= 0.13.0
-            result = json.loads(run_command(command, working_directory))
-            terraform_version = result["terraform_version"]
+            # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
+            command = ["tfswitch", "-b", terraform_binary_path]
+            run_command(command, working_directory)
 
+            command = ["terraform", "version", "--json"]
+            result = run_command(command, working_directory)
+
+            # jsonOut = json.dumps(result)
+
+            # print(f'json data is = {jsonOut}')
+            # result = json.loads(run_command(command, working_directory))
+            # terraform_version = result["terraform_version"]
+            # print(f'current tf version = {terraform_version}')
+            
             # Load deprecation map
-            config = load_file(args.filepath)
+            # config = load_file(args.filepath)
 
-            # Check if the file exists
-            if os.path.exists(output_file):
-                # Read existing data from the file
-                with open(output_file, 'r') as file:
-                    output_array = json.load(file)
-            else:
-                # If file does not exist, start with an empty list
-                output_array = []
+            # # Check if the file exists
+            # if os.path.exists(output_file):
+            #     # Read existing data from the file
+            #     with open(output_file, 'r') as file:
+            #         output_array = json.load(file)
+            # else:
+            #     # If file does not exist, start with an empty list
+            #     output_array = []
 
-            # Append warning/error if flagged
-            output_array.append(terraform_version_checker(terraform_version, config, current_date))
+            # # Append warning/error if flagged
+            # output_array.append(terraform_version_checker(terraform_version, config, current_date))
 
-            # Write the updated data back to the file
-            with open(output_file, 'w') as file:
-                json.dump(output_array, file, indent=4)
+            # # Write the updated data back to the file
+            # with open(output_file, 'w') as file:
+            #     json.dump(output_array, file, indent=4)
 
         # # Handle providers
         # terraform_providers = result["provider_selections"]
@@ -547,12 +559,13 @@ def main():
 
     except JSONDecodeError:
         # Fallback to regex when terraform version <= 0.13.0
-        result = run_command(command)
+        result = run_command(command, working_directory)
         terraform_regex = f"^([Tt]erraform(\\s))(?P<semver>{semver_regex})"
         terraform_version = extract_version(result, terraform_regex)
         log_message(
             slack_user_id,
             slack_webhook_url,
+            "error",
             f"Detected terraform version {terraform_version} does not support "
             "checking provider versions in addition to the main binary. "
             "Please upgrade your terraform version to at least v0.13.0",
