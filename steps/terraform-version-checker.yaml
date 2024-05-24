@@ -5,6 +5,8 @@ parameters:
     type: object
   - name: workingDirectory
     default: $(System.DefaultWorkingDirectory)
+  - name: baseDirectory
+    default: ''
 
 steps:
   - checkout: self
@@ -28,13 +30,14 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        echo "${{ parameters.environment_components }}"
+        json=$(echo '${{ convertToJson(parameters.environment_components) }}')
+        echo "$json" | jq '{ environment_components: . }' > environment_components.json
+        echo "$json" | jq '{ environment_components: . }'
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
         -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml \
-        -e ${{ convertToJson(parameters.environment_components) }}
-      workingDirectory: ${{ parameters.workingDirectory }}
+        -e environment_components.json
     env:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
-      WORKDIR: ${{ parameters.workingDirectory }}
+      BASE_DIRECTORY: ${{ parameters.baseDirectory }}
       SYSTEM_DEFAULT_WORKING_DIRECTORY: $(System.DefaultWorkingDirectory)
       BUILD_REPO_SUFFIX: $(buildRepoSuffix)

@@ -37,9 +37,10 @@ parser.add_argument(
 parser.add_argument(
     "-e",
     "--environment_components",
+    help="JSON string of environment components",
+    dest="environment_components",
     type=str,
     required=True,
-    help="JSON string of environment components"
 )
 args = parser.parse_args()
 
@@ -78,11 +79,17 @@ def run_command(command, working_directory):
     os.chdir(working_directory)
     try:
         run_command = subprocess.run(command, capture_output=True)
+        # debug with 2 lines
+        output = run_command.stdout.decode("utf-8")
+        print("Command output:", output)
         return run_command.stdout.decode("utf-8")
     except TypeError:
         run_command = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
+        # debug with 2 lines
+        output = run_command.stdout.decode("utf-8")
+        print("Command output:", output)
         return run_command.stdout.decode("utf-8")
     except subprocess.CalledProcessError as e:
         raise subprocess.CalledProcessError(e.returncode, e.cmd, e.output, e.stderr)
@@ -361,14 +368,6 @@ def extract_version(text, regex):
         return None
 
 
-def tfswitch_activation(working_directory, tfswitch_args="-b ~/.local/bin/terraform"):
-    # Change to the target working directory
-    os.chdir(working_directory)
-    
-    # Run tfswitch command
-    subprocess.run(f"tfswitch {tfswitch_args}", shell=True)
-
-
 def terraform_version_checker(terraform_version, config, current_date):
     # Get the date after which Terraform versions are no longer supported
     end_support_date_str = config["terraform"]["terraform"]["date_deadline"]
@@ -430,7 +429,7 @@ def main():
     if not slack_webhook_url:
         log_message(None, None, "error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
 
-    command = ["tfswitch", "-b", "~/.local/bin/terraform" ">/dev/null" "&&" "terraform", "version", "--json"]
+    command = ["tfswitch", "-b", "~/.local/bin/terraform", ">", "/dev/null", "&&", "terraform", "version", "--json"]
 
     try:
         # # Try to run `version --json` which is present in tf versions >= 0.13.0
@@ -447,23 +446,32 @@ def main():
         #         f"Detected outdated terraform version: {terraform_version}. Newer version is available.",
         #     )
 
-        # Parse the JSON string into a Python object
-        environment_components = json.loads(args.environment_components)
+
+        try:
+            with open(args.environment_components, "r") as f:
+                environment_components = json.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"The file '{args.environment_components}' does not exist.")
+        except Exception as e:
+            logger.error(f"Error loading {args.environment_components}: {e}")
+
+
         # Retrieve the environment variables
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
-        for deployment in environment_components:
+        for deployment in environment_components['environment_components']:
             # Construct the working directory path
-            base_directory = os.getenv('WORKDIR')
+            base_directory = os.getenv('BASE_DIRECTORY')
             if not base_directory or base_directory == '':
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{deployment['component']}"
             else:
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{deployment['component']}"
 
-            # # Run tfswitch activation for the current deployment component
-            # tfswitch_activation(working_directory)
-
+            # debug
+            print(f'working_directory = {working_directory}')
+            print(f'build repo suffix = {build_repo_suffix}')
+  
             # Try to run `version --json` which is present in tf versions >= 0.13.0
             result = json.loads(run_command(command, working_directory))
             terraform_version = result["terraform_version"]
