@@ -101,7 +101,7 @@ steps:
   - task: InfracostSetup@2
     displayName: Setup Infracost
     inputs:
-      apiKey: $(infracostApiKey)
+      apiKey: $(infracost-api-key)
       currency: GBP
 
   - bash: |
