@@ -90,56 +90,6 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureKeyVault@1
-    displayName: 'Get Infracost API token from Keyvault'
-    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
-    inputs:
-      runAsPreJob: false
-      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
-      keyVaultName: 'infra-vault-nonprod'
-      secretsFilter: 'infracost-api-key'
-
-  - task: InfracostSetup@2
-    displayName: Setup Infracost
-    inputs:
-      apiKey: $(infracost-api-key)
-      currency: GBP
-
-  - task: Bash@3
-    displayName: Generate Infracost cost estimate baseline
-    inputs:
-      script: |
-        cd /tmp/base
-        infracost breakdown --path=. \
-          --format=json \
-          --out-file=/tmp/infracost-base.json
-          --terraform-var-file="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-      bashEnvValue:
-      ${{ if eq(parameters['tfVarsFile'], '') }}:
-        TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-      ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
-        TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-      ${{ else }}:
-        TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
-
-  - task: Bash@3
-    displayName: Generate Infracost diff
-    inputs:
-      script: |
-        cd -
-        infracost diff --path=. \
-          --format=json \
-          --compare-to=/tmp/infracost-base.json \
-          --out-file=/tmp/infracost.json
-          --terraform-var-file=$(TF_VAR_FILE)
-      bashEnvValue:
-      ${{ if eq(parameters['tfVarsFile'], '') }}:
-        TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-      ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
-        TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-      ${{ else }}:
-        TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
-
-  - task: AzureKeyVault@1
     displayName: 'Get GitHub API token from Keyvault'
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
@@ -233,6 +183,7 @@ steps:
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -var-file "${{ parameters.tfVarsFile }}"
           -lock=false
+
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
@@ -256,6 +207,56 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+
+  - task: AzureKeyVault@1
+    displayName: 'Get Infracost API token from Keyvault'
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'infracost-api-key'
+
+  - task: InfracostSetup@2
+    displayName: Setup Infracost
+    inputs:
+      apiKey: $(infracost-api-key)
+      currency: GBP
+
+  - task: Bash@3
+    displayName: Generate Infracost cost estimate baseline
+    inputs:
+      script: |
+        cd /tmp/base
+        infracost breakdown --path=. \
+          --format=json \
+          --out-file=/tmp/infracost-base.json
+          --terraform-var-file=$(TF_VAR_FILE)
+      bashEnvValue:
+      ${{ if eq(parameters['tfVarsFile'], '') }}:
+        TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+      ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
+        TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+      ${{ else }}:
+        TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
+
+  - task: Bash@3
+    displayName: Generate Infracost diff
+    inputs:
+      script: |
+        cd -
+        infracost diff --path=. \
+          --format=json \
+          --compare-to=/tmp/infracost-base.json \
+          --out-file=/tmp/infracost.json
+          --terraform-var-file=$(TF_VAR_FILE)
+      bashEnvValue:
+      ${{ if eq(parameters['tfVarsFile'], '') }}:
+        TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+      ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
+        TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+      ${{ else }}:
+        TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
 
   - task: Bash@3
     displayName: Post Infracost PR comment
