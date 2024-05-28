@@ -90,6 +90,35 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureKeyVault@1
+    displayName: 'Get Infracost API token from Keyvault'
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'infracost-api-key'
+
+  - task: InfracostSetup@2
+    displayName: Setup Infracost
+    inputs:
+      apiKey: $(infracostApiKey)
+
+  - bash: |
+      cd /tmp/base
+      infracost breakdown --path=. \
+        --format=json \
+        --out-file=/tmp/infracost-base.json
+    displayName: Generate Infracost cost estimate baseline
+
+  - bash: |
+      cd -
+      infracost diff --path=. \
+        --format=json \
+        --compare-to=/tmp/infracost-base.json \
+        --out-file=/tmp/infracost.json
+    displayName: Generate Infracost diff
+
+  - task: AzureKeyVault@1
     displayName: 'Get GitHub API token from Keyvault'
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
@@ -206,6 +235,15 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+
+  - bash: |
+      infracost comment github \
+        --path=/tmp/infracost.json \
+        --github-token=$(githubToken)\
+        --pull-request=$(System.PullRequest.PullRequestNumber) \
+        --repo=$(Build.Repository.Name) \
+        --behavior=update
+    displayName: Post Infracost PR comment
 
   - task: TerraformCLI@1
     displayName: Terraform apply ${{ parameters.component }}
