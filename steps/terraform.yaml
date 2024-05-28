@@ -112,7 +112,7 @@ steps:
         infracost breakdown --path=. \
           --format=json \
           --out-file=/tmp/infracost-base.json
-          --terraform-var-file=$(TF_VAR_FILE)
+          --terraform-var-file="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
       bashEnvValue:
       ${{ if eq(parameters['tfVarsFile'], '') }}:
         TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
