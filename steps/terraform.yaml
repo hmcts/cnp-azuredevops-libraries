@@ -104,38 +104,41 @@ steps:
       apiKey: $(infracost-api-key)
       currency: GBP
 
-  - bash: |
-      cd /tmp/base
-      infracost breakdown --path=. \
-        --format=json \
-        --out-file=/tmp/infracost-base.json
-        --terraform-var-file=$(TF_VAR_FILE)
+  - task: Bash@3
     displayName: Generate Infracost cost estimate baseline
     inputs:
-      bashEnvValue:
-        ${{ if eq(parameters['tfVarsFile'], '') }}:
-          TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-        ${{ elif eq(parameters['tfVarsFile'], 'NULL') }}:
-          TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-        ${{ else }}:
-          TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
+      script: |
+        cd /tmp/base
+        infracost breakdown --path=. \
+          --format=json \
+          --out-file=/tmp/infracost-base.json
+          --terraform-var-file=$(TF_VAR_FILE)
+      inputs:
+        bashEnvValue:
+          ${{ if eq(parameters['tfVarsFile'], '') }}:
+            TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+          ${{ elif eq(parameters['tfVarsFile'], 'NULL') }}:
+            TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+          ${{ else }}:
+            TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
 
-  - bash: |
-      cd -
-      infracost diff --path=. \
-        --format=json \
-        --compare-to=/tmp/infracost-base.json \
-        --out-file=/tmp/infracost.json
-        --terraform-var-file=$(TF_VAR_FILE)
+  - task: Bash@3
     displayName: Generate Infracost diff
     inputs:
-      bashEnvValue:
-        ${{ if eq(parameters['tfVarsFile'], '') }}:
-          TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-        ${{ elif eq(parameters['tfVarsFile'], 'NULL') }}:
-          TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-        ${{ else }}:
-          TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
+      script: |
+        cd -
+        infracost diff --path=. \
+          --format=json \
+          --compare-to=/tmp/infracost-base.json \
+          --out-file=/tmp/infracost.json
+          --terraform-var-file=$(TF_VAR_FILE)
+        bashEnvValue:
+          ${{ if eq(parameters['tfVarsFile'], '') }}:
+            TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+          ${{ elif eq(parameters['tfVarsFile'], 'NULL') }}:
+            TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+          ${{ else }}:
+            TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
 
   - task: AzureKeyVault@1
     displayName: 'Get GitHub API token from Keyvault'
@@ -255,14 +258,16 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  - bash: |
-      infracost comment github \
-        --path=/tmp/infracost.json \
-        --github-token=$(github-api-token)\
-        --pull-request=$(System.PullRequest.PullRequestNumber) \
-        --repo=$(Build.Repository.Name) \
-        --behavior=update
+  - bash@3:
     displayName: Post Infracost PR comment
+    inputs:
+      script: |
+        infracost comment github \
+          --path=/tmp/infracost.json \
+          --github-token=$(github-api-token)\
+          --pull-request=$(System.PullRequest.PullRequestNumber) \
+          --repo=$(Build.Repository.Name) \
+          --behavior=update
 
   - task: TerraformCLI@1
     displayName: Terraform apply ${{ parameters.component }}
