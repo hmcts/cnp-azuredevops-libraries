@@ -113,14 +113,13 @@ steps:
           --format=json \
           --out-file=/tmp/infracost-base.json
           --terraform-var-file=$(TF_VAR_FILE)
-      inputs:
-        bashEnvValue:
-          ${{ if eq(parameters['tfVarsFile'], '') }}:
-            TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-          ${{ elif eq(parameters['tfVarsFile'], 'NULL') }}:
-            TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-          ${{ else }}:
-            TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
+      bashEnvValue:
+        ${{ if eq(parameters['tfVarsFile'], '') }}:
+          TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+        ${{ elif eq(parameters['tfVarsFile'], 'NULL') }}:
+          TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+        ${{ else }}:
+          TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
 
   - task: Bash@3
     displayName: Generate Infracost diff
@@ -132,13 +131,13 @@ steps:
           --compare-to=/tmp/infracost-base.json \
           --out-file=/tmp/infracost.json
           --terraform-var-file=$(TF_VAR_FILE)
-        bashEnvValue:
-          ${{ if eq(parameters['tfVarsFile'], '') }}:
-            TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-          ${{ elif eq(parameters['tfVarsFile'], 'NULL') }}:
-            TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-          ${{ else }}:
-            TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
+      bashEnvValue:
+        ${{ if eq(parameters['tfVarsFile'], '') }}:
+          TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+        ${{ elif eq(parameters['tfVarsFile'], 'NULL') }}:
+          TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+        ${{ else }}:
+          TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
 
   - task: AzureKeyVault@1
     displayName: 'Get GitHub API token from Keyvault'
@@ -258,7 +257,7 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  - bash@3:
+  - task: Bash@3
     displayName: Post Infracost PR comment
     inputs:
       script: |
