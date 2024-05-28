@@ -240,7 +240,7 @@ steps:
   - bash: |
       infracost comment github \
         --path=/tmp/infracost.json \
-        --github-token=$(githubToken)\
+        --github-token=$(github-api-token)\
         --pull-request=$(System.PullRequest.PullRequestNumber) \
         --repo=$(Build.Repository.Name) \
         --behavior=update
