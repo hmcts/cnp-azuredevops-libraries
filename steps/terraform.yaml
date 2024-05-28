@@ -134,7 +134,7 @@ steps:
       bashEnvValue:
       ${{ if eq(parameters['tfVarsFile'], '') }}:
         TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
-      ${{ elif eq(parameters['tfVarsFile'], 'NULL') }}:
+      ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
         TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
       ${{ else }}:
         TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
