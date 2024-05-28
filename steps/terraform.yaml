@@ -109,6 +109,7 @@ steps:
       infracost breakdown --path=. \
         --format=json \
         --out-file=/tmp/infracost-base.json
+        --terraform-var-file="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
     displayName: Generate Infracost cost estimate baseline
 
   - bash: |
@@ -117,6 +118,7 @@ steps:
         --format=json \
         --compare-to=/tmp/infracost-base.json \
         --out-file=/tmp/infracost.json
+        --terraform-var-file="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
     displayName: Generate Infracost diff
 
   - task: AzureKeyVault@1
