@@ -102,6 +102,7 @@ steps:
     displayName: Setup Infracost
     inputs:
       apiKey: $(infracostApiKey)
+      currency: GBP
 
   - bash: |
       cd /tmp/base
