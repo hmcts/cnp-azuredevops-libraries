@@ -226,32 +226,26 @@ steps:
   - task: Bash@3
     displayName: Generate Infracost cost estimate baseline
     inputs:
+      script: |
+        cd /tmp/base
+        infracost breakdown --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix) \
+          --format=json \
+          --out-file=/tmp/infracost-base.json
+          --terraform-var-file=$(TF_VAR_FILE)
+      bashEnvValue:
       ${{ if eq(parameters['tfVarsFile'], '') }}:
-        script: |
-          cd /tmp/base
-          infracost breakdown --path=. \
-            --format=json \
-            --out-file=/tmp/infracost-base.json
-            --terraform-var-file=/home/vsts/work/1/s/dynatrace-activegate/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
+        TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
-          cd /tmp/base
-          infracost breakdown --path=. \
-            --format=json \
-            --out-file=/tmp/infracost-base.json
-            --terraform-var-file=/home/vsts/work/1/s/dynatrace-activegate/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
+        TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
       ${{ else }}:
-          cd /tmp/base
-          infracost breakdown --path=. \
-            --format=json \
-            --out-file=/tmp/infracost-base.json
-            --terraform-var-file=/home/vsts/work/1/s/dynatrace-activegate/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
+        TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
 
   - task: Bash@3
     displayName: Generate Infracost diff
     inputs:
       script: |
         cd -
-        infracost diff --path=. \
+        infracost diff --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix) \
           --format=json \
           --compare-to=/tmp/infracost-base.json \
           --out-file=/tmp/infracost.json
