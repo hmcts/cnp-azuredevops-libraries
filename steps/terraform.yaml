@@ -226,19 +226,25 @@ steps:
   - task: Bash@3
     displayName: Generate Infracost cost estimate baseline
     inputs:
-      script: |
-        cd /tmp/base
-        infracost breakdown --path=. \
-          --format=json \
-          --out-file=/tmp/infracost-base.json
-          --terraform-var-file=$(TF_VAR_FILE)
-      bashEnvValue:
       ${{ if eq(parameters['tfVarsFile'], '') }}:
-        TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+        script: |
+          cd /tmp/base
+          infracost breakdown --path=. \
+            --format=json \
+            --out-file=/tmp/infracost-base.json
+            --terraform-var-file=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
-        TF_VAR_FILE: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
+          cd /tmp/base
+          infracost breakdown --path=. \
+            --format=json \
+            --out-file=/tmp/infracost-base.json
+            --terraform-var-file=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
       ${{ else }}:
-        TF_VAR_FILE: "${{ parameters.tfVarsFile }}"
+          cd /tmp/base
+          infracost breakdown --path=. \
+            --format=json \
+            --out-file=/tmp/infracost-base.json
+            --terraform-var-file=${{ parameters.tfVarsFile }}
 
   - task: Bash@3
     displayName: Generate Infracost diff
