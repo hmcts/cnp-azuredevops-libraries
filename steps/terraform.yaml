@@ -232,13 +232,13 @@ steps:
           infracost breakdown --path=. \
             --format=json \
             --out-file=/tmp/infracost-base.json
-            --terraform-var-file=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
+            --terraform-var-file=/home/vsts/work/1/s/dynatrace-activegate/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
           cd /tmp/base
           infracost breakdown --path=. \
             --format=json \
             --out-file=/tmp/infracost-base.json
-            --terraform-var-file=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
+            --terraform-var-file=/home/vsts/work/1/s/dynatrace-activegate/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
       ${{ else }}:
           cd /tmp/base
           infracost breakdown --path=. \
