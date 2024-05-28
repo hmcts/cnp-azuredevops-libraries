@@ -228,7 +228,7 @@ steps:
     inputs:
       script: |
         cd /tmp/base
-        infracost breakdown --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix) \
+        infracost breakdown --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
           --format=json \
           --out-file=/tmp/infracost-base.json
           --terraform-var-file=$(TF_VAR_FILE)
@@ -245,7 +245,7 @@ steps:
     inputs:
       script: |
         cd -
-        infracost diff --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix) \
+        infracost diff --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
           --format=json \
           --compare-to=/tmp/infracost-base.json \
           --out-file=/tmp/infracost.json
