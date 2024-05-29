@@ -510,7 +510,9 @@ def main():
 
                 # Append warning/error if flagged
                 output_array[component] = { "environment": env['environment'] }
-
+                # debug
+                print(output_array)
+                
             output_array[component] = {
                 "terraform_message": (terraform_version_checker(terraform_version, config, current_date))
             }
