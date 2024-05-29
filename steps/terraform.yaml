@@ -62,6 +62,9 @@ parameters:
   - name: baseDirectory
     default: ''
 
+  - name: baseBranch
+    default: ''
+
   - name: forcePreventParallelJobRun
     displayName: Always force prevent parallem run job
     type: boolean
@@ -264,6 +267,7 @@ steps:
       component: ${{ parameters.component }}
       environment: ${{ parameters.environment }}
       tfVarsFile: ${{ parameters.tfVarsFile }}
+      baseBranch: ${{ parameters.baseBranch }}
 
   - task: TerraformCLI@1
     displayName: Terraform apply ${{ parameters.component }}

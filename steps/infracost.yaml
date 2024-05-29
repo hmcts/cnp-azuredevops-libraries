@@ -44,22 +44,16 @@ parameters:
   - name: baseDirectory
     default: ''
 
+  - name: baseBranch
+    default: ''
+
   - name: forcePreventParallelJobRun
     displayName: Always force prevent parallem run job
     type: boolean
     default: false
 
-resources:
-  repositories:
-  - repository: $(Build.Repository.Name)
-    type: github
-    ref: $(System.PullRequest.targetBranchName)
-    name: $(Build.Repository.Name)
-    endpoint: 'hmcts'
-
-
 steps:
-  - checkout: $(Build.Repository.Name)
+  - checkout: ${{ parameters.baseBranch }}
     clean: true
   - checkout: cnp-azuredevops-libraries
     clean: true
