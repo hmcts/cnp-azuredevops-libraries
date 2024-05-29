@@ -1,0 +1,133 @@
+parameters:
+
+  - name: environment
+    default: sandbox
+
+  - name: stage
+    default: ''
+
+  - name: location
+    default: 'UK South'
+    values:
+      - 'UK South'
+      - 'UK West'
+
+  - name: multiRegion
+    default: false
+    type: boolean
+
+  - name: product
+    default: ''
+
+  - name: component
+    default: ''
+
+  - name: serviceConnection
+    default: ''
+
+  - name: terraformInitSubscription
+    default: ''
+
+  - name: sensitive
+    default: false
+
+  - name: kvConnectedServiceName
+    default: 'azurerm-sandbox'
+
+  - name: tfVarsFile
+    default: ''
+
+  - name: terraformEnvironmentVariables
+    type: object
+    default: null
+
+  - name: baseDirectory
+    default: ''
+
+  - name: forcePreventParallelJobRun
+    displayName: Always force prevent parallem run job
+    type: boolean
+    default: false
+
+
+steps:
+  - checkout: refs/heads/master
+    clean: true
+  - checkout: cnp-azuredevops-libraries
+    clean: true
+  - bash: echo ${{ parameters.environment }}
+    displayName: Display environment parameter
+
+  - template: ./set-build-repo-suffix-env-var.yaml
+  - template: ./keyvault-read.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
+      environment: ${{ parameters.environment }}
+
+  - task: AzureKeyVault@1
+    displayName: 'Get GitHub API token from Keyvault'
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'github-api-token'
+
+  - task: Bash@3
+    displayName: Build resource values
+    env:
+      STAGE: ${{ parameters.stage }}
+      MULTI_REGION: ${{ parameters.multiRegion }}
+      ENVIRONMENT: ${{ parameters.environment }}
+      COMPONENT: ${{ parameters.component }}
+      LOCATION: ${{ parameters.location }}
+    inputs:
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+
+  - task: AzureKeyVault@1
+    displayName: 'Get Infracost API token from Keyvault'
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'infracost-api-key'
+
+  - task: InfracostSetup@2
+    displayName: Setup Infracost
+    inputs:
+      apiKey: $(infracost-api-key)
+      currency: GBP
+
+  - task: Bash@3
+    displayName: Generate Infracost cost estimate baseline
+    inputs:
+      targetType: 'inline'
+      script: |
+        infracost breakdown --path=. \
+          --format=json \
+          --out-file=/tmp/infracost-base.json \
+
+  - checkout: self
+    clean: true
+
+  - task: Bash@3
+    displayName: Generate Infracost diff
+    inputs:
+      targetType: 'inline'
+      script: |
+        infracost diff --path=. \
+          --format=json \
+          --compare-to=/tmp/infracost-base.json \
+          --out-file=/tmp/infracost.json
+
+  - task: Bash@3
+    displayName: Post Infracost PR comment
+    inputs:
+      targetType: 'inline'
+      script: |
+        infracost comment github \
+          --path=/tmp/infracost.json \
+          --github-token=$(github-api-token)\
+          --pull-request=$(System.PullRequest.PullRequestNumber) \
+          --repo=$(Build.Repository.Name) \
+          --behavior=update
