@@ -506,7 +506,7 @@ def main():
                         output_array = json.load(file)
                 else:
                     # If file does not exist, start with an empty list
-                    output_array = {}
+                    output_array[component] = {}
 
                 # Append warning/error if flagged
                 output_array[component].update({ "environment": env['environment'] })
