@@ -231,27 +231,21 @@ steps:
       targetType: 'inline'
       ${{ if eq(parameters['tfVarsFile'], '') }}:
         script: |
-          cd $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-          ls -la components
-          ls -la environments
-          ls -la environments/${{ parameters.environment }}
-          infracost breakdown --path=components/${{ parameters.component }} \
+          infracost breakdown --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
             --format=json \
             --out-file=/tmp/infracost-base.json \
             --terraform-var-file=../../environments/${{ parameters.environment }}/$(tfVarsName).tfvars \
             --project-name=${{ parameters.environment }}
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
         script: |
-          cd $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-          infracost breakdown --path=components/${{ parameters.component }} \
+          infracost breakdown --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
             --format=json \
             --out-file=/tmp/infracost-base.json \
             --terraform-var-file=../../environments/${{ parameters.environment }}/$(tfVarsName).tfvars \
             --project-name=${{ parameters.environment }}
       ${{ else }}:
         script: |
-          cd $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-          infracost breakdown --path=components/${{ parameters.component }} \
+          infracost breakdown --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
             --format=json \
             --out-file=/tmp/infracost-base.json \
             --terraform-var-file=${{ parameters.tfVarsFile }} \
@@ -267,21 +261,21 @@ steps:
           infracost diff --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
             --format=json \
             --compare-to=/tmp/infracost-base.json \
-            --out-file=/tmp/infracost.json
+            --out-file=/tmp/infracost.json \
             --terraform-var-file=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
         script: |
           infracost diff --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
             --format=json \
             --compare-to=/tmp/infracost-base.json \
-            --out-file=/tmp/infracost.json
+            --out-file=/tmp/infracost.json \
             --terraform-var-file=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
       ${{ else }}:
         script: |
           infracost diff --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
             --format=json \
             --compare-to=/tmp/infracost-base.json \
-            --out-file=/tmp/infracost.json
+            --out-file=/tmp/infracost.json \
             --terraform-var-file=${{ parameters.tfVarsFile }}
 
   - task: Bash@3
