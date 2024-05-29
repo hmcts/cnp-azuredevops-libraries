@@ -509,15 +509,17 @@ def main():
                     output_array = {}
 
                 # Append warning/error if flagged
-                output_array[env['environment']] = {
-                    "terraform_message": (terraform_version_checker(terraform_version, config, current_date))
-                }
-                # debug
-                # print(output_array)
+                output_array[component] = output_array[component].append(env['environment'])
 
-                # Write the updated data back to the file
-                with open(output_file, 'w') as file:
-                    json.dump(output_array, file, indent=4)
+            output_array[component] = {
+                "terraform_message": (terraform_version_checker(terraform_version, config, current_date))
+            }
+            # debug
+            print(output_array)
+
+            # Write the updated data back to the file
+            with open(output_file, 'w') as file:
+                json.dump(output_array, file, indent=4)
 
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
