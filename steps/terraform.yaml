@@ -227,6 +227,7 @@ steps:
     displayName: Generate Infracost cost estimate baseline
     inputs:
       script: |
+        echo "file path is $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}"
         cd /tmp/base
         infracost breakdown --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
           --format=json \
