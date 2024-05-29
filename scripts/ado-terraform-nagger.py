@@ -337,7 +337,6 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
         if message_type == "warning":
             # Attempt to send slack message
             log_message_slack(slack_recipient, slack_webhook_url, message)
-        if message_type == "warning":
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
         if message_type == "error":
             logger.error(f"##vso[task.logissue type=error;]{message}")
@@ -463,13 +462,13 @@ def main():
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
             if not base_directory or base_directory == '':
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{deployment['component']}"
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{deployment}"
             else:
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{deployment['component']}"
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{deployment}"
 
             # debug
-            print(f'working_directory = {working_directory}')
-            print(f'build repo suffix = {build_repo_suffix}')
+            # print(f'working_directory = {working_directory}')
+            # print(f'build repo suffix = {build_repo_suffix}')
   
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
             command = ["tfswitch", "-b", terraform_binary_path]
