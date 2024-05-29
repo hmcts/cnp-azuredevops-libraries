@@ -226,6 +226,7 @@ steps:
   - task: Bash@3
     displayName: Generate Infracost cost estimate baseline
     inputs:
+      targetType: 'inline'
       script: |
         echo "file path is $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}"
         cd /tmp/base
@@ -244,6 +245,7 @@ steps:
   - task: Bash@3
     displayName: Generate Infracost diff
     inputs:
+      targetType: 'inline'
       script: |
         cd -
         infracost diff --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
@@ -262,6 +264,7 @@ steps:
   - task: Bash@3
     displayName: Post Infracost PR comment
     inputs:
+      targetType: 'inline'
       script: |
         infracost comment github \
           --path=/tmp/infracost.json \
