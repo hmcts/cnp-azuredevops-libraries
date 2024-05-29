@@ -231,24 +231,21 @@ steps:
       targetType: 'inline'
       ${{ if eq(parameters['tfVarsFile'], '') }}:
         script: |
-          ls -la
-          infracost breakdown --path=components/${{ parameters.component }} \
+          infracost breakdown --path=$(buildRepoSuffix)/components/${{ parameters.component }} \
             --format=json \
             --out-file=/tmp/infracost-base.json
-            --terraform-var-file=../../environments/${{ parameters.environment }}/$(tfVarsName).tfvars \
+            --terraform-var-file=$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars \
             --project-name=${{ parameters.environment }}
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
         script: |
-          ls -la
-          infracost breakdown --path=components/${{ parameters.component }} \
+          infracost breakdown --path=$(buildRepoSuffix)/components/${{ parameters.component }} \
             --format=json \
             --out-file=/tmp/infracost-base.json
-            --terraform-var-file=../../environments/${{ parameters.environment }}/$(tfVarsName).tfvars \
+            --terraform-var-file=$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars \
             --project-name=${{ parameters.environment }}
       ${{ else }}:
         script: |
-          ls -la
-          infracost breakdown --path=components/${{ parameters.component }} \
+          infracost breakdown --path=$(buildRepoSuffix)/components/${{ parameters.component }} \
             --format=json \
             --out-file=/tmp/infracost-base.json
             --terraform-var-file=${{ parameters.tfVarsFile }} \
