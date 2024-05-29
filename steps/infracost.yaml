@@ -50,9 +50,7 @@ parameters:
     default: false
 
 steps:
-  - checkout: self
-    clean: true
-    ref: ref/heads/master
+  - checkout: git://github.com/hmcts/$(Build.Repository.Name)@$(System.PullRequest.targetBranchName)
   - checkout: cnp-azuredevops-libraries
     clean: true
   - bash: echo ${{ parameters.environment }}
