@@ -458,25 +458,25 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
-        # ### testing
-        # # Transform env components into a dictionary
-        # environment_components_dict = {}
-        # for item in environment_components['environment_components']:
-        #     Component = item.pop('component')  # Remove the component from the item and store it
-        #     if Component not in environment_components_dict:
-        #         environment_components_dict[Component] = []  # Initialize a new list for this component
-        #     environment_components_dict[Component].append(item)  # Add the item to the component's list
+        ### testing
+        # Transform env components into a dictionary
+        environment_components_dict = {}
+        for item in environment_components['environment_components']:
+            Component = item.pop('component')  # Remove the component from the item and store it
+            if Component not in environment_components_dict:
+                environment_components_dict[Component] = []  # Initialize a new list for this component
+            environment_components_dict[Component].append(item)  # Add the item to the component's list
 
-        # print(f'{environment_components_dict}')
-        # ###
+        print(f'{environment_components_dict}')
+        ###
 
-        for deployment in environment_components['environment_components']:
+        for env in environment_components_dict['Component']:
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
             if not base_directory or base_directory == '':
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{deployment['component']}"
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{environment_components_dict['Component']}"
             else:
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{deployment['component']}"
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{environment_components_dict['Component']}"
 
             # debug
             # print(f'working_directory = {working_directory}')
@@ -505,9 +505,11 @@ def main():
                 output_array = {}
 
             # Append warning/error if flagged
-            output_array[deployment['component']] = {
+            output_array[env] = {
                 "terraform_message": (terraform_version_checker(terraform_version, config, current_date))
             }
+            # debug
+            print(output_array)
 
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
