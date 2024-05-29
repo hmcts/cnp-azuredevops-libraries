@@ -476,9 +476,9 @@ def main():
                 # Construct the working directory path
                 base_directory = os.getenv('BASE_DIRECTORY')
                 if not base_directory or base_directory == '':
-                    working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{environment_components_dict['component']}"
+                    working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{component}"
                 else:
-                    working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{environment_components_dict['component']}"
+                    working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
 
                 # debug
                 # print(f'working_directory = {working_directory}')
