@@ -230,7 +230,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        infracost breakdown --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
+        infracost breakdown --path=. \
           --format=json \
           --out-file=/tmp/infracost-base.json \
 
@@ -240,7 +240,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        infracost diff --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
+        infracost diff --path=. \
           --format=json \
           --compare-to=/tmp/infracost-base.json \
           --out-file=/tmp/infracost.json
