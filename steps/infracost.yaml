@@ -44,17 +44,15 @@ parameters:
   - name: baseDirectory
     default: ''
 
-  - name: baseBranch
-    default: ''
-
   - name: forcePreventParallelJobRun
     displayName: Always force prevent parallem run job
     type: boolean
     default: false
 
 steps:
-  - checkout: ${{ parameters.baseBranch }}
+  - checkout: self
     clean: true
+    ref: ref/heads/master
   - checkout: cnp-azuredevops-libraries
     clean: true
   - bash: echo ${{ parameters.environment }}
