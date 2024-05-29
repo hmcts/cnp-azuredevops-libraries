@@ -231,6 +231,7 @@ steps:
       targetType: 'inline'
       ${{ if eq(parameters['tfVarsFile'], '') }}:
         script: |
+          ls -la
           infracost breakdown --path=components/${{ parameters.component }} \
             --format=json \
             --out-file=/tmp/infracost-base.json
@@ -238,6 +239,7 @@ steps:
             --project-name=${{ parameters.environment }}
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
         script: |
+          ls -la
           infracost breakdown --path=components/${{ parameters.component }} \
             --format=json \
             --out-file=/tmp/infracost-base.json
@@ -245,6 +247,7 @@ steps:
             --project-name=${{ parameters.environment }}
       ${{ else }}:
         script: |
+          ls -la
           infracost breakdown --path=components/${{ parameters.component }} \
             --format=json \
             --out-file=/tmp/infracost-base.json
