@@ -186,7 +186,7 @@ def send_slack_message(webhook, channel, username, text, icon_emoji, color=None)
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Stages:*\n16.0 (2 days)\n12\n15\n16\n17"
+                        "text": "*Components:*\n16.0 (2 days)\n12\n15\n16\n17"
                     }
                 ]
             }
@@ -496,7 +496,7 @@ def main():
 
             # Append warning/error if flagged
             output_array[deployment['component']] = {
-                "terraform_version": (terraform_version_checker(terraform_version, config, current_date))
+                "terraform_message": (terraform_version_checker(terraform_version, config, current_date))
             }
 
             # Write the updated data back to the file
