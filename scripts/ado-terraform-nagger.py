@@ -462,58 +462,60 @@ def main():
         # Transform env components into a dictionary
         environment_components_dict = {}
         for item in environment_components['environment_components']:
-            Component = item.pop('component')  # Remove the component from the item and store it
-            if Component not in environment_components_dict:
-                environment_components_dict[Component] = []  # Initialize a new list for this component
-            environment_components_dict[Component].append(item)  # Add the item to the component's list
+            component = item.pop('component')  # Remove the component from the item and store it
+            if component not in environment_components_dict:
+                environment_components_dict[component] = []  # Initialize a new list for this component
+            environment_components_dict[component].append(item)  # Add the item to the component's list
 
         print(f'{environment_components_dict}')
         ###
 
-        for env in environment_components_dict['Component']:
-            # Construct the working directory path
-            base_directory = os.getenv('BASE_DIRECTORY')
-            if not base_directory or base_directory == '':
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{environment_components_dict['Component']}"
-            else:
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{environment_components_dict['Component']}"
+        for component, environments in environment_components_dict.items():
+            print(f"component: {component}")
+            for env in environments:
+                # Construct the working directory path
+                base_directory = os.getenv('BASE_DIRECTORY')
+                if not base_directory or base_directory == '':
+                    working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{environment_components_dict['component']}"
+                else:
+                    working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{environment_components_dict['component']}"
 
-            # debug
-            # print(f'working_directory = {working_directory}')
-            # print(f'build repo suffix = {build_repo_suffix}')
-  
-            # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
-            command = ["tfswitch", "-b", terraform_binary_path]
-            run_command(command, working_directory)
+                # debug
+                # print(f'working_directory = {working_directory}')
+                # print(f'build repo suffix = {build_repo_suffix}')
+    
+                # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
+                command = ["tfswitch", "-b", terraform_binary_path]
+                run_command(command, working_directory)
 
-            command = ["terraform", "version", "--json"]
-            result = json.loads(run_command(command, working_directory))
-            terraform_version = result["terraform_version"]
-            print(f'tf version: {terraform_version}')
+                command = ["terraform", "version", "--json"]
+                result = json.loads(run_command(command, working_directory))
+                terraform_version = result["terraform_version"]
+                print(f'tf version: {terraform_version}')
 
-            # Load deprecation map
-            config = load_file(args.filepath)
-            # print(f'config: {config}')
+                # Load deprecation map
+                config = load_file(args.filepath)
+                # print(f'config: {config}')
 
-            # Check if the file exists
-            if os.path.exists(output_file):
-                # Read existing data from the file
-                with open(output_file, 'r') as file:
-                    output_array = json.load(file)
-            else:
-                # If file does not exist, start with an empty list
-                output_array = {}
+                # Check if the file exists
+                if os.path.exists(output_file):
+                    # Read existing data from the file
+                    with open(output_file, 'r') as file:
+                        output_array = json.load(file)
+                else:
+                    # If file does not exist, start with an empty list
+                    output_array = {}
 
-            # Append warning/error if flagged
-            output_array[env] = {
-                "terraform_message": (terraform_version_checker(terraform_version, config, current_date))
-            }
-            # debug
-            print(output_array)
+                # Append warning/error if flagged
+                output_array[env] = {
+                    "terraform_message": (terraform_version_checker(terraform_version, config, current_date))
+                }
+                # debug
+                print(output_array)
 
-            # Write the updated data back to the file
-            with open(output_file, 'w') as file:
-                json.dump(output_array, file, indent=4)
+                # Write the updated data back to the file
+                with open(output_file, 'w') as file:
+                    json.dump(output_array, file, indent=4)
 
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
