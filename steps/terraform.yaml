@@ -237,14 +237,14 @@ steps:
           ls -la environments/${{ parameters.environment }}
           infracost breakdown --path=components/${{ parameters.component }} \
             --format=json \
-            --out-file=/tmp/infracost-base.json
+            --out-file=/tmp/infracost-base.json \
             --project-name=${{ parameters.environment }}
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
         script: |
           cd $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
           infracost breakdown --path=components/${{ parameters.component }} \
             --format=json \
-            --out-file=/tmp/infracost-base.json
+            --out-file=/tmp/infracost-base.json \
             --project-name=${{ parameters.environment }}
       ${{ else }}:
         script: |
