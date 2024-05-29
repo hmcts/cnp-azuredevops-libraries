@@ -233,7 +233,6 @@ steps:
         infracost breakdown --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
           --format=json \
           --out-file=/tmp/infracost-base.json \
-          --project-name=${{ parameters.environment }}
 
   - task: Bash@3
     displayName: Generate Infracost diff
