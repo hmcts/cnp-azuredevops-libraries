@@ -509,13 +509,12 @@ def main():
                     output_array = {}
 
                 # Append warning/error if flagged
-                output_array[component] = { "environment": env['environment'] }
+                output_array[component].update({ "environment": env['environment'] })
                 # debug
                 print(output_array)
-                
-            output_array[component] = {
-                "terraform_message": (terraform_version_checker(terraform_version, config, current_date))
-            }
+
+            output_array[component].update({ "terraform_message": (terraform_version_checker(terraform_version, config, current_date)) })
+            
             # debug
             print(output_array)
 
