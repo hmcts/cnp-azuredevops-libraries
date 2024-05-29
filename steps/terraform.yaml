@@ -230,12 +230,12 @@ steps:
     inputs:
       targetType: 'inline'
       ${{ if eq(parameters['tfVarsFile'], '') }}:
-      script: |
-        cd /tmp/base
-        infracost breakdown --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
-          --format=json \
-          --out-file=/tmp/infracost-base.json
-          --terraform-var-file=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
+        script: |
+          cd /tmp/base
+          infracost breakdown --path=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }} \
+            --format=json \
+            --out-file=/tmp/infracost-base.json
+            --terraform-var-file=$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
         script: |
           cd /tmp/base
