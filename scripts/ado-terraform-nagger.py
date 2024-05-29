@@ -474,6 +474,7 @@ def main():
             print(f'component: {component}')
             for env in environments:
                 print('environments: ', env['environment'])
+
                 # Construct the working directory path
                 base_directory = os.getenv('BASE_DIRECTORY')
                 if not base_directory or base_directory == '':
@@ -508,7 +509,7 @@ def main():
                     output_array = {}
 
                 # Append warning/error if flagged
-                output_array[component] = {
+                output_array[env['environment']] = {
                     "terraform_message": (terraform_version_checker(terraform_version, config, current_date))
                 }
                 # debug
