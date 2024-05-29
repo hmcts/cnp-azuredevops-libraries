@@ -467,11 +467,11 @@ def main():
                 environment_components_dict[component] = []  # Initialize a new list for this component
             environment_components_dict[component].append(item)  # Add the item to the component's list
 
-        print(f'{environment_components_dict}')
+        # print(f'{environment_components_dict}')
         ###
 
         for component, environments in environment_components_dict.items():
-            print(f"component: {component}")
+            print(f'component: {component}\nenvironments: {environments}')
             for env in environments:
                 # Construct the working directory path
                 base_directory = os.getenv('BASE_DIRECTORY')
@@ -491,7 +491,7 @@ def main():
                 command = ["terraform", "version", "--json"]
                 result = json.loads(run_command(command, working_directory))
                 terraform_version = result["terraform_version"]
-                print(f'tf version: {terraform_version}')
+                # print(f'tf version: {terraform_version}')
 
                 # Load deprecation map
                 config = load_file(args.filepath)
