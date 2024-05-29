@@ -458,6 +458,18 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
+        # testing
+        # Transform the list into a dictionary
+        environment_components_dict = {}
+        for item in environment_components['environment_components']:
+            component = item.pop('component')  # Remove the component from the item and store it
+            if component not in environment_components_dict:
+                environment_components_dict[component] = []  # Initialize a new list for this component
+            environment_components_dict[component].append(item)  # Add the item to the component's list
+
+        print(environment_components_dict)
+        # 
+
         for deployment in environment_components['environment_components']:
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
