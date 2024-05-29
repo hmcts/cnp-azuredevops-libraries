@@ -232,6 +232,9 @@ steps:
       ${{ if eq(parameters['tfVarsFile'], '') }}:
         script: |
           cd $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+          ls -la components
+          ls -la environments
+          ls -la environments/${{ parameters.environment }}
           infracost breakdown --path=components/${{ parameters.component }} \
             --format=json \
             --out-file=/tmp/infracost-base.json
