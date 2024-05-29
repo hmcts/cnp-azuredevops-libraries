@@ -473,7 +473,7 @@ def main():
         for component, environments in environment_components_dict.items():
             print(f'component: {component}')
             for env in environments:
-                print(f'environments: {env}')
+                print(f'environments: {env['environment']}')
                 # Construct the working directory path
                 base_directory = os.getenv('BASE_DIRECTORY')
                 if not base_directory or base_directory == '':
