@@ -261,8 +261,6 @@ steps:
   - template: ./infracost.yaml
     parameters:
       kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
-      github-api-token: $(github-api-token)
-      buildRepoSuffix: $(buildRepoSuffix)
       component: ${{ parameters.component }}
       environment: ${{ parameters.environment }}
       tfVarsFile: ${{ parameters.tfVarsFile }}
