@@ -177,7 +177,7 @@ def send_slack_message(webhook, channel, username, text, icon_emoji, color=None)
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Warning:*\nTerraform version 1.3.0 is no longer supported after deprecation deadline 30/05/2024. Please upgrade."
+                        "text": "*Warning:*\nTerraform version {version} is no longer supported after deprecation deadline {deprecation_deadline}. Please upgrade."
                     }
                 ]
             },
@@ -186,7 +186,7 @@ def send_slack_message(webhook, channel, username, text, icon_emoji, color=None)
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Components:*\n16.0 (2 days)\n12\n15\n16\n17"
+                        "text": "*Components:*\n{loop_components}"
                     }
                 ]
             }
@@ -482,8 +482,7 @@ def main():
 
             # Load deprecation map
             config = load_file(args.filepath)
-            print('config:')
-            print(config)
+            # print(f'config: {config}')
 
             # Check if the file exists
             if os.path.exists(output_file):
