@@ -462,10 +462,10 @@ def main():
         # Transform env components into a dictionary
         environment_components_dict = {}
         for item in environment_components['environment_components']:
-            component = item.pop('component')  # Remove the component from the item and store it
-            if component not in environment_components_dict:
-                environment_components_dict[component] = []  # Initialize a new list for this component
-            environment_components_dict[component].append(item)  # Add the item to the component's list
+            Component = item.pop('component')  # Remove the component from the item and store it
+            if Component not in environment_components_dict:
+                environment_components_dict[Component] = []  # Initialize a new list for this component
+            environment_components_dict[Component].append(item)  # Add the item to the component's list
 
         print(f'{environment_components_dict}')
         ###
