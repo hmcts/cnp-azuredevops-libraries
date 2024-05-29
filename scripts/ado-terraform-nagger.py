@@ -511,7 +511,7 @@ def main():
                     "terraform_message": (terraform_version_checker(terraform_version, config, current_date))
                 }
                 # debug
-                print(output_array)
+                # print(output_array)
 
                 # Write the updated data back to the file
                 with open(output_file, 'w') as file:
@@ -519,7 +519,7 @@ def main():
 
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
-            print(complete_file)
+            print(f'complete file: {complete_file}')
 
 
         # # Handle providers
