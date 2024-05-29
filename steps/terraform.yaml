@@ -238,7 +238,6 @@ steps:
           infracost breakdown --path=components/${{ parameters.component }} \
             --format=json \
             --out-file=/tmp/infracost-base.json
-            --terraform-var-file=../../environments/${{ parameters.environment }}/$(tfVarsName).tfvars \
             --project-name=${{ parameters.environment }}
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
         script: |
@@ -246,7 +245,6 @@ steps:
           infracost breakdown --path=components/${{ parameters.component }} \
             --format=json \
             --out-file=/tmp/infracost-base.json
-            --terraform-var-file=../../environments/${{ parameters.environment }}/$(tfVarsName).tfvars \
             --project-name=${{ parameters.environment }}
       ${{ else }}:
         script: |
