@@ -49,9 +49,17 @@ parameters:
     type: boolean
     default: false
 
+resources:
+  repositories:
+  - repository: $(Build.Repository.Name)
+    type: github
+    ref: $(System.PullRequest.targetBranchName)
+    name: $(Build.Repository.Name)
+    endpoint: 'hmcts'
+
 
 steps:
-  - checkout: refs/heads/master
+  - checkout: $(Build.Repository.Name)
     clean: true
   - checkout: cnp-azuredevops-libraries
     clean: true
