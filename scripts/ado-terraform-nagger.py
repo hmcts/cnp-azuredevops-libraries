@@ -464,7 +464,7 @@ def main():
         # Transform env_components into a dictionary where component is top level, func this 
         components_dict = {'components': {}}
 
-        for item in environment_components['component']:
+        for item in environment_components['environment_components']:
             component = item.pop('component')  # Remove the component from the item and store it
             if component not in components_dict['components']:
                 components_dict['components'][component] = []  # Initialize a new list for this component
