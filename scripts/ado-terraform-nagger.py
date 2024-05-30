@@ -465,16 +465,16 @@ def main():
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
         # Transform env_components into a dictionary where component is top level
-        component_deployments_dict = {}
+        component_deployments_dict = {'component_deployments': {}}
         for item in environment_components['environment_components']:
             component = item.pop('component')  # Remove the component from the item and store it
-            if component not in component_deployments_dict:
-                component_deployments_dict[component] = []  # Initialize a new list for this component
-            component_deployments_dict[component].append(item)  # Add the item to the component's list
+            if component not in component_deployments_dict['component_deployments']:
+                component_deployments_dict['component_deployments'][component] = []  # Initialize a new list for this component
+            component_deployments_dict['component_deployments'][component].append(item)  # Add the item to the component's list
 
         print(json.dumps(component_deployments_dict, indent=4, sort_keys=True))
 
-        for component in component_deployments_dict.keys():
+        for component in component_deployments_dict['component_deployments'].keys():
             print(f'component: {component}')
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
