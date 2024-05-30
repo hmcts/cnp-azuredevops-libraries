@@ -522,7 +522,7 @@ def main():
 
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
-            print(f'complete file: {complete_file}')
+            print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
 
 
         # # Handle providers
