@@ -467,11 +467,11 @@ def main():
                 deployment_components_dict[component] = []  # Initialize a new list for this component
             deployment_components_dict[component].append(item)  # Add the item to the component's list
 
-        # print(f'{deployment_components_dict}')
+        print(f'{deployment_components_dict}')
         ###
 
         for component in deployment_components_dict.items():
-            print('component:', component['component'])
+            # print('component:', component['component'])
             
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
