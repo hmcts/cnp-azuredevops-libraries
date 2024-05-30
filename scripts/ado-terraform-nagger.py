@@ -470,15 +470,14 @@ def main():
         print(f'{deployment_components_dict}')
         ###
 
-        for component in deployment_components_dict.items():
-            # print('component:', component['component'])
-            
+        for component, deployments in deployment_components_dict.items:
+            print(f'component: {component}')
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
             if not base_directory or base_directory == '':
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{component['component']}"
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{component}"
             else:
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component['component']}"
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
 
             # debug
             # print(f'working_directory = {working_directory}')
