@@ -336,7 +336,6 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
     """
     global errors_detected
 
-    logger.warning(message)
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
         if message_type == "warning":
@@ -449,8 +448,6 @@ def main():
         #         "warning",
         #         f"Detected outdated terraform version: {terraform_version}. Newer version is available.",
         #     )
-
-
         try:
             with open(args.environment_components, "r") as f:
                 environment_components = json.load(f)
@@ -464,8 +461,9 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
-        # Transform env_components into a dictionary where component is top level
+        # Transform env_components into a dictionary where component is top level, func this 
         component_deployments_dict = {'component_deployments': {}}
+
         for item in environment_components['environment_components']:
             component = item.pop('component')  # Remove the component from the item and store it
             if component not in component_deployments_dict['component_deployments']:
