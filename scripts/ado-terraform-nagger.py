@@ -459,7 +459,7 @@ def main():
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
         ### testing
-        # Transform env components into a dictionary
+        # Transform env_components into a dictionary
         deployment_components_dict = {}
         for item in environment_components['environment_components']:
             component = item.pop('component')  # Remove the component from the item and store it
@@ -506,7 +506,7 @@ def main():
                 output_array = {}
 
             # Append warning/error if flagged
-            output_array[component] = [{ "terraform_message": (terraform_version_checker(terraform_version, config, current_date)) }]
+            output_array[component] = { "terraform_message": (terraform_version_checker(terraform_version, config, current_date)) }
             # debug
             print(output_array)
 
