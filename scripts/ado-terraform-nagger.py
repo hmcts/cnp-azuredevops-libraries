@@ -514,7 +514,7 @@ def main():
             # Append warning/error if flagged
             output_array[component] = { "terraform_message": (terraform_version_checker(terraform_version, config, current_date)) }
             # debug
-            print(json.dump(output_array, indent=4, sort_keys=True))
+            print(json.dumps(output_array, indent=4, sort_keys=True))
 
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
