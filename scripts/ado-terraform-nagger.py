@@ -512,7 +512,7 @@ def main():
 
             if is_warning is True:
                 output_array[component] = {'tf_version': terraform_version}
-                output_array[component].update({'severity': 'error'})
+                output_array[component].update({'severity': 'warning'})
                 output_array[component].update({'error_message': error_message})
             else:
                 output_array[component] = {'severity': 'error'}
