@@ -506,9 +506,8 @@ def main():
             error_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
 
             if error_warning is True:
-                output_array['severity'] = ['warning']
-                output_array['message'] = [error_message]
-                output_array['components'].append([component])
+                output_array[component]['severity'] = ['warning']
+                output_array[component]['message'] = [error_message]
 
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
