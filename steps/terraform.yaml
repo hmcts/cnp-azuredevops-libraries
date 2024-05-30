@@ -262,7 +262,7 @@ steps:
     displayName: Get cost via infracost
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
     inputs:
-      targetType: 'inline'
+      targetType: 'filepath'
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/infracost.sh
     env:
       GITHUB_TOKEN: $(github-api-token)
