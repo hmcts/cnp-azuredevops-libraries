@@ -336,7 +336,7 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
     if is_ado:
         if message_type == "warning":
             # Attempt to send slack message
-            log_message_slack(slack_recipient, slack_webhook_url, message)
+            # log_message_slack(slack_recipient, slack_webhook_url, message)
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
         if message_type == "error":
             logger.error(f"##vso[task.logissue type=error;]{message}")
@@ -460,61 +460,53 @@ def main():
 
         ### testing
         # Transform env components into a dictionary
-        environment_components_dict = {}
+        deployment_components_dict = {}
         for item in environment_components['environment_components']:
             component = item.pop('component')  # Remove the component from the item and store it
-            if component not in environment_components_dict:
-                environment_components_dict[component] = []  # Initialize a new list for this component
-            environment_components_dict[component].append(item)  # Add the item to the component's list
+            if component not in deployment_components_dict:
+                deployment_components_dict[component] = []  # Initialize a new list for this component
+            deployment_components_dict[component].append(item)  # Add the item to the component's list
 
-        # print(f'{environment_components_dict}')
+        # print(f'{deployment_components_dict}')
         ###
 
-        for component, environments in environment_components_dict.items():
+        for component in deployment_components_dict.items():
             print(f'component: {component}')
-            for env in environments:
-                print('environment:', env['environment'])
+            # Construct the working directory path
+            base_directory = os.getenv('BASE_DIRECTORY')
+            if not base_directory or base_directory == '':
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{component}"
+            else:
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
 
-                # Construct the working directory path
-                base_directory = os.getenv('BASE_DIRECTORY')
-                if not base_directory or base_directory == '':
-                    working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{component}"
-                else:
-                    working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
+            # debug
+            # print(f'working_directory = {working_directory}')
+            # print(f'build repo suffix = {build_repo_suffix}')
 
-                # debug
-                # print(f'working_directory = {working_directory}')
-                # print(f'build repo suffix = {build_repo_suffix}')
-    
-                # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
-                command = ["tfswitch", "-b", terraform_binary_path]
-                run_command(command, working_directory)
+            # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
+            command = ["tfswitch", "-b", terraform_binary_path]
+            run_command(command, working_directory)
 
-                command = ["terraform", "version", "--json"]
-                result = json.loads(run_command(command, working_directory))
-                terraform_version = result["terraform_version"]
-                # print(f'tf version: {terraform_version}')
+            command = ["terraform", "version", "--json"]
+            result = json.loads(run_command(command, working_directory))
+            terraform_version = result["terraform_version"]
+            # print(f'tf version: {terraform_version}')
 
-                # Load deprecation map
-                config = load_file(args.filepath)
-                # print(f'config: {config}')
+            # Load deprecation map
+            config = load_file(args.filepath)
+            # print(f'config: {config}')
 
-                # Check if the file exists
-                if os.path.exists(output_file):
-                    # Read existing data from the file
-                    with open(output_file, 'r') as file:
-                        output_array = json.load(file)
-                else:
-                    # If file does not exist, start with an empty list
-                    output_array = {}
+            # Check if the file exists
+            if os.path.exists(output_file):
+                # Read existing data from the file
+                with open(output_file, 'r') as file:
+                    output_array = json.load(file)
+            else:
+                # If file does not exist, start with an empty list
+                output_array = {}
 
-                # Append warning/error if flagged
-                output_array[component]['environment'].update({ env['environment'] })
-                # debug
-                print(output_array)
-
+            # Append warning/error if flagged
             output_array[component].update({ "terraform_message": (terraform_version_checker(terraform_version, config, current_date)) })
-            
             # debug
             print(output_array)
 
