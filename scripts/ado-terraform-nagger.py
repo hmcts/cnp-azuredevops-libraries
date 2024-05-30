@@ -473,7 +473,7 @@ def main():
         for component, environments in environment_components_dict.items():
             print(f'component: {component}')
             for env in environments:
-                print('environments: ', env['environment'])
+                print('environment:', env['environment'])
 
                 # Construct the working directory path
                 base_directory = os.getenv('BASE_DIRECTORY')
@@ -506,7 +506,7 @@ def main():
                         output_array = json.load(file)
                 else:
                     # If file does not exist, start with an empty list
-                    output_array[component] = {}
+                    output_array = {}
 
                 # Append warning/error if flagged
                 output_array[component].update({ "environment": env['environment'] })
@@ -517,6 +517,7 @@ def main():
             
             # debug
             print(output_array)
+            print(output_array[component])
 
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
