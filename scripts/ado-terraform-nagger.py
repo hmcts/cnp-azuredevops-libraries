@@ -248,7 +248,7 @@ def get_github_slack_user_mapping(mappings, github_id):
     return None
 
 
-def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None):
+def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None, severity=None):
     """
     Sends a message to a Slack recipient using a webhook URL.
 
@@ -294,6 +294,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
 
         # Format message with useful information to quickly identify the stage,
         # component, repository and its branch.
+        # build slack msg then send after
         slack_message = (
             f"\n"
             + f"We have noticed deprecated configuration in {build_origin}: <{build_url}|Build {build_id}>"
@@ -340,9 +341,9 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
     if is_ado:
         if message_type == "warning":
             # Attempt to send slack message
-            log_message_slack(slack_recipient, slack_webhook_url, message)
-            
+            log_message_slack(slack_recipient, slack_webhook_url, message, message_type)
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
+
         if message_type == "error":
             logger.error(f"##vso[task.logissue type=error;]{message}")
             errors_detected = True
@@ -513,7 +514,7 @@ def main():
             # Append warning/error if flagged
             output_array[component] = { "terraform_message": (terraform_version_checker(terraform_version, config, current_date)) }
             # debug
-            print(output_array)
+            print(json.dump(json.loads(output_array), indent=4))
 
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
