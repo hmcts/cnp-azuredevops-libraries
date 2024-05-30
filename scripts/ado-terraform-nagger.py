@@ -464,7 +464,7 @@ def main():
         # Transform env_components into a dictionary where component is top level, func this 
         components_dict = {'components': {}}
 
-        for item in environment_components['components']:
+        for item in environment_components['component']:
             component = item.pop('component')  # Remove the component from the item and store it
             if component not in components_dict['components']:
                 components_dict['components'][component] = []  # Initialize a new list for this component
@@ -503,9 +503,9 @@ def main():
 
             # Append warning/error if flagged
             # if return warning append to warning etc...
-            is_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
+            error_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
 
-            if is_warning is True:
+            if error_warning is True:
                 output_array['severity'] = ['warning']
                 output_array['message'] = [error_message]
 
