@@ -470,7 +470,7 @@ def main():
         print(f'{deployment_components_dict}')
         ###
 
-        for component, deployments in deployment_components_dict.items():
+        for component in deployment_components_dict.keys():
             print(f'component: {component}')
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
@@ -506,7 +506,7 @@ def main():
                 output_array = {}
 
             # Append warning/error if flagged
-            output_array[component].update({ "terraform_message": (terraform_version_checker(terraform_version, config, current_date)) })
+            output_array[component].append({ "terraform_message": (terraform_version_checker(terraform_version, config, current_date)) })
             # debug
             print(output_array)
 
