@@ -124,7 +124,7 @@ def load_file(filename):
         logger.error(f"Error loading {filename}: {e}")
 
 
-def send_slack_message(webhook, channel, username, text, icon_emoji, color=None):
+def send_slack_message(webhook, channel, username, text, icon_emoji):
     """
     Sends a message to a Slack channel using a webhook.
 
@@ -178,6 +178,10 @@ def send_slack_message(webhook, channel, username, text, icon_emoji, color=None)
                     {
                         "type": "mrkdwn",
                         "text": "*Warning:*\nTerraform version {version} is no longer supported after deprecation deadline {deprecation_deadline}. Please upgrade."
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": text
                     }
                 ]
             },
@@ -299,7 +303,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         icon_emoji = ":warning:"
 
         send_slack_message(
-            slack_webhook_url, slack_recipient, slack_sender, slack_message, icon_emoji, color="warning"
+            slack_webhook_url, slack_recipient, slack_sender, slack_message, icon_emoji
         )
 
 
