@@ -509,7 +509,7 @@ def main():
                     output_array = {}
 
                 # Append warning/error if flagged
-                output_array[component].update({ "environment": env['environment'] })
+                output_array[component]['environment'].update({ env['environment'] })
                 # debug
                 print(output_array)
 
@@ -517,7 +517,6 @@ def main():
             
             # debug
             print(output_array)
-            print(output_array[component])
 
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
