@@ -387,7 +387,7 @@ def terraform_version_checker(terraform_version, config, current_date):
         #     f'is lower than {config["terraform"]["terraform"]["version"]}. '
         #     f"Please upgrade before deprecation deadline {end_support_date_str}...",
         # )
-        return True, f'Terraform version {terraform_version} is lower than {config["terraform"]["terraform"]["version"]}. Please upgrade before deprecation deadline {end_support_date_str}.'
+        return "warning", f'Terraform version {terraform_version} is lower than {config["terraform"]["terraform"]["version"]}. Please upgrade before deprecation deadline {end_support_date_str}.'
 
     # Error if terraform version lower than specified & passed deadline.
     if version.parse(terraform_version) < version.parse(
@@ -400,7 +400,20 @@ def terraform_version_checker(terraform_version, config, current_date):
         #     f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
         #     "Please upgrade...",
         # )
-        return f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade."
+        return False, f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade."
+
+def transform_environment_components(environment_components=None):
+    components_dict = {'components': {}}
+
+    for item in environment_components['environment_components']:
+        component = item.pop('component')  # Remove the component from the item and store it
+        if component not in components_dict['components']:
+            components_dict['components'][component] = []  # Initialize a new list for this component
+        components_dict['components'][component].append(item)  # Add the item to the component's list
+
+    print(json.dumps(components_dict, indent=4, sort_keys=True))
+    
+    return components_dict
 
 
 def main():
@@ -461,16 +474,8 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
-        # Transform env_components into a dictionary where component is top level, func this 
-        components_dict = {'components': {}}
-
-        for item in environment_components['environment_components']:
-            component = item.pop('component')  # Remove the component from the item and store it
-            if component not in components_dict['components']:
-                components_dict['components'][component] = []  # Initialize a new list for this component
-            components_dict['components'][component].append(item)  # Add the item to the component's list
-
-        print(json.dumps(components_dict, indent=4, sort_keys=True))
+        # Transform env_components into a dictionary where component is top level
+        components_dict = transform_environment_components(environment_components)
 
         for component in components_dict['components'].keys():
             print(f'component: {component}')
@@ -503,10 +508,13 @@ def main():
 
             # Append warning/error if flagged
             # if return warning append to warning etc...
-            error_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
+            is_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
 
-            if error_warning is True:
+            if is_warning is True:
                 output_array[component] = {'severity': 'warning'}
+                output_array[component].update({'error_message': error_message})
+            else:
+                output_array[component] = {'severity': 'error'}
                 output_array[component].update({'error_message': error_message})
 
             # Write the updated data back to the file
