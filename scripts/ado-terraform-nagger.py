@@ -464,19 +464,17 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
-        ### testing
-        # Transform env_components into a dictionary
-        deployment_components_dict = {}
+        # Transform env_components into a dictionary where component is top level
+        component_deployments_dict = {}
         for item in environment_components['environment_components']:
             component = item.pop('component')  # Remove the component from the item and store it
-            if component not in deployment_components_dict:
-                deployment_components_dict[component] = []  # Initialize a new list for this component
-            deployment_components_dict[component].append(item)  # Add the item to the component's list
+            if component not in component_deployments_dict:
+                component_deployments_dict[component] = []  # Initialize a new list for this component
+            component_deployments_dict[component].append(item)  # Add the item to the component's list
 
-        print(f'{deployment_components_dict}')
-        ###
+        print(json.dumps(component_deployments_dict, indent=4, sort_keys=True))
 
-        for component in deployment_components_dict.keys():
+        for component in component_deployments_dict.keys():
             print(f'component: {component}')
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
@@ -485,10 +483,6 @@ def main():
             else:
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
 
-            # debug
-            # print(f'working_directory = {working_directory}')
-            # print(f'build repo suffix = {build_repo_suffix}')
-
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
             command = ["tfswitch", "-b", terraform_binary_path]
             run_command(command, working_directory)
@@ -496,11 +490,9 @@ def main():
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, working_directory))
             terraform_version = result["terraform_version"]
-            # print(f'tf version: {terraform_version}')
 
             # Load deprecation map
             config = load_file(args.filepath)
-            # print(f'config: {config}')
 
             # Check if the file exists
             if os.path.exists(output_file):
@@ -513,8 +505,6 @@ def main():
 
             # Append warning/error if flagged
             output_array[component] = { "terraform_message": (terraform_version_checker(terraform_version, config, current_date)) }
-            # debug
-            print(json.dumps(output_array, indent=4, sort_keys=True))
 
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
