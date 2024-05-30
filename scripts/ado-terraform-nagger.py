@@ -471,7 +471,8 @@ def main():
         ###
 
         for component in deployment_components_dict.items():
-            print(f'component: {component['component']}')
+            print('component:', component['component'])
+            
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
             if not base_directory or base_directory == '':
