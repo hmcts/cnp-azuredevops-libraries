@@ -145,7 +145,7 @@ def send_slack_message(webhook, channel, username, text, icon_emoji, color=None)
         "channel": channel,
         "username": username,
         "text": 'dummy_text',
-        "icon_emoji": ":warning:",
+        "icon_emoji": icon_emoji,
         "blocks": 
         [
             {
@@ -296,10 +296,10 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
             + f"STAGE: {stage}\n"
             + f"MESSAGE: {message}\n"
         )
-        slack_icon = "warning"
+        icon_emoji = ":warning:"
 
         send_slack_message(
-            slack_webhook_url, slack_recipient, slack_sender, slack_message, slack_icon, color="warning"
+            slack_webhook_url, slack_recipient, slack_sender, slack_message, icon_emoji, color="warning"
         )
 
 
@@ -336,7 +336,8 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
     if is_ado:
         if message_type == "warning":
             # Attempt to send slack message
-            # log_message_slack(slack_recipient, slack_webhook_url, message)
+            log_message_slack(slack_recipient, slack_webhook_url, message)
+            
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
         if message_type == "error":
             logger.error(f"##vso[task.logissue type=error;]{message}")
