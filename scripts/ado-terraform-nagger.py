@@ -471,13 +471,13 @@ def main():
         ###
 
         for component in deployment_components_dict.items():
-            print(f'component: {component}')
+            print(f'component: {component['component']}')
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
             if not base_directory or base_directory == '':
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{component}"
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{component['component']}"
             else:
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component['component']}"
 
             # debug
             # print(f'working_directory = {working_directory}')
