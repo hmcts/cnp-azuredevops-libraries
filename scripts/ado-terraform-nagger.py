@@ -470,7 +470,7 @@ def main():
         print(f'{deployment_components_dict}')
         ###
 
-        for component, deployments in deployment_components_dict.items:
+        for component, deployments in deployment_components_dict.items():
             print(f'component: {component}')
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
