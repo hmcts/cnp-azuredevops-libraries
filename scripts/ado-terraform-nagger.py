@@ -508,6 +508,7 @@ def main():
             if error_warning is True:
                 output_array['severity'] = ['warning']
                 output_array['message'] = [error_message]
+                output_array['components'].append([component])
 
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
