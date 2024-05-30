@@ -258,12 +258,19 @@ steps:
   #         --repo=$(Build.Repository.Name) \
   #         --behavior=update
 
-  - template: ./infracost.yaml
-    parameters:
-      kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
-      component: ${{ parameters.component }}
-      environment: ${{ parameters.environment }}
-      tfVarsFile: ${{ parameters.tfVarsFile }}
+  - task: Bash@3
+    displayName: Get cost via infracost
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    inputs:
+      targetType: 'inline'
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/infracost.sh
+    env:
+      GITHUB_TOKEN: $(github-api-token)
+      INFRACOST_API_KEY: $(infracost-api-key)
+      INFRACOST_CURRENCY: GBP
+      PULL_REQUEST_BRANCH: $(System.PullRequest.SourceBranch)
+      MASTER_BRANCH: $(System.PullRequest.TargetBranch)
+      REPO_NAME: $(Build.Repository.Name)
 
   - task: TerraformCLI@1
     displayName: Terraform apply ${{ parameters.component }}
