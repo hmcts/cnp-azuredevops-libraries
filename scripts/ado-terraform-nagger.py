@@ -379,27 +379,27 @@ def terraform_version_checker(terraform_version, config, current_date):
     if version.parse(terraform_version) < version.parse(
         config["terraform"]["terraform"]["version"]
     ) and current_date <= end_support_date:
-        log_message(
-            slack_user_id,
-            slack_webhook_url,
-            "warning",
-            f"Detected terraform version {terraform_version} "
-            f'is lower than {config["terraform"]["terraform"]["version"]}. '
-            f"Please upgrade before deprecation deadline {end_support_date_str}...",
-        )
-        return f'Terraform version {terraform_version} is lower than {config["terraform"]["terraform"]["version"]}. Please upgrade before deprecation deadline {end_support_date_str}.'
+        # log_message(
+        #     slack_user_id,
+        #     slack_webhook_url,
+        #     "warning",
+        #     f"Detected terraform version {terraform_version} "
+        #     f'is lower than {config["terraform"]["terraform"]["version"]}. '
+        #     f"Please upgrade before deprecation deadline {end_support_date_str}...",
+        # )
+        return True, f'Terraform version {terraform_version} is lower than {config["terraform"]["terraform"]["version"]}. Please upgrade before deprecation deadline {end_support_date_str}.'
 
     # Error if terraform version lower than specified & passed deadline.
     if version.parse(terraform_version) < version.parse(
         config["terraform"]["terraform"]["version"]
     ) and current_date > end_support_date:
-        log_message(
-            slack_user_id,
-            slack_webhook_url,
-            "error",
-            f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
-            "Please upgrade...",
-        )
+        # log_message(
+        #     slack_user_id,
+        #     slack_webhook_url,
+        #     "error",
+        #     f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
+        #     "Please upgrade...",
+        # )
         return f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade."
 
 
@@ -462,17 +462,17 @@ def main():
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
         # Transform env_components into a dictionary where component is top level, func this 
-        component_deployments_dict = {'component_deployments': {}}
+        components_dict = {'components': {}}
 
-        for item in environment_components['environment_components']:
+        for item in environment_components['components']:
             component = item.pop('component')  # Remove the component from the item and store it
-            if component not in component_deployments_dict['component_deployments']:
-                component_deployments_dict['component_deployments'][component] = []  # Initialize a new list for this component
-            component_deployments_dict['component_deployments'][component].append(item)  # Add the item to the component's list
+            if component not in components_dict['components']:
+                components_dict['components'][component] = []  # Initialize a new list for this component
+            components_dict['components'][component].append(item)  # Add the item to the component's list
 
-        print(json.dumps(component_deployments_dict, indent=4, sort_keys=True))
+        print(json.dumps(components_dict, indent=4, sort_keys=True))
 
-        for component in component_deployments_dict['component_deployments'].keys():
+        for component in components_dict['components'].keys():
             print(f'component: {component}')
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
@@ -502,7 +502,12 @@ def main():
                 output_array = {}
 
             # Append warning/error if flagged
-            output_array[component] = { "terraform_message": (terraform_version_checker(terraform_version, config, current_date)) }
+            # if return warning append to warning etc...
+            is_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
+
+            if is_warning is True:
+                output_array['severity'] = ['warning']
+                output_array['message'] = [error_message]
 
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
