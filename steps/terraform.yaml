@@ -226,8 +226,8 @@ steps:
 
   - task: Bash@3
     displayName: Checkout $(System.PullRequest.TargetBranch)
-    targetType: 'inline'
     inputs:
+      targetType: 'inline'
       script: |
         cd $(buildRepoSuffix)
         git checkout $(System.PullRequest.TargetBranch)
@@ -244,8 +244,8 @@ steps:
 
   - task: Bash@3
     displayName: Checkout $(Build.SourceBranchName)
-    targetType: 'inline'
     inputs:
+      targetType: 'inline'
       script: |
         cd $(buildRepoSuffix)
         git checkout $(Build.SourceBranchName)
