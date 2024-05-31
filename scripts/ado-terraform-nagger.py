@@ -511,9 +511,8 @@ def main():
             is_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
 
             if is_warning is True:
-                output_array[component] = {'tf_version': terraform_version}
-                output_array[component].update({'severity': 'warning'})
-                output_array[component].update({'error_message': error_message})
+                output_array['warning'] = {'error_message': error_message, 'components': []}
+                output_array['warning']['components'].append(component)
             else:
                 output_array[component] = {'severity': 'error'}
                 output_array[component].update({'error_message': error_message})
