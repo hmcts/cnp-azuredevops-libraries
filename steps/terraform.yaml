@@ -208,14 +208,14 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  # - task: AzureKeyVault@1
-  #   displayName: 'Get Infracost API token from Keyvault'
-  #   condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
-  #   inputs:
-  #     runAsPreJob: false
-  #     ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
-  #     keyVaultName: 'infra-vault-nonprod'
-  #     secretsFilter: 'infracost-api-key'
+  - task: AzureKeyVault@1
+    displayName: 'Get Infracost API token from Keyvault'
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'infracost-api-key'
 
   # - task: InfracostSetup@2
   #   displayName: Setup Infracost
