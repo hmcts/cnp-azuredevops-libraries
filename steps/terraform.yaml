@@ -230,6 +230,7 @@ steps:
       targetType: 'inline'
       script: |
         cd $(buildRepoSuffix)
+        git fetch
         git checkout $(System.PullRequest.TargetBranch)
 
   - task: Bash@3
