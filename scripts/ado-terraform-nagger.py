@@ -340,7 +340,7 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
     if is_ado:
         if message_type == "warning":
             # Attempt to send slack message
-            log_message_slack(slack_recipient, slack_webhook_url, message, message_type)
+            # log_message_slack(slack_recipient, slack_webhook_url, message, message_type)
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
 
         if message_type == "error":
@@ -379,27 +379,27 @@ def terraform_version_checker(terraform_version, config, current_date):
     if version.parse(terraform_version) < version.parse(
         config["terraform"]["terraform"]["version"]
     ) and current_date <= end_support_date:
-        # log_message(
-        #     slack_user_id,
-        #     slack_webhook_url,
-        #     "warning",
-        #     f"Detected terraform version {terraform_version} "
-        #     f'is lower than {config["terraform"]["terraform"]["version"]}. '
-        #     f"Please upgrade before deprecation deadline {end_support_date_str}...",
-        # )
+        log_message(
+            slack_user_id,
+            slack_webhook_url,
+            "warning",
+            f"Detected terraform version {terraform_version} "
+            f'is lower than {config["terraform"]["terraform"]["version"]}. '
+            f"Please upgrade before deprecation deadline {end_support_date_str}...",
+        )
         return True, f'Terraform version {terraform_version} is lower than {config["terraform"]["terraform"]["version"]}. Please upgrade before deprecation deadline {end_support_date_str}.'
 
     # Error if terraform version lower than specified & passed deadline.
     if version.parse(terraform_version) < version.parse(
         config["terraform"]["terraform"]["version"]
     ) and current_date > end_support_date:
-        # log_message(
-        #     slack_user_id,
-        #     slack_webhook_url,
-        #     "error",
-        #     f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
-        #     "Please upgrade...",
-        # )
+        log_message(
+            slack_user_id,
+            slack_webhook_url,
+            "error",
+            f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
+            "Please upgrade...",
+        )
         return False, f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade."
 
 def transform_environment_components(environment_components=None):
@@ -524,6 +524,7 @@ def main():
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
             print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
+            log_message
 
 
         # # Handle providers
