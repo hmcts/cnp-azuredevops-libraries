@@ -217,60 +217,70 @@ steps:
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'infracost-api-key'
 
-  # - task: InfracostSetup@2
-  #   displayName: Setup Infracost
-  #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
-  #   inputs:
-  #     apiKey: $(infracost-api-key)
-  #     currency: GBP
-
-  # - task: Bash@3
-  #   displayName: Generate Infracost cost estimate baseline
-  #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
-  #   inputs:
-  #     targetType: 'inline'
-  #     script: |
-  #       infracost breakdown --path=. \
-  #         --format=json \
-  #         --out-file=/tmp/infracost-base.json \
-
-  # - task: Bash@3
-  #   displayName: Generate Infracost diff
-  #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
-  #   inputs:
-  #     targetType: 'inline'
-  #     script: |
-  #       infracost diff --path=. \
-  #         --format=json \
-  #         --compare-to=/tmp/infracost-base.json \
-  #         --out-file=/tmp/infracost.json
-
-  # - task: Bash@3
-  #   displayName: Post Infracost PR comment
-  #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
-  #   inputs:
-  #     targetType: 'inline'
-  #     script: |
-  #       infracost comment github \
-  #         --path=/tmp/infracost.json \
-  #         --github-token=$(github-api-token)\
-  #         --pull-request=$(System.PullRequest.PullRequestNumber) \
-  #         --repo=$(Build.Repository.Name) \
-  #         --behavior=update
-
-  - task: Bash@3
-    displayName: Get cost via infracost
+  - task: InfracostSetup@2
+    displayName: Setup Infracost
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
     inputs:
-      targetType: 'filepath'
-      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/infracost.sh
-    env:
-      GITHUB_TOKEN: $(github-api-token)
-      INFRACOST_API_KEY: $(infracost-api-key)
-      INFRACOST_CURRENCY: GBP
-      PULL_REQUEST_BRANCH: $(System.PullRequest.SourceBranch)
-      MASTER_BRANCH: $(System.PullRequest.TargetBranch)
-      REPO_NAME: $(buildRepoSuffix)
+      apiKey: $(infracost-api-key)
+      currency: GBP
+
+  - task: Bash@3
+    displayName: Checkout $(System.PullRequest.TargetBranch)
+    inputs:
+      script: 'git checkout $(System.PullRequest.TargetBranch)'
+
+  - task: Bash@3
+    displayName: Generate Infracost cost estimate baseline
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    inputs:
+      targetType: 'inline'
+      script: |
+        infracost breakdown --path=. \
+          --format=json \
+          --out-file=/tmp/infracost-base.json \
+
+  - task: Bash@3
+    displayName: Checkout $(Build.SourceBranchName)
+    inputs:
+      script: 'git checkout $(Build.SourceBranchName)'
+
+  - task: Bash@3
+    displayName: Generate Infracost diff
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    inputs:
+      targetType: 'inline'
+      script: |
+        infracost diff --path=. \
+          --format=json \
+          --compare-to=/tmp/infracost-base.json \
+          --out-file=/tmp/infracost.json
+
+  - task: Bash@3
+    displayName: Post Infracost PR comment
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    inputs:
+      targetType: 'inline'
+      script: |
+        infracost comment github \
+          --path=/tmp/infracost.json \
+          --github-token=$(github-api-token)\
+          --pull-request=$(System.PullRequest.PullRequestNumber) \
+          --repo=$(Build.Repository.Name) \
+          --behavior=update
+
+  # - task: Bash@3
+  #   displayName: Get cost via infracost
+  #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+  #   inputs:
+  #     targetType: 'filepath'
+  #     filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/infracost.sh
+  #   env:
+  #     GITHUB_TOKEN: $(github-api-token)
+  #     INFRACOST_API_KEY: $(infracost-api-key)
+  #     INFRACOST_CURRENCY: GBP
+  #     PULL_REQUEST_BRANCH: $(System.PullRequest.SourceBranch)
+  #     MASTER_BRANCH: $(System.PullRequest.TargetBranch)
+  #     REPO_NAME: $(buildRepoSuffix)
 
   - task: TerraformCLI@1
     displayName: Terraform apply ${{ parameters.component }}
