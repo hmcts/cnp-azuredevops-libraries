@@ -227,7 +227,9 @@ steps:
   - task: Bash@3
     displayName: Checkout $(System.PullRequest.TargetBranch)
     inputs:
-      script: 'git checkout $(System.PullRequest.TargetBranch)'
+      script: |
+        cd $(buildRepoSuffix)
+        git checkout $(System.PullRequest.TargetBranch)
 
   - task: Bash@3
     displayName: Generate Infracost cost estimate baseline
@@ -242,7 +244,9 @@ steps:
   - task: Bash@3
     displayName: Checkout $(Build.SourceBranchName)
     inputs:
-      script: 'git checkout $(Build.SourceBranchName)'
+      script: |
+        cd $(buildRepoSuffix)
+        git checkout $(Build.SourceBranchName)
 
   - task: Bash@3
     displayName: Generate Infracost diff
