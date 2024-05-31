@@ -11,6 +11,7 @@ infracost --version
 cd $REPO_NAME
 
 # checkout master
+git branch
 git checkout $MASTER_BRANCH
 
 # configure infracost
