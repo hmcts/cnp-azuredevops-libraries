@@ -248,7 +248,7 @@ def get_github_slack_user_mapping(mappings, github_id):
     return None
 
 
-def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None, severity=None):
+def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None):
     """
     Sends a message to a Slack recipient using a webhook URL.
 
@@ -527,8 +527,7 @@ def main():
             log_message_slack(
                 slack_user_id,
                 slack_webhook_url,
-                complete_file['warning']['error_message'],
-
+                complete_file['warning']['components'],
             )
             
 
