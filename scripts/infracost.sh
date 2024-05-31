@@ -7,6 +7,11 @@ sudo mv /tmp/infracost-linux-amd64 /usr/local/bin/infracost
 # Verify installation
 infracost --version
 
+# change directory
+echo "current directory is $(pwd)"
+ls -la
+cd $REPO_NAME
+
 # checkout master
 git checkout $MASTER_BRANCH
 
