@@ -527,8 +527,8 @@ def main():
             log_message_slack(
                 slack_user_id,
                 slack_webhook_url,
-                f'{complete_file['warning']['error_message']}',
-                
+                complete_file['warning']['error_message'],
+
             )
             
 
