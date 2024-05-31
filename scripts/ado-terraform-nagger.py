@@ -308,7 +308,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         )
 
 
-def log_message(message_type, message):
+def log_message(slack_recipient, slack_webhook_url, message_type, message):
     """
     Log a message and, if running in Azure DevOps, log a warning issue and
     attempt to send a Slack message.
@@ -339,6 +339,8 @@ def log_message(message_type, message):
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
         if message_type == "warning":
+            # Attempt to send slack message
+            # log_message_slack(slack_recipient, slack_webhook_url, message, message_type)
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
 
         if message_type == "error":
@@ -378,6 +380,8 @@ def terraform_version_checker(terraform_version, config, current_date):
         config["terraform"]["terraform"]["version"]
     ) and current_date <= end_support_date:
         log_message(
+            slack_user_id,
+            slack_webhook_url,
             "warning",
             f"Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["terraform"]["version"]}. '
@@ -390,6 +394,8 @@ def terraform_version_checker(terraform_version, config, current_date):
         config["terraform"]["terraform"]["version"]
     ) and current_date > end_support_date:
         log_message(
+            slack_user_id,
+            slack_webhook_url,
             "error",
             f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
             "Please upgrade...",
@@ -518,8 +524,12 @@ def main():
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
             print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
-            # Attempt to send slack message
-            # log_message_slack(slack_recipient, slack_webhook_url, message, message_type)
+            log_message_slack(
+                slack_user_id,
+                slack_webhook_url,
+                f'{complete_file['warning']['error_message']}',
+                
+            )
             
 
 
