@@ -244,12 +244,12 @@ steps:
           --out-file=/tmp/infracost-base.json \
 
   - task: Bash@3
-    displayName: Checkout $(Build.SourceBranchName)
+    displayName: Checkout $(System.PullRequest.SourceBranch)
     inputs:
       targetType: 'inline'
       script: |
         cd $(buildRepoSuffix)
-        git checkout $(Build.SourceBranchName)
+        git checkout $(System.PullRequest.SourceBranch)
 
   - task: Bash@3
     displayName: Generate Infracost diff
