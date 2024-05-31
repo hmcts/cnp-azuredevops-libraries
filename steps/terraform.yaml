@@ -226,6 +226,7 @@ steps:
 
   - task: Bash@3
     displayName: Checkout $(System.PullRequest.TargetBranch)
+    targetType: 'inline'
     inputs:
       script: |
         cd $(buildRepoSuffix)
@@ -243,6 +244,7 @@ steps:
 
   - task: Bash@3
     displayName: Checkout $(Build.SourceBranchName)
+    targetType: 'inline'
     inputs:
       script: |
         cd $(buildRepoSuffix)
