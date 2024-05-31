@@ -513,6 +513,7 @@ def main():
             if is_warning is True:
                 output_array['warning'] = {'error_message': error_message, 'components': []}
                 output_array['warning']['components'].append(component)
+                output_array['warning']['components'].append('component-b', 'component-c')
             else:
                 output_array['error'] = {'error_message': error_message, 'components': []}
                 output_array['error']['components'].append(component)
