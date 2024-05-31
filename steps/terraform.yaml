@@ -270,7 +270,7 @@ steps:
       INFRACOST_CURRENCY: GBP
       PULL_REQUEST_BRANCH: $(System.PullRequest.SourceBranch)
       MASTER_BRANCH: $(System.PullRequest.TargetBranch)
-      REPO_NAME: $(Build.Repository.Name)
+      REPO_NAME: $(buildRepoSuffix)
 
   - task: TerraformCLI@1
     displayName: Terraform apply ${{ parameters.component }}
