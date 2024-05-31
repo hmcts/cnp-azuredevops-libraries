@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install Infracost CLI
-curl -fsSL https://github.com/infracost/infracost/releases/latest/download/infracost-$(uname -s)-$(uname -m).tar.gz | tar -xzf - -C /tmp
+curl -fsSL https://github.com/infracost/infracost/releases/latest/download/infracost-$(uname -s)-amd64.tar.gz | tar -xzf - -C /tmp
 sudo mv /tmp/infracost-$(uname -s)-$(uname -m) /usr/local/bin/infracost
 
 # Verify installation
