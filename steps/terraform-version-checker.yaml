@@ -14,7 +14,7 @@ steps:
   - template: ./set-build-repo-suffix-env-var.yaml
 
   - script: |
-      git clone https://github.com/hmcts/cnp-deprecation-map.git
+      git clone -b new-format https://github.com/hmcts/cnp-deprecation-map.git
     displayName: Clone Depreciation Map
   
   - task: AzureKeyVault@1
