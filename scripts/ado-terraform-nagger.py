@@ -545,6 +545,10 @@ def main():
                     "Please add it to the config in this file in order to "
                     "compare it's versions.",
                 )
+                print("warning",
+                    f"Provider {provider} is missing from version config. "
+                    "Please add it to the config in this file in order to "
+                    "compare it's versions.")
             else:
                 # Handle providers
                 # Get the date after which Terraform versions are no longer supported
@@ -565,7 +569,14 @@ def main():
                         f'{config["terraform"]["providers"][provider]["version"]}. '
                         f"Please upgrade before deprecation deadline {end_support_date_str}...",
                     )
-
+                print(
+                        "warning",
+                        f"Detected provider {provider} version "
+                        f"{terraform_providers[provider]} "
+                        "is lower than "
+                        f'{config["terraform"]["providers"][provider]["version"]}. '
+                        f"Please upgrade before deprecation deadline {end_support_date_str}...",
+                    )
                 # Error if terraform provider version lower than specified & passed deadline.
                 if version.parse(terraform_providers[provider]) < version.parse(
                     config["terraform"]["providers"][provider]["version"]
@@ -573,6 +584,15 @@ def main():
                     log_message(
                         slack_user_id,
                         slack_webhook_url,
+                        "error",
+                        f"Detected provider {provider} version "
+                        f"{terraform_providers[provider]} "
+                        "is lower than "
+                        f'{config["terraform"]["providers"][provider]["version"]}. '
+                        f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
+                        "Please upgrade...",
+                    )
+                    print(
                         "error",
                         f"Detected provider {provider} version "
                         f"{terraform_providers[provider]} "
