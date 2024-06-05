@@ -193,26 +193,26 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             }
         ])
 
-    if message['error']['components']:
-        # Add the error message block
-        slack_data["blocks"].extend([
-            {
-                "type": "divider"
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Error:*\n" + message['error']['error_message']
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Affected Components:*\n" + ', '.join(message['error']['components'])
-                    }
-                ]
-            }
-        ])
+    # if message['error']['components']:
+    #     # Add the error message block
+    #     slack_data["blocks"].extend([
+    #         {
+    #             "type": "divider"
+    #         },
+    #         {
+    #             "type": "section",
+    #             "fields": [
+    #                 {
+    #                     "type": "mrkdwn",
+    #                     "text": "*Error:*\n" + message['error']['error_message']
+    #                 },
+    #                 {
+    #                     "type": "mrkdwn",
+    #                     "text": "*Affected Components:*\n" + ', '.join(message['error']['components'])
+    #                 }
+    #             ]
+    #         }
+    #     ])
 
     response = requests.post(webhook, json=slack_data)
     if response.status_code:
