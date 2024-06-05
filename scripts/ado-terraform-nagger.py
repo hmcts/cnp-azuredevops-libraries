@@ -124,7 +124,7 @@ def load_file(filename):
         logger.error(f"Error loading {filename}: {e}")
 
 
-def send_slack_message(webhook, channel, username, icon_emoji, message, build_origin, build_url, build_id, components_str):
+def send_slack_message(webhook, channel, username, icon_emoji, build_origin, build_url, build_id, message, components_str):
     """
     Sends a message to a Slack channel using a webhook.
 
@@ -181,7 +181,23 @@ def send_slack_message(webhook, channel, username, icon_emoji, message, build_or
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Affected Components:*\n" + components_str
+                        "text": "*Affected Components:*\n" + ', '.join(message['warning']['components'])
+                    }
+                ]
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Error:*\n" + message['error']['error_message']
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Affected Components:*\n" + ', '.join(message['error']['components'])
                     }
                 ]
             }
@@ -282,21 +298,11 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
             build_origin_url = f"{repository}/tree/{source_branch_name}" # https://github.com/hmcts/cnp-dummy-library-test/tree/dtspo-17345-reinstate-nagger
             build_origin = f"<{build_origin_url}|{repository_name}/tree/{source_branch_name}>"
         
-
-        # Format message with useful information to quickly identify the stage,
-        # component, repository and its branch.
-        # build slack msg then send after
-        slack_message = (
-            f"\n"
-            + f"We have noticed deprecated configuration in {build_origin}: <{build_url}|Build {build_id}>"
-            + f"STAGE: {stage}\n"
-            + f"MESSAGE: {message}\n"
-        )
         icon_emoji = ":warning:"
-        components_str = ', '.join(message['warning']['components'])
+        warning_components_str = ', '.join(message['warning']['components'])
 
         send_slack_message(
-            slack_webhook_url, slack_recipient, slack_sender, icon_emoji, message, build_origin, build_url, build_id, components_str
+            slack_webhook_url, slack_recipient, slack_sender, icon_emoji, build_origin, build_url, build_id, message, warning_components_str
         )
 
 
