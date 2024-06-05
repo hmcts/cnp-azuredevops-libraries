@@ -177,7 +177,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, message, build_or
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Warning:*\n" + message['warning']['error_message']
+                        "text": "*Warning:*\n".join(message['warning']['error_message'])
                     }
                 ]
             },
@@ -186,7 +186,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, message, build_or
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Components:*\n" + message['warning']['components']
+                        "text": "*Components:*\n".join(message['warning']['components'])
                     }
                 ]
             }
