@@ -165,7 +165,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, message, build_or
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Build:*\n" + build_url + "|Build" + build_id
+                        "text": "*Build:*"+ build_id +"\n" + build_url
                     }
                 ]
             },
