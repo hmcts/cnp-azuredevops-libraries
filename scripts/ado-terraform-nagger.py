@@ -300,7 +300,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         icon_emoji = ":warning:"
 
         send_slack_message(
-            slack_webhook_url, slack_recipient, slack_sender, icon_emoji, slack_message, build_origin, build_url, build_id
+            slack_webhook_url, slack_recipient, slack_sender, icon_emoji, message, build_origin, build_url, build_id
         )
 
 
