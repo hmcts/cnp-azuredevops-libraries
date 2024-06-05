@@ -173,7 +173,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
     }
 
     if message['warning']['components']:
-        # Add the error message block
+        # Add the warning message block
         slack_data["blocks"].extend([
             {
                 "type": "divider"
@@ -315,10 +315,9 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         )
 
 
-def log_message(slack_recipient, slack_webhook_url, message_type, message):
+def log_message(message_type, message):
     """
-    Log a message and, if running in Azure DevOps, log a warning issue and
-    attempt to send a Slack message.
+    Log a message if running in Azure DevOps.
 
     This function logs a message with the Python logging library, and if the
     system is running in Azure DevOps (as determined by the
@@ -346,8 +345,6 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
         if message_type == "warning":
-            # Attempt to send slack message
-            # log_message_slack(slack_recipient, slack_webhook_url, message, message_type)
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
 
         if message_type == "error":
@@ -409,7 +406,9 @@ def terraform_version_checker(terraform_version, config, current_date):
         )
         return False, f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade."
 
+
 def transform_environment_components(environment_components=None):
+    # Transform env_components into a dictionary where component is top level
     components_dict = {'components': {}}
 
     for item in environment_components['environment_components']:
@@ -429,8 +428,10 @@ def main():
 
     # Get the current date
     current_date = datetime.date.today()
+
     # Retrieve HMCTS github to slack user mappings
     hmcts_github_slack_user_mappings = get_hmcts_github_slack_user_mappings()
+    
     # Attempt to retrieve github username
     github_user = os.getenv("BUILD_SOURCEVERSIONAUTHOR")
     
@@ -529,14 +530,6 @@ def main():
             if is_warning is True:
                 output_array['warning']['error_message'] = error_message
                 output_array['warning']['components'].append(component)
-                output_array['warning']['components'].append('component-b')
-                output_array['warning']['components'].append('component-c')
-                output_array['warning']['components'].append('component-e')
-
-                output_array['error']['error_message'] = 'Error testing found tf config out of date'
-                output_array['error']['components'].append('component-a')
-                output_array['error']['components'].append('component-d')
-                output_array['error']['components'].append('component-f')
             else:
                 output_array['error']['error_message'] = error_message
                 output_array['error']['components'].append(component)
