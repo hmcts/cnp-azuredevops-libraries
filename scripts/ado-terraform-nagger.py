@@ -421,8 +421,8 @@ def transform_environment_components(environment_components=None):
     
     return components_dict
 
-def terraform_version_check_componenet(system_default_working_directory, build_repo_suffix, terraform_binary_path, output_file, environment_components, current_date):
-            # Transform env_components into a dictionary where component is top level
+def terraform_version_check_componenets(system_default_working_directory, build_repo_suffix, terraform_binary_path, output_file, environment_components, current_date):
+        # Transform env_components into a dictionary where component is top level
         components_dict = transform_environment_components(environment_components)
         output_array = {
             'warning': {
@@ -468,6 +468,15 @@ def terraform_version_check_componenet(system_default_working_directory, build_r
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
                 json.dump(output_array, file, indent=4)
+
+        with open(output_file, 'r') as file:
+            complete_file = json.load(file)
+            print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
+            log_message_slack(
+                slack_user_id,
+                slack_webhook_url,
+                complete_file
+            )
 
 
 def main():
@@ -530,17 +539,8 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
-        terraform_version_check_componenet(system_default_working_directory, build_repo_suffix, terraform_binary_path, output_file, environment_components, current_date)
+        terraform_version_check_componenets(system_default_working_directory, build_repo_suffix, terraform_binary_path, output_file, environment_components, current_date)
 
-        with open(output_file, 'r') as file:
-            complete_file = json.load(file)
-            print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
-            log_message_slack(
-                slack_user_id,
-                slack_webhook_url,
-                complete_file
-            )
-            
         # Handle providers
         terraform_providers = result["provider_selections"]
 
