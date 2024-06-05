@@ -315,7 +315,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         )
 
 
-def log_message(message_type, message):
+def log_message(slack_recipient, slack_webhook_url, message_type, message):
     """
     Log a message if running in Azure DevOps.
 
