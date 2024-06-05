@@ -510,6 +510,8 @@ def main():
                 # Read existing data from the file
                 with open(output_file, 'r') as file:
                     output_array = json.load(file)
+                # Update data
+                output_array.update(output_array)
             else:
                 # If file does not exist, start with an empty list
                 output_array = {
@@ -533,13 +535,6 @@ def main():
                 output_array['error']['error_message'] = error_message
                 output_array['error']['components'].append(component)
             print(component + f' file: { json.dumps(output_array, indent=4, sort_keys=True) }')
-
-            # Load existing data
-            with open(output_file, 'r') as file:
-                update_data = json.load(file)
-
-            # Update data
-            update_data.update(output_array)
 
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
