@@ -534,9 +534,10 @@ def main():
                 output_array['error']['error_message'] = error_message
                 output_array['error']['components'].append(component)
 
-        # Write the updated data back to the file
-        with open(output_file, 'w') as file:
-            json.dump(output_array, file, indent=4)
+            # Write the updated data back to the file
+            print(output_file)
+            with open(output_file, 'w') as file:
+                json.dump(output_array, file, indent=4)
 
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
