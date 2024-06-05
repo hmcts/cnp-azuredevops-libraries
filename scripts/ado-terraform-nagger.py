@@ -188,19 +188,19 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             {
                 "type": "divider"
             },
-            {
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Error:*\n" + message['error']['error_message']
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Affected Components:*\n" + ', '.join(message['error']['components'])
-                    }
-                ]
-            }
+            # {
+            #     "type": "section",
+            #     "fields": [
+            #         {
+            #             "type": "mrkdwn",
+            #             "text": "*Error:*\n" + message['error']['error_message']
+            #         },
+            #         {
+            #             "type": "mrkdwn",
+            #             "text": "*Affected Components:*\n" + ', '.join(message['error']['components'])
+            #         }
+            #     ]
+            # }
         ]
     }
 
