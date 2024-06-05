@@ -124,7 +124,7 @@ def load_file(filename):
         logger.error(f"Error loading {filename}: {e}")
 
 
-def send_slack_message(webhook, channel, username, icon_emoji, message, build_url, build_id):
+def send_slack_message(webhook, channel, username, icon_emoji, message, build_origin, build_url, build_id):
     """
     Sends a message to a Slack channel using a webhook.
 
@@ -161,11 +161,11 @@ def send_slack_message(webhook, channel, username, icon_emoji, message, build_ur
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Source:*\n" + build_url
+                        "text": "*Source:*\n" + build_origin
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Build:*\n" + build_id
+                        "text": "*Build:*\n" + build_url + "|Build" + build_id
                     }
                 ]
             },
@@ -300,7 +300,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         icon_emoji = ":warning:"
 
         send_slack_message(
-            slack_webhook_url, slack_recipient, slack_sender, slack_message, icon_emoji
+            slack_webhook_url, slack_recipient, slack_sender, icon_emoji, slack_message, build_origin, build_url, build_id
         )
 
 
