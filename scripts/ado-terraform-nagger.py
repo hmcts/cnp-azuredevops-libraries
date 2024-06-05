@@ -168,7 +168,13 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                         "text": "*Build:* " + build_id + "\n" + build_url
                     }
                 ]
-            },
+            }
+        ]
+    }
+
+    if message['warning']['components']:
+        # Add the error message block
+        slack_data["blocks"].extend([
             {
                 "type": "divider"
             },
@@ -184,25 +190,29 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                         "text": "*Affected Components:*\n" + ', '.join(message['warning']['components'])
                     }
                 ]
-            },
+            }
+        ])
+
+    if message['error']['components']:
+        # Add the error message block
+        slack_data["blocks"].extend([
             {
                 "type": "divider"
             },
-            # {
-            #     "type": "section",
-            #     "fields": [
-            #         {
-            #             "type": "mrkdwn",
-            #             "text": "*Error:*\n" + message['error']['error_message']
-            #         },
-            #         {
-            #             "type": "mrkdwn",
-            #             "text": "*Affected Components:*\n" + ', '.join(message['error']['components'])
-            #         }
-            #     ]
-            # }
-        ]
-    }
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Error:*\n" + message['error']['error_message']
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Affected Components:*\n" + ', '.join(message['error']['components'])
+                    }
+                ]
+            }
+        ])
 
     response = requests.post(webhook, json=slack_data)
     if response.status_code:
@@ -502,6 +512,7 @@ def main():
                     output_array = json.load(file)
             else:
                 # If file does not exist, start with an empty list
+                # update this array to new format?
                 output_array = {}
 
             # Append warning/error if flagged
