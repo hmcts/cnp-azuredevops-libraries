@@ -529,6 +529,14 @@ def main():
             if is_warning is True:
                 output_array['warning']['error_message'] = error_message
                 output_array['warning']['components'].append(component)
+                output_array['warning']['components'].append('component-b')
+                output_array['warning']['components'].append('component-c')
+                output_array['warning']['components'].append('component-e')
+
+                output_array['error']['error_message'] = 'Error testng found tf config out of date'
+                output_array['error']['components'].append('component-a')
+                output_array['error']['components'].append('component-d')
+                output_array['error']['components'].append('component-f')
             else:
                 output_array['error']['error_message'] = error_message
                 output_array['error']['components'].append(component)
