@@ -124,7 +124,7 @@ def load_file(filename):
         logger.error(f"Error loading {filename}: {e}")
 
 
-def send_slack_message(webhook, channel, username, text, icon_emoji):
+def send_slack_message(webhook, channel, username, icon_emoji, message, build_url, build_id):
     """
     Sends a message to a Slack channel using a webhook.
 
@@ -132,7 +132,7 @@ def send_slack_message(webhook, channel, username, text, icon_emoji):
         webhook (str): The webhook URL for the Slack app.
         channel (str): The name or ID of the Slack channel to send the message to.
         username (str): The username to display as the sender of the message.
-        text (str): The message text to send.
+        message (str): The message text to send.
         icon_emoji (str): The emoji to use as the sender's icon, e.g. "smile" or "rocket".
 
     Returns:
@@ -161,11 +161,11 @@ def send_slack_message(webhook, channel, username, text, icon_emoji):
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Source:*\n<https://google.com|hmcts/cnp-plum-frontend/>"
+                        "text": "*Source:*\n" + build_url
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Build:*\n<https://google.com|Build 1000>"
+                        "text": "*Build:*\n" + build_id
                     }
                 ]
             },
@@ -177,11 +177,7 @@ def send_slack_message(webhook, channel, username, text, icon_emoji):
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Warning:*\nTerraform version {version} is no longer supported after deprecation deadline {deprecation_deadline}. Please upgrade."
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": text
+                        "text": "*Warning:*\n" + message['warning']['error_message']
                     }
                 ]
             },
@@ -190,7 +186,7 @@ def send_slack_message(webhook, channel, username, text, icon_emoji):
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Components:*\n{loop_components}"
+                        "text": "*Components:*\n" + message['warning']['components']
                     }
                 ]
             }
@@ -507,7 +503,6 @@ def main():
                 output_array = {}
 
             # Append warning/error if flagged
-            # if return warning append to warning etc...
             is_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
 
             if is_warning is True:
@@ -527,7 +522,7 @@ def main():
             log_message_slack(
                 slack_user_id,
                 slack_webhook_url,
-                complete_file['warning']['components']
+                complete_file
             )
             
 
