@@ -193,26 +193,26 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             }
         ])
 
-    # if message['error']['components']:
-    #     # Add the error message block
-    #     slack_data["blocks"].extend([
-    #         {
-    #             "type": "divider"
-    #         },
-    #         {
-    #             "type": "section",
-    #             "fields": [
-    #                 {
-    #                     "type": "mrkdwn",
-    #                     "text": "*Error:*\n" + message['error']['error_message']
-    #                 },
-    #                 {
-    #                     "type": "mrkdwn",
-    #                     "text": "*Affected Components:*\n" + ', '.join(message['error']['components'])
-    #                 }
-    #             ]
-    #         }
-    #     ])
+    if message['error']['components']:
+        # Add the error message block
+        slack_data["blocks"].extend([
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Error:*\n" + message['error']['error_message']
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Affected Components:*\n" + ', '.join(message['error']['components'])
+                    }
+                ]
+            }
+        ])
 
     response = requests.post(webhook, json=slack_data)
     if response.status_code:
@@ -513,16 +513,25 @@ def main():
             else:
                 # If file does not exist, start with an empty list
                 # update this array to new format?
-                output_array = {}
+                output_array = {
+                    'warning': {
+                        'components': [],
+                        'error_message': ''
+                    },
+                    'error': {
+                        'components': [],
+                        'error_message': ''
+                    },
+                }
 
             # Append warning/error if flagged
             is_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
 
             if is_warning is True:
-                output_array['warning'] = {'error_message': error_message, 'components': []}
+                output_array['warning']['error_message'] = error_message
                 output_array['warning']['components'].append(component)
             else:
-                output_array['error'] = {'error_message': error_message, 'components': []}
+                output_array['error']['error_message'] = error_message
                 output_array['error']['components'].append(component)
 
             # Write the updated data back to the file
