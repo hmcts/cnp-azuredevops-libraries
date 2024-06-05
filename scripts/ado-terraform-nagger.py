@@ -144,7 +144,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
     slack_data = {
         "channel": channel,
         "username": username,
-        "text": 'Config Check Status',
+        "text": 'Config Version Report',
         "icon_emoji": icon_emoji,
         "blocks": 
         [
