@@ -187,7 +187,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Affected Components:*\n" + ', '.join(message['warning']['components'])
+                        "text": "*Affected Components:*\n" + '\n'.join(message['warning']['components'])
                     }
                 ]
             }
@@ -208,7 +208,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Affected Components:*\n" + ', '.join(message['error']['components'])
+                        "text": "*Affected Components:*\n" + '\n'.join(message['error']['components'])
                     }
                 ]
             }
