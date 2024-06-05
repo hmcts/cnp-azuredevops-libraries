@@ -421,6 +421,54 @@ def transform_environment_components(environment_components=None):
     
     return components_dict
 
+def terraform_version_check_componenet(system_default_working_directory, build_repo_suffix, terraform_binary_path, output_file, environment_components, current_date):
+            # Transform env_components into a dictionary where component is top level
+        components_dict = transform_environment_components(environment_components)
+        output_array = {
+            'warning': {
+                'components': [],
+                'error_message': ''
+            },
+            'error': {
+                'components': [],
+                'error_message': ''
+            },
+        }
+
+        for component in components_dict['components'].keys():
+            print(f'component: {component}')
+            # Construct the working directory path
+            base_directory = os.getenv('BASE_DIRECTORY')
+            if not base_directory or base_directory == '':
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{component}"
+            else:
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
+
+            # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
+            command = ["tfswitch", "-b", terraform_binary_path]
+            run_command(command, working_directory)
+
+            command = ["terraform", "version", "--json"]
+            result = json.loads(run_command(command, working_directory))
+            terraform_version = result["terraform_version"]
+
+            # Load deprecation map
+            config = load_file(args.filepath)
+
+            # Append warning/error if flagged
+            is_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
+
+            if is_warning is True:
+                output_array['warning']['error_message'] = error_message
+                output_array['warning']['components'].append(component)
+            else:
+                output_array['error']['error_message'] = error_message
+                output_array['error']['components'].append(component)
+
+            # Write the updated data back to the file
+            with open(output_file, 'w') as file:
+                json.dump(output_array, file, indent=4)
+
 
 def main():
     # initialise array of warnings/errors
@@ -482,52 +530,7 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
-        # Transform env_components into a dictionary where component is top level
-        components_dict = transform_environment_components(environment_components)
-        output_array = {
-            'warning': {
-                'components': [],
-                'error_message': ''
-            },
-            'error': {
-                'components': [],
-                'error_message': ''
-            },
-        }
-
-        for component in components_dict['components'].keys():
-            print(f'component: {component}')
-            # Construct the working directory path
-            base_directory = os.getenv('BASE_DIRECTORY')
-            if not base_directory or base_directory == '':
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{component}"
-            else:
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
-
-            # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
-            command = ["tfswitch", "-b", terraform_binary_path]
-            run_command(command, working_directory)
-
-            command = ["terraform", "version", "--json"]
-            result = json.loads(run_command(command, working_directory))
-            terraform_version = result["terraform_version"]
-
-            # Load deprecation map
-            config = load_file(args.filepath)
-
-            # Append warning/error if flagged
-            is_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
-
-            if is_warning is True:
-                output_array['warning']['error_message'] = error_message
-                output_array['warning']['components'].append(component)
-            else:
-                output_array['error']['error_message'] = error_message
-                output_array['error']['components'].append(component)
-
-            # Write the updated data back to the file
-            with open(output_file, 'w') as file:
-                json.dump(output_array, file, indent=4)
+        terraform_version_check_componenet(system_default_working_directory, build_repo_suffix, terraform_binary_path, output_file, environment_components, current_date)
 
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
