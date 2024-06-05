@@ -533,7 +533,7 @@ def main():
                 output_array['warning']['components'].append('component-c')
                 output_array['warning']['components'].append('component-e')
 
-                output_array['error']['error_message'] = 'Error testng found tf config out of date'
+                output_array['error']['error_message'] = 'Error testing found tf config out of date'
                 output_array['error']['components'].append('component-a')
                 output_array['error']['components'].append('component-d')
                 output_array['error']['components'].append('component-f')
