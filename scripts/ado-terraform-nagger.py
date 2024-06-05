@@ -540,8 +540,6 @@ def main():
                 complete_file
             )
             
-
-
         # Handle providers
         terraform_providers = result["provider_selections"]
 
