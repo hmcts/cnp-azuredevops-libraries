@@ -535,7 +535,7 @@ def main():
                 output_array['error']['components'].append(component)
 
             # Write the updated data back to the file
-            print(output_file)
+            print(component + f' file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
             with open(output_file, 'w') as file:
                 json.dump(output_array, file, indent=4)
 
