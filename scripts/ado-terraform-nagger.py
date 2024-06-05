@@ -484,6 +484,16 @@ def main():
 
         # Transform env_components into a dictionary where component is top level
         components_dict = transform_environment_components(environment_components)
+        output_array = {
+            'warning': {
+                'components': [],
+                'error_message': ''
+            },
+            'error': {
+                'components': [],
+                'error_message': ''
+            },
+        }
 
         for component in components_dict['components'].keys():
             print(f'component: {component}')
@@ -504,26 +514,6 @@ def main():
 
             # Load deprecation map
             config = load_file(args.filepath)
-
-            # Check if the file exists
-            if os.path.exists(output_file):
-                # Read existing data from the file
-                with open(output_file, 'r') as file:
-                    output_array = json.load(file)
-                # Update data
-                output_array.update(output_array)
-            else:
-                # If file does not exist, start with an empty list
-                output_array = {
-                    'warning': {
-                        'components': [],
-                        'error_message': ''
-                    },
-                    'error': {
-                        'components': [],
-                        'error_message': ''
-                    },
-                }
 
             # Append warning/error if flagged
             is_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
