@@ -512,7 +512,6 @@ def main():
                     output_array = json.load(file)
             else:
                 # If file does not exist, start with an empty list
-                # update this array to new format?
                 output_array = {
                     'warning': {
                         'components': [],
@@ -533,11 +532,12 @@ def main():
             else:
                 output_array['error']['error_message'] = error_message
                 output_array['error']['components'].append(component)
+            print(component + f' file: { json.dumps(output_array, indent=4, sort_keys=True) }')
 
-            # Write the updated data back to the file
-            with open(output_file, 'w') as file:
-                json.dump(output_array, file, indent=4)
-                print(component + f' file: { json.dumps(output_array, indent=4, sort_keys=True) }')
+        # Write the updated data back to the file
+        with open(output_file, 'w') as file:
+            json.dump(output_array, file, indent=4)
+            print(f'Write file: { json.dumps(output_array, indent=4, sort_keys=True) }')
 
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
