@@ -531,9 +531,10 @@ def main():
 
             # Handle providers
             terraform_providers = result["provider_selections"]
+            print(terraform_providers)
 
             for provider in terraform_providers:
-                if provider not in config["terraform"]["registry.terraform.io"]:
+                if provider not in config["terraform"]["providers"]:
                     log_message(
                         slack_user_id,
                         slack_webhook_url,
