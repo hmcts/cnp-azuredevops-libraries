@@ -452,7 +452,7 @@ def terraform_provider_checker(provider, terraform_providers, config, current_da
                     f'{config["terraform"][provider]["version"]}. '
                     f"Please upgrade before deprecation deadline {end_support_date_str}...")
             
-        return True, message
+            return True, message
             
         # Error if terraform provider version lower than specified & passed deadline.
         if version.parse(terraform_providers[provider]) < version.parse(
@@ -564,18 +564,17 @@ def main():
                     'error_message': ''
                 },
                 'terraform_provider': {
-                    'components': [],
+                    'provider': [],
                     'error_message': ''
                 }
             },
-
             'error': {
                 'terraform_version': {
                     'components': [],
                     'error_message': ''
                 },
                 'terraform_provider': {
-                    'components': [],
+                    'provider': [],
                     'error_message': ''
                 }
             }
@@ -630,10 +629,10 @@ def main():
 
                 if is_warning is True:
                     output_array['warning']['terraform_provider']['error_message'] = error_message
-                    output_array['warning']['terraform_provider']['components'].append(provider)
+                    output_array['warning']['terraform_provider']['provider'].append(provider)
                 else:
                     output_array['error']['terraform_provider']['error_message'] = error_message
-                    output_array['error']['terraform_provider']['components'].append(provider)
+                    output_array['error']['terraform_provider']['provider'].append(provider)
             
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
