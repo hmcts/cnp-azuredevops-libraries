@@ -625,7 +625,7 @@ def main():
             print(json.dumps(terraform_providers, indent=4, sort_keys=True))
 
             for provider, provider_version in terraform_providers.items():
-                print(provider, +" provider version: "+ provider_version)
+                print(provider + " provider version: " + provider_version)
                 # Append warning/error if flagged
                 is_warning, error_message = terraform_provider_checker(provider, terraform_providers, config, current_date)
 
