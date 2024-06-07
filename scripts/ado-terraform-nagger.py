@@ -477,7 +477,7 @@ def terraform_provider_checker(provider, terraform_providers, config, current_da
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
                 "Please upgrade...")
             
-        return False, message
+            return False, message
 
 
 def transform_environment_components(environment_components=None):
