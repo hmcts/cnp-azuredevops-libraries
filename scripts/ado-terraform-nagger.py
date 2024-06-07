@@ -441,7 +441,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 slack_webhook_url,
                 "warning",
                 f"Detected provider {provider} version "
-                f"{provider_version[provider]} "
+                f"{provider_version} "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}...",
@@ -456,7 +456,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 slack_webhook_url,
                 "error",
                 f"Detected provider {provider} version "
-                f"{provider_version[provider]} "
+                f"{provider_version} "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
