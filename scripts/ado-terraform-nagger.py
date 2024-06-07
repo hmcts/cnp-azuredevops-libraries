@@ -427,7 +427,7 @@ def terraform_provider_checker(provider, terraform_providers, config, current_da
             f"Provider {provider} is missing from version config."
             "Please add it to the config in this file in order to compare it's versions."
         )
-
+        print(message)
         return True, message
     
     else:
@@ -451,7 +451,7 @@ def terraform_provider_checker(provider, terraform_providers, config, current_da
                     "is lower than "
                     f'{config["terraform"][provider]["version"]}. '
                     f"Please upgrade before deprecation deadline {end_support_date_str}...")
-            
+            print(message)
             return True, message
             
         # Error if terraform provider version lower than specified & passed deadline.
