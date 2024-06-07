@@ -408,7 +408,7 @@ def terraform_version_checker(terraform_version, config, current_date):
         return False, f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade."
 
 
-def terraform_provider_checker(provider, terraform_providers, config, current_date):
+def terraform_provider_checker(provider, provider_version, config, current_date):
     # Handle providers
     # Get the date after which Terraform versions are no longer supported
     end_support_date_str = config["terraform"][provider]["date_deadline"]
@@ -432,7 +432,7 @@ def terraform_provider_checker(provider, terraform_providers, config, current_da
     
     else:
         # Warn if terraform provider version is lower than specified & not past deadline.
-        if version.parse(terraform_providers[provider]) < version.parse(
+        if version.parse(provider_version) < version.parse(
             config["terraform"][provider]["version"]
         ) and current_date <= end_support_date:
             log_message(
@@ -440,14 +440,14 @@ def terraform_provider_checker(provider, terraform_providers, config, current_da
                 slack_webhook_url,
                 "warning",
                 f"Detected provider {provider} version "
-                f"{terraform_providers[provider]} "
+                f"{provider_version} "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}...")
             
             message = (
                     f"Detected provider {provider} version "
-                    f"{terraform_providers[provider]} "
+                    f"{provider_version} "
                     "is lower than "
                     f'{config["terraform"][provider]["version"]}. '
                     f"Please upgrade before deprecation deadline {end_support_date_str}...")
@@ -455,7 +455,7 @@ def terraform_provider_checker(provider, terraform_providers, config, current_da
             return True, message
             
         # Error if terraform provider version lower than specified & passed deadline.
-        if version.parse(terraform_providers[provider]) < version.parse(
+        if version.parse(provider_version) < version.parse(
             config["terraform"][provider]["version"]
         ) and current_date > end_support_date:
             log_message(
@@ -463,7 +463,7 @@ def terraform_provider_checker(provider, terraform_providers, config, current_da
                 slack_webhook_url,
                 "error",
                 f"Detected provider {provider} version "
-                f"{terraform_providers[provider]} "
+                f"{provider_version} "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. "
@@ -471,7 +471,7 @@ def terraform_provider_checker(provider, terraform_providers, config, current_da
             
             message = (
                 f"Detected provider {provider} version "
-                f"{terraform_providers[provider]} "
+                f"{provider_version} "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
@@ -627,7 +627,7 @@ def main():
             for provider, provider_version in terraform_providers.items():
                 print(provider + " provider version: " + provider_version)
                 # Append warning/error if flagged
-                is_warning, error_message = terraform_provider_checker(provider, terraform_providers, config, current_date)
+                is_warning, error_message = terraform_provider_checker(provider, provider_version, config, current_date)
 
                 if is_warning is True:
                     output_array['warning']['terraform_provider']['error_message'] = error_message
