@@ -10,6 +10,7 @@ import logging
 import argparse
 import requests
 import subprocess
+import shutil
 from packaging import version
 from json.decoder import JSONDecodeError
 
@@ -482,7 +483,7 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
-                # Transform env_components into a dictionary where component is top level
+        # Transform env_components into a dictionary where component is top level
         components_dict = transform_environment_components(environment_components)
         output_array = {
             'warning': {
@@ -503,9 +504,17 @@ def main():
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{component}"
             else:
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
+            
+            # TODO: copy the override.tf from system_default_working_directory/cnp-azuredevops-libraries/resources dir and 
+            # paste it into the component working_directory to have a local provider_selection
+            shutil.copyfile(f"{system_default_working_directory}/cnp-azuredevops-libraries/resources/override.tf", working_directory)
 
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
             command = ["tfswitch", "-b", terraform_binary_path]
+            run_command(command, working_directory)
+
+            # try and do the terraform init here 
+            command = ["terraform", "init"]
             run_command(command, working_directory)
 
             command = ["terraform", "version", "--json"]
