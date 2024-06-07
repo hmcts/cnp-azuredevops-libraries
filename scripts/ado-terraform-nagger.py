@@ -173,7 +173,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
         ]
     }
 
-    if message['warning']['components']:
+    if message['warning']['terraform_version']['components']:
         # Add the warning message block
         slack_data["blocks"].extend([
             {
@@ -184,17 +184,17 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Warning:*\n" + message['warning']['error_message']
+                        "text": "*Warning:*\n" + message['warning']['terraform_version']['error_message']
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Affected Components:*\n" + '\n'.join(message['warning']['components'])
+                        "text": "*Affected Components:*\n" + '\n'.join(message['warning']['terraform_version']['components'])
                     }
                 ]
             }
         ])
 
-    if message['error']['components']:
+    if message['error']['terraform_version']['components']:
         # Add the error message block
         slack_data["blocks"].extend([
             {
@@ -205,11 +205,11 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Error:*\n" + message['error']['error_message']
+                        "text": "*Error:*\n" + message['error']['terraform_version']['error_message']
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Affected Components:*\n" + '\n'.join(message['error']['components'])
+                        "text": "*Affected Components:*\n" + '\n'.join(message['error']['terraform_version']['components'])
                     }
                 ]
             }
