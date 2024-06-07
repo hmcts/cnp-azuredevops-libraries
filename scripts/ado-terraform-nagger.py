@@ -440,7 +440,7 @@ def terraform_provider_checker(terraform_providers, provider, config, current_da
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}...")
 
-            return True, f"Detected provider {provider} version {terraform_providers[provider]} is lower than {config["terraform"][provider]["version"]}. Please upgrade before deprecation deadline {end_support_date_str}..."
+            return True, f"Detected provider {provider} version {terraform_providers[provider]} is lower than {config['terraform'][provider]['version']}. Please upgrade before deprecation deadline {end_support_date_str}..."
             
         # Error if terraform provider version lower than specified & passed deadline.
         if version.parse(terraform_providers[provider]) < version.parse(
