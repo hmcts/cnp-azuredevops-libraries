@@ -422,8 +422,13 @@ def terraform_provider_checker(terraform_providers, provider, config, current_da
             f"Provider {provider} is missing from version config. "
             "Please add it to the config in this file in order to "
             "compare it's versions.")
+        
+        message = (
+            f"Provider {provider} is missing from version config."
+            "Please add it to the config in this file in order to compare it's versions."
+        )
 
-        return True, f"Provider {provider} is missing from version config. Please add it to the config in this file in order to compare it's versions."
+        return True, message
     
     else:
         # Warn if terraform provider version is lower than specified & not past deadline.
@@ -439,8 +444,14 @@ def terraform_provider_checker(terraform_providers, provider, config, current_da
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}...")
-
-            return True, f"Detected provider {provider} version {terraform_providers[provider]} is lower than {config['terraform'][provider]['version']}. Please upgrade before deprecation deadline {end_support_date_str}..."
+            
+            message = (
+                    f"Detected provider {provider} version "
+                    f"{terraform_providers[provider]} "
+                    "is lower than "
+                    f'{config["terraform"][provider]["version"]}. '
+                    f"Please upgrade before deprecation deadline {end_support_date_str}...")
+            return True, message
             
         # Error if terraform provider version lower than specified & passed deadline.
         if version.parse(terraform_providers[provider]) < version.parse(
@@ -613,12 +624,12 @@ def main():
                 # Append warning/error if flagged
                 is_warning, error_message = terraform_provider_checker(terraform_providers, provider, config, current_date)
 
-            if is_warning is True:
-                output_array['warning']['terraform_provider']['error_message'] = error_message
-                output_array['warning']['terraform_provider']['components'].append(provider)
-            else:
-                output_array['error']['terraform_provider']['error_message'] = error_message
-                output_array['error']['terraform_provider']['components'].append(provider)
+                if is_warning is True:
+                    output_array['warning']['terraform_provider']['error_message'] = error_message
+                    output_array['warning']['terraform_provider']['components'].append(provider)
+                else:
+                    output_array['error']['terraform_provider']['error_message'] = error_message
+                    output_array['error']['terraform_provider']['components'].append(provider)
             
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
