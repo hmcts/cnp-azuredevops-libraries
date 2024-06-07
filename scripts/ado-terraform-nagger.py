@@ -423,11 +423,7 @@ def terraform_provider_checker(terraform_providers, provider, config, current_da
             "Please add it to the config in this file in order to "
             "compare it's versions.")
 
-        message = (
-            f"Provider {provider} is missing from version config. "
-            "Please add it to the config in this file in order to "
-            "compare it's versions.")
-        return True, message
+        return True, f"Provider {provider} is missing from version config. Please add it to the config in this file in order to compare it's versions."
     
     else:
         # Warn if terraform provider version is lower than specified & not past deadline.
@@ -443,14 +439,8 @@ def terraform_provider_checker(terraform_providers, provider, config, current_da
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}...")
-            
-            message = (
-                    f"Detected provider {provider} version "
-                    f"{terraform_providers[provider]} "
-                    "is lower than "
-                    f'{config["terraform"][provider]["version"]}. '
-                    f"Please upgrade before deprecation deadline {end_support_date_str}...")
-            return True, message
+
+            return True, f"Detected provider {provider} version {terraform_providers[provider]} is lower than '{config["terraform"][provider]["version"]}. ' Please upgrade before deprecation deadline {end_support_date_str}..."
             
         # Error if terraform provider version lower than specified & passed deadline.
         if version.parse(terraform_providers[provider]) < version.parse(
@@ -618,7 +608,7 @@ def main():
 
             # Handle providers
             terraform_providers = result["provider_selections"]
-            
+
             for provider in terraform_providers:
                 # Append warning/error if flagged
                 is_warning, error_message = terraform_provider_checker(terraform_providers, provider, config, current_date)
