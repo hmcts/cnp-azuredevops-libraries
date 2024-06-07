@@ -408,7 +408,7 @@ def terraform_version_checker(terraform_version, config, current_date):
         return False, f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade."
 
 
-def terraform_provider_checker(terraform_providers, provider, config, current_date):
+def terraform_provider_checker(provider, terraform_providers, config, current_date):
     # Handle providers
     # Get the date after which Terraform versions are no longer supported
     end_support_date_str = config["terraform"][provider]["date_deadline"]
@@ -451,7 +451,8 @@ def terraform_provider_checker(terraform_providers, provider, config, current_da
                     "is lower than "
                     f'{config["terraform"][provider]["version"]}. '
                     f"Please upgrade before deprecation deadline {end_support_date_str}...")
-            return True, message
+            
+        return True, message
             
         # Error if terraform provider version lower than specified & passed deadline.
         if version.parse(terraform_providers[provider]) < version.parse(
@@ -475,7 +476,8 @@ def terraform_provider_checker(terraform_providers, provider, config, current_da
                 f'{config["terraform"][provider]["version"]}. '
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
                 "Please upgrade...")
-            return False, message
+            
+        return False, message
 
 
 def transform_environment_components(environment_components=None):
@@ -616,13 +618,15 @@ def main():
             else:
                 output_array['error']['terraform_version']['error_message'] = error_message
                 output_array['error']['terraform_version']['components'].append(component)
+            
+            print(f'Component file: { json.dumps(output_array, indent=4) }')
 
             # Handle providers
             terraform_providers = result["provider_selections"]
 
             for provider in terraform_providers:
                 # Append warning/error if flagged
-                is_warning, error_message = terraform_provider_checker(terraform_providers, provider, config, current_date)
+                is_warning, error_message = terraform_provider_checker(provider, terraform_providers, config, current_date)
 
                 if is_warning is True:
                     output_array['warning']['terraform_provider']['error_message'] = error_message
