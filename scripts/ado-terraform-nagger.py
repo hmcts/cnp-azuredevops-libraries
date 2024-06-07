@@ -594,12 +594,12 @@ def main():
             config = load_file(args.filepath)
 
             # Append warning/error if flagged
-            warning, error_message = terraform_version_checker(terraform_version, config, current_date)
+            is_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
 
-            if warning == 'warning':
+            if is_warning is True:
                 output_array['warning']['terraform_version']['error_message'] = error_message
                 output_array['warning']['terraform_version']['components'].append(component)
-            elif warning == 'error':
+            else:
                 output_array['error']['terraform_version']['error_message'] = error_message
                 output_array['error']['terraform_version']['components'].append(component)
             
@@ -612,12 +612,12 @@ def main():
             for provider, provider_version in terraform_providers.items():
                 print(provider + " provider version: " + provider_version)
                 # Append warning/error if flagged
-                is_warning, error_message = terraform_provider_checker(provider, provider_version, config, current_date)
+                warning, error_message = terraform_provider_checker(provider, provider_version, config, current_date)
 
-                if is_warning is True:
+                if warning == 'warning':
                     output_array['warning']['terraform_provider']['error_message'] = error_message
                     output_array['warning']['terraform_provider']['provider'].append(provider)
-                else:
+                elif warning == 'error':
                     output_array['error']['terraform_provider']['error_message'] = error_message
                     output_array['error']['terraform_provider']['provider'].append(provider)
             
