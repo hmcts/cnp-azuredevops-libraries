@@ -480,8 +480,6 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 "Please upgrade...")
             
             return False, message
-    
-    return True, "test msg"
 
 
 def transform_environment_components(environment_components=None):
