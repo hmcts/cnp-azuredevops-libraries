@@ -448,7 +448,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             )
             return True, "debug msg"
         # Error if terraform provider version lower than specified & passed deadline.
-        if version.parse(provider_version[provider]) < version.parse(
+        if version.parse(provider_version) < version.parse(
             config["terraform"][provider]["version"]
         ) and current_date > end_support_date:
             log_message(
