@@ -619,7 +619,7 @@ def main():
 
             for provider in terraform_providers:
                 # Append warning/error if flagged
-                is_warning, error_message = terraform_provider_checker(terraform_providers, provider, config)
+                is_warning, error_message = terraform_provider_checker(terraform_providers, provider, config, current_date)
 
             if is_warning is True:
                 output_array['warning']['terraform_provider']['error_message'] = error_message
