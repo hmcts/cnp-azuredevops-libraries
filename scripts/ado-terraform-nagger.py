@@ -408,7 +408,7 @@ def terraform_version_checker(terraform_version, config, current_date):
         return False, f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade."
 
 
-def terraform_provider_checker(provider, config, current_date):
+def terraform_provider_checker(provider, terraform_providers, config, current_date):
     # Handle providers
     # Get the date after which Terraform versions are no longer supported
     end_support_date_str = config["terraform"][provider]["date_deadline"]
@@ -432,7 +432,7 @@ def terraform_provider_checker(provider, config, current_date):
     
     else:
         # Warn if terraform provider version is lower than specified & not past deadline.
-        if version.parse(provider) < version.parse(
+        if version.parse(terraform_providers[provider]) < version.parse(
             config["terraform"][provider]["version"]
         ) and current_date <= end_support_date:
             log_message(
@@ -440,14 +440,14 @@ def terraform_provider_checker(provider, config, current_date):
                 slack_webhook_url,
                 "warning",
                 f"Detected provider {provider} version "
-                f"{provider} "
+                f"{terraform_providers[provider]} "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}...")
             
             message = (
                     f"Detected provider {provider} version "
-                    f"{provider} "
+                    f"{terraform_providers[provider]} "
                     "is lower than "
                     f'{config["terraform"][provider]["version"]}. '
                     f"Please upgrade before deprecation deadline {end_support_date_str}...")
@@ -455,7 +455,7 @@ def terraform_provider_checker(provider, config, current_date):
             return True, message
             
         # Error if terraform provider version lower than specified & passed deadline.
-        if version.parse(provider) < version.parse(
+        if version.parse(terraform_providers[provider]) < version.parse(
             config["terraform"][provider]["version"]
         ) and current_date > end_support_date:
             log_message(
@@ -463,7 +463,7 @@ def terraform_provider_checker(provider, config, current_date):
                 slack_webhook_url,
                 "error",
                 f"Detected provider {provider} version "
-                f"{provider} "
+                f"{terraform_providers[provider]} "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. "
@@ -471,7 +471,7 @@ def terraform_provider_checker(provider, config, current_date):
             
             message = (
                 f"Detected provider {provider} version "
-                f"{provider} "
+                f"{terraform_providers[provider]} "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
@@ -622,11 +622,11 @@ def main():
 
             # Handle providers
             terraform_providers = result["provider_selections"]
-            print(terraform_providers)
+            print(json.dumps(terraform_providers, indent=4, sort_keys=True))
 
             for provider in terraform_providers:
                 # Append warning/error if flagged
-                is_warning, error_message = terraform_provider_checker(provider, config, current_date)
+                is_warning, error_message = terraform_provider_checker(provider, terraform_providers, config, current_date)
 
                 if is_warning is True:
                     output_array['warning']['terraform_provider']['error_message'] = error_message
