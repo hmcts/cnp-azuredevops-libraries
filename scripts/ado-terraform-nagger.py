@@ -446,7 +446,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}...",
             )
-            return True, "debug msg"
+            return 'warning', "debug msg"
         # Error if terraform provider version lower than specified & passed deadline.
         if version.parse(provider_version) < version.parse(
             config["terraform"][provider]["version"]
@@ -462,7 +462,8 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
                 "Please upgrade...",
             ) 
-            return False, "error debug msg"
+            return 'error', "error debug msg"
+    return 'no-error', 'All providers up to date'
 
 def transform_environment_components(environment_components=None):
     # Transform env_components into a dictionary where component is top level
@@ -593,12 +594,12 @@ def main():
             config = load_file(args.filepath)
 
             # Append warning/error if flagged
-            is_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
+            warning, error_message = terraform_version_checker(terraform_version, config, current_date)
 
-            if is_warning is True:
+            if warning == 'warning':
                 output_array['warning']['terraform_version']['error_message'] = error_message
                 output_array['warning']['terraform_version']['components'].append(component)
-            else:
+            elif warning == 'error':
                 output_array['error']['terraform_version']['error_message'] = error_message
                 output_array['error']['terraform_version']['components'].append(component)
             
