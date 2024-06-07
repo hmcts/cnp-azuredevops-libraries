@@ -432,54 +432,53 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
         print(message)
         return True, message
     
-    else:
-        # Warn if terraform provider version is lower than specified & not past deadline.
-        if version.parse(provider_version) < version.parse(
-            config["terraform"][provider]["version"]
-        ) and current_date <= end_support_date:
-            log_message(
-                slack_user_id,
-                slack_webhook_url,
-                "warning",
+    # Warn if terraform provider version is lower than specified & not past deadline.
+    if version.parse(provider_version) < version.parse(
+        config["terraform"][provider]["version"]
+    ) and current_date <= end_support_date:
+        log_message(
+            slack_user_id,
+            slack_webhook_url,
+            "warning",
+            f"Detected provider {provider} version "
+            f"{provider_version} "
+            "is lower than "
+            f'{config["terraform"][provider]["version"]}. '
+            f"Please upgrade before deprecation deadline {end_support_date_str}...")
+        
+        message = (
                 f"Detected provider {provider} version "
                 f"{provider_version} "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}...")
-            
-            message = (
-                    f"Detected provider {provider} version "
-                    f"{provider_version} "
-                    "is lower than "
-                    f'{config["terraform"][provider]["version"]}. '
-                    f"Please upgrade before deprecation deadline {end_support_date_str}...")
-            print(message)
-            return True, message
-            
-        # Error if terraform provider version lower than specified & passed deadline.
-        if version.parse(provider_version) < version.parse(
-            config["terraform"][provider]["version"]
-        ) and current_date > end_support_date:
-            log_message(
-                slack_user_id,
-                slack_webhook_url,
-                "error",
-                f"Detected provider {provider} version "
-                f"{provider_version} "
-                "is lower than "
-                f'{config["terraform"][provider]["version"]}. '
-                f"This is no longer supported after deprecation deadline {end_support_date_str}. "
-                "Please upgrade...")
-            
-            message = (
-                f"Detected provider {provider} version "
-                f"{provider_version} "
-                "is lower than "
-                f'{config["terraform"][provider]["version"]}. '
-                f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
-                "Please upgrade...")
-            
-            return False, message
+        print(message)
+        return True, message
+        
+    # Error if terraform provider version lower than specified & passed deadline.
+    if version.parse(provider_version) < version.parse(
+        config["terraform"][provider]["version"]
+    ) and current_date > end_support_date:
+        log_message(
+            slack_user_id,
+            slack_webhook_url,
+            "error",
+            f"Detected provider {provider} version "
+            f"{provider_version} "
+            "is lower than "
+            f'{config["terraform"][provider]["version"]}. '
+            f"This is no longer supported after deprecation deadline {end_support_date_str}. "
+            "Please upgrade...")
+        
+        message = (
+            f"Detected provider {provider} version "
+            f"{provider_version} "
+            "is lower than "
+            f'{config["terraform"][provider]["version"]}. '
+            f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
+            "Please upgrade...")
+        
+        return False, message
 
 
 def transform_environment_components(environment_components=None):
