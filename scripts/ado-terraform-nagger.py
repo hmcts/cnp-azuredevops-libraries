@@ -644,7 +644,7 @@ def main():
             else:
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
             
-            # TODO: copy the override.tf from system_default_working_directory/cnp-azuredevops-libraries/resources dir and 
+            # copy the override.tf from system_default_working_directory/cnp-azuredevops-libraries/resources dir and 
             # paste it into the component working_directory to have a local provider_selection
             shutil.copyfile(f"{system_default_working_directory}/cnp-azuredevops-libraries/resources/override.tf", f"{working_directory}/override.tf")
 
@@ -652,7 +652,7 @@ def main():
             command = ["tfswitch", "-b", terraform_binary_path]
             run_command(command, working_directory)
 
-            # try and do the terraform init here 
+            # try and do the terraform init 
             command = ["terraform", "init"]
             run_command(command, working_directory)
 
