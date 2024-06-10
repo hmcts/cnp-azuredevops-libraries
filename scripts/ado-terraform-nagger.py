@@ -434,7 +434,13 @@ def terraform_version_checker(terraform_version, config, current_date):
             f'is lower than {config["terraform"]["terraform"]["version"]}. '
             f"Please upgrade before deprecation deadline {end_support_date_str}...",
         )
-        return 'warning', f'Terraform version is lower than {config["terraform"]["terraform"]["version"]}. Please upgrade before deprecation deadline {end_support_date_str}.'
+
+        message = (
+            f"Terraform version is lower than "
+            f'{config["terraform"]["terraform"]["version"]}. '
+            f"Please upgrade before deprecation deadline {end_support_date_str}."
+        )
+        return 'warning', message
 
     # Error if terraform version lower than specified & passed deadline.
     if version.parse(terraform_version) < version.parse(
@@ -446,6 +452,11 @@ def terraform_version_checker(terraform_version, config, current_date):
             "error",
             f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
             "Please upgrade...",
+        )
+
+        message = (
+            f"Terraform version is no longer supported after deprecation deadline {end_support_date_str}. "
+            "Please upgrade.",
         )
         return 'error', f"Terraform version is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade, more information found in pipeline output."
     
@@ -490,8 +501,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             )
 
             message = (
-                f"Provider {provider} version "
-                "is lower than "
+                f"Affected provider(s) version is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}..."
             )
@@ -514,8 +524,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             ) 
 
             message = (
-                f"Detected provider {provider} version "
-                "is lower than "
+                f"Affected provider(s) version is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
                 "Please upgrade..."
