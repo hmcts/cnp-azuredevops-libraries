@@ -414,8 +414,6 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
     end_support_date_str = config["terraform"][provider]["date_deadline"]
     end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
 
-    print(config["terraform"])
-
     if provider not in config["terraform"]:
         log_message(
             slack_user_id,
