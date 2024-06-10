@@ -436,7 +436,7 @@ def terraform_version_checker(terraform_version, config, current_date):
         )
 
         message = (
-            f"Terraform version is lower than "
+            f"Affected Terraform version(s) is lower than "
             f'{config["terraform"]["terraform"]["version"]}. '
             f"Please upgrade before deprecation deadline {end_support_date_str}."
         )
@@ -455,7 +455,7 @@ def terraform_version_checker(terraform_version, config, current_date):
         )
 
         message = (
-            f"Terraform version is no longer supported after deprecation deadline {end_support_date_str}. "
+            f"Affected Terraform version(s) is no longer supported after deprecation deadline {end_support_date_str}. "
             "Please upgrade.",
         )
         return 'error', f"Terraform version is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade, more information found in pipeline output."
@@ -501,7 +501,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             )
 
             message = (
-                f"Affected provider(s) version is lower than "
+                f"Affected provider version(s) is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}..."
             )
@@ -524,7 +524,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             ) 
 
             message = (
-                f"Affected provider(s) version is lower than "
+                f"Affected provider version(s) is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
                 "Please upgrade..."
