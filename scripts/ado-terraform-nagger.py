@@ -602,8 +602,6 @@ def main():
             else:
                 output_array['error']['terraform_version']['error_message'] = error_message
                 output_array['error']['terraform_version']['components'].append(component)
-            
-            print(f'Component file: { json.dumps(output_array, indent=4) }')
 
             # Handle providers
             terraform_providers = result["provider_selections"]
@@ -617,6 +615,7 @@ def main():
                 if warning == 'warning':
                     output_array['warning']['terraform_provider']['error_message'] = error_message
                     output_array['warning']['terraform_provider']['provider'].append(provider)
+
                 elif warning == 'error':
                     output_array['error']['terraform_provider']['error_message'] = error_message
                     output_array['error']['terraform_provider']['provider'].append(provider)
