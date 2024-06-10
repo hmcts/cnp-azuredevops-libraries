@@ -488,12 +488,12 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}...",
             )
-            
+
             message = (
-                f"Detected provider {provider} version "
+                f"Provider {provider} version "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
-                f"Please upgrade before deprecation deadline {end_support_date_str}...",
+                f"Please upgrade before deprecation deadline {end_support_date_str}..."
             )
             return 'warning', message
     
@@ -518,7 +518,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
-                "Please upgrade...",
+                "Please upgrade..."
             ) 
             return 'error', message
 
