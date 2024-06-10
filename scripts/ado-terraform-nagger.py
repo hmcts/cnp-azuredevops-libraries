@@ -392,7 +392,7 @@ def terraform_version_checker(terraform_version, config, current_date):
             f'is lower than {config["terraform"]["terraform"]["version"]}. '
             f"Please upgrade before deprecation deadline {end_support_date_str}...",
         )
-        return True, f'Terraform version {terraform_version} is lower than {config["terraform"]["terraform"]["version"]}. Please upgrade before deprecation deadline {end_support_date_str}.'
+        return 'warning', f'Terraform version is lower than {config["terraform"]["terraform"]["version"]}. Please upgrade before deprecation deadline {end_support_date_str}.'
 
     # Error if terraform version lower than specified & passed deadline.
     if version.parse(terraform_version) < version.parse(
@@ -405,7 +405,9 @@ def terraform_version_checker(terraform_version, config, current_date):
             f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
             "Please upgrade...",
         )
-        return False, f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade."
+        return 'error', f"Terraform version is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade, more information found in pipeline output."
+    
+    return True, 'Terraform version(s) up to date'
 
 
 def terraform_provider_checker(provider, provider_version, config, current_date):
@@ -445,6 +447,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 f"Please upgrade before deprecation deadline {end_support_date_str}...",
             )
             return 'warning', "debug msg"
+        
         # Error if terraform provider version lower than specified & passed deadline.
         if version.parse(provider_version) < version.parse(
             config["terraform"][provider]["version"]
@@ -461,7 +464,9 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 "Please upgrade...",
             ) 
             return 'error', "error debug msg"
-    return 'no-error', 'All providers up to date'
+        
+    return True, 'All providers up to date'
+
 
 def transform_environment_components(environment_components=None):
     # Transform env_components into a dictionary where component is top level
@@ -565,6 +570,7 @@ def main():
 
         for component in components_dict['components'].keys():
             print(f'component: {component}')
+
             # Construct the working directory path
             base_directory = os.getenv('BASE_DIRECTORY')
             if not base_directory or base_directory == '':
@@ -592,12 +598,13 @@ def main():
             config = load_file(args.filepath)
 
             # Append warning/error if flagged
-            is_warning, error_message = terraform_version_checker(terraform_version, config, current_date)
+            warning, error_message = terraform_version_checker(terraform_version, config, current_date)
 
-            if is_warning is True:
+            if warning == 'warning':
                 output_array['warning']['terraform_version']['error_message'] = error_message
                 output_array['warning']['terraform_version']['components'].append(component)
-            else:
+
+            elif warning == 'error':
                 output_array['error']['terraform_version']['error_message'] = error_message
                 output_array['error']['terraform_version']['components'].append(component)
 
@@ -606,6 +613,7 @@ def main():
 
             for provider, provider_version in terraform_providers.items():
                 print(f'provider: {provider}')
+
                 # Append warning/error if flagged
                 warning, error_message = terraform_provider_checker(provider, provider_version, config, current_date)
 
