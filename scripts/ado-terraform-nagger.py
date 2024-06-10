@@ -685,11 +685,13 @@ def main():
 
                 if warning == 'warning':
                     output_array['warning']['terraform_provider']['error_message'] = error_message
-                    output_array['warning']['terraform_provider']['provider'].append(provider)
+                    if provider not in output_array['warning']['terraform_provider']['provider']:
+                        output_array['warning']['terraform_provider']['provider'].append(provider)
 
                 elif warning == 'error':
                     output_array['error']['terraform_provider']['error_message'] = error_message
-                    output_array['error']['terraform_provider']['provider'].append(provider)
+                    if provider not in output_array['error']['terraform_provider']['provider']:
+                        output_array['error']['terraform_provider']['provider'].append(provider)
             
                 # Write the updated data back to the file
                 with open(output_file, 'w') as file:
