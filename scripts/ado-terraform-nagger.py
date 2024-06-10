@@ -194,6 +194,27 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             }
         ])
 
+    if message['warning']['terraform_provider']['provider']:
+        # Add the warning message block
+        slack_data["blocks"].extend([
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Warning:*\n" + message['warning']['terraform_provider']['error_message']
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Affected Providers:*\n" + '\n'.join(message['warning']['terraform_provider']['provider'])
+                    }
+                ]
+            }
+        ])
+
     if message['error']['terraform_version']['components']:
         # Add the error message block
         slack_data["blocks"].extend([
@@ -210,6 +231,27 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                     {
                         "type": "mrkdwn",
                         "text": "*Affected Components:*\n" + '\n'.join(message['error']['terraform_version']['components'])
+                    }
+                ]
+            }
+        ])
+
+    if message['error']['terraform_provider']['provider']:
+        # Add the warning message block
+        slack_data["blocks"].extend([
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Warning:*\n" + message['error']['terraform_provider']['error_message']
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Affected Providers:*\n" + '\n'.join(message['error']['terraform_provider']['provider'])
                     }
                 ]
             }
@@ -446,8 +488,15 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}...",
             )
-            return 'warning', "debug msg"
-        
+            
+            message = (
+                f"Detected provider {provider} version "
+                "is lower than "
+                f'{config["terraform"][provider]["version"]}. '
+                f"Please upgrade before deprecation deadline {end_support_date_str}...",
+            )
+            return 'warning', message
+    
         # Error if terraform provider version lower than specified & passed deadline.
         if version.parse(provider_version) < version.parse(
             config["terraform"][provider]["version"]
@@ -463,8 +512,16 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
                 "Please upgrade...",
             ) 
-            return 'error', "error debug msg"
-        
+
+            message = (
+                f"Detected provider {provider} version "
+                "is lower than "
+                f'{config["terraform"][provider]["version"]}. '
+                f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
+                "Please upgrade...",
+            ) 
+            return 'error', message
+
     return True, 'All providers up to date'
 
 
