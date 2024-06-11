@@ -486,7 +486,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             "Please add it to the config in this file in order to "
             "compare it's versions.",
         )
-        return True, f"Provider {provider} is missing from version config. Please add it to the config in this file in order to compare it's versions.", None
+        return True, f"Provider {provider} is missing from version config. Please add it to the config in this file in order to compare it's versions.", ''
     else:
         # Handle providers
         # Get the date after which Terraform versions are no longer supported
@@ -537,7 +537,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             ) 
             return 'error', message, end_support_date
 
-    return True, 'All providers up to date', None
+    return True, 'All providers up to date', ''
 
 
 def transform_environment_components(environment_components=None):
