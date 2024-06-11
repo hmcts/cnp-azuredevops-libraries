@@ -690,7 +690,7 @@ def main():
 
                 if warning == 'warning':
                     output_array['warning']['terraform_provider']['error_message'] = error_message
-                    if provider not in output_array['warning']['terraform_provider']['provider'].keys():
+                    if provider not in output_array['warning']['terraform_provider']['provider']:
                         output_array['warning']['terraform_provider']['provider'].append({provider:provider_version})
 
                 elif warning == 'error':
