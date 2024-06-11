@@ -196,8 +196,8 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
 
     if message['warning']['terraform_provider']['provider']:
         providers_info = [
-            f"{provider}: {version}" 
-            for provider, version in message['warning']['terraform_provider']['provider'].items()
+            f"{provider} - {end_support_date}" 
+            for provider, end_support_date in message['warning']['terraform_provider']['provider'].items()
         ]
         # Add the warning message block
         slack_data["blocks"].extend([
@@ -242,8 +242,8 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
 
     if message['error']['terraform_provider']['provider']:
         providers_info = [
-            f"{provider}: {version}" 
-            for provider, version in message['error']['terraform_provider']['provider'].items()
+            f"{provider} - {end_support_date}" 
+            for provider, end_support_date in message['error']['terraform_provider']['provider'].items()
         ]
         # Add the warning message block
         slack_data["blocks"].extend([
@@ -512,7 +512,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 f"Affected provider version(s) are out of date "
                 f"Please upgrade before deprecation deadline"
             )
-            return 'warning', message
+            return 'warning', message, end_support_date
     
         # Error if terraform provider version lower than specified & passed deadline.
         if version.parse(provider_version) < version.parse(
@@ -535,7 +535,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 f"no longer supported after deprecation deadline " 
                 "Please upgrade."
             ) 
-            return 'error', message
+            return 'error', message, end_support_date
 
     return True, 'All providers up to date'
 
@@ -687,19 +687,19 @@ def main():
                 print(f'provider: {provider}')
 
                 # Append warning/error if flagged
-                warning, error_message = terraform_provider_checker(provider, provider_version, config, current_date)
+                warning, error_message, end_support_date = terraform_provider_checker(provider, provider_version, config, current_date)
 
                 provider = provider.split('/')[-1]
 
                 if warning == 'warning':
                     output_array['warning']['terraform_provider']['error_message'] = error_message
                     if provider not in output_array['warning']['terraform_provider']['provider']:
-                        output_array['warning']['terraform_provider']['provider'][provider] = provider_version
+                        output_array['warning']['terraform_provider']['provider'][provider] = end_support_date
 
                 elif warning == 'error':
                     output_array['error']['terraform_provider']['error_message'] = error_message
                     if provider not in output_array['error']['terraform_provider']['provider']:
-                        output_array['error']['terraform_provider']['provider'][provider] = provider_version
+                        output_array['error']['terraform_provider']['provider'][provider] = end_support_date
             
                 # Write the updated data back to the file
                 with open(output_file, 'w') as file:
