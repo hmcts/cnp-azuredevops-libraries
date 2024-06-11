@@ -634,7 +634,7 @@ def main():
                     'error_message': ''
                 },
                 'terraform_provider': {
-                    'provider': [],
+                    'provider': {},
                     'error_message': ''
                 }
             }
