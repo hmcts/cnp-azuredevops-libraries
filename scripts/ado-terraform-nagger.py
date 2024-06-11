@@ -209,10 +209,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Affected Providers:*\n" + '\n'.join(
-                            f"{list(provider.keys())[0]}:{list(provider.values())[0]}" 
-                            for provider in message['warning']['terraform_provider']['provider']
-                            )
+                        "text": "*Affected Providers:*\n" + '\n'.join(message['warning']['terraform_provider']['provider'])
                     }
                 ]
             }
@@ -504,9 +501,8 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             )
 
             message = (
-                f"Affected provider version(s) is lower than "
-                f'{config["terraform"][provider]["version"]}. '
-                f"Please upgrade before deprecation deadline {end_support_date_str}."
+                f"Affected provider version(s) are out of date "
+                f"Please upgrade before deprecation deadline"
             )
             return 'warning', message
     
@@ -527,9 +523,8 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             ) 
 
             message = (
-                f"Affected provider version(s) is lower than "
-                f'{config["terraform"][provider]["version"]}. '
-                f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
+                f"Affected provider version(s) are "
+                f"no longer supported after deprecation deadline " 
                 "Please upgrade."
             ) 
             return 'error', message
