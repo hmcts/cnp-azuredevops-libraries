@@ -699,7 +699,7 @@ def main():
                 elif warning == 'error':
                     output_array['error']['terraform_provider']['error_message'] = error_message
                     if provider not in output_array['error']['terraform_provider']['provider']:
-                        output_array['error']['terraform_provider']['provider'].append(provider)
+                        output_array['error']['terraform_provider']['provider'][provider] = provider_version
             
                 # Write the updated data back to the file
                 with open(output_file, 'w') as file:
