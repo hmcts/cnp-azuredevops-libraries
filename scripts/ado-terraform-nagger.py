@@ -209,7 +209,10 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Affected Providers:*\n" + '\n'.join(message['warning']['terraform_provider']['provider'])
+                        "text": "*Affected Providers:*\n" + '\n'.join(
+                            f"{list(provider.keys())[0]}:{list(provider.values())[0]}" 
+                            for provider in message['warning']['terraform_provider']['provider']
+                            )
                     }
                 ]
             }
