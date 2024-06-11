@@ -237,6 +237,10 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
         ])
 
     if message['error']['terraform_provider']['provider']:
+        providers_info = [
+            f"{provider}: {version}" 
+            for provider, version in message['warning']['terraform_provider']['provider'].items()
+        ]
         # Add the warning message block
         slack_data["blocks"].extend([
             {
@@ -251,7 +255,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Affected Providers:*\n" + '\n'.join(message['error']['terraform_provider']['provider'])
+                        "text": "*Affected Providers:*\n" + '\n'.join(providers_info)
                     }
                 ]
             }
