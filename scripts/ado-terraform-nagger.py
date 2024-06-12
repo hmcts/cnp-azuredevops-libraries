@@ -472,11 +472,6 @@ def terraform_version_checker(terraform_version, config, current_date):
 
 
 def terraform_provider_checker(provider, provider_version, config, current_date):
-    # Handle providers
-    # Get the date after which Terraform versions are no longer supported
-    end_support_date_str = config["terraform"][provider]["date_deadline"]
-    end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
-
     if provider not in config["terraform"]:
         log_message(
             slack_user_id,
