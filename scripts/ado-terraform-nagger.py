@@ -540,16 +540,16 @@ def transform_environment_components(environment_components=None):
     # Transform env_components into a dictionary where component is top level
     components_dict = {'components': []}
 
-    for component in environment_components['environment_components']:
-        components_dict['components'].append(component)
+    # for component in environment_components['environment_components']:
+    #     components_dict['components'].append(component)
 
-    # for item in environment_components['environment_components']:
-    #     # Check if 'component' is in the item, if not use 'deployment' as the component
-    #     component = item.pop('component', item['deployment'])
-    #     item.pop('deployment', None)  # Remove the 'deployment' key from the item
-    #     if component not in components_dict['components']:
-    #         components_dict['components'][component] = []  # Initialize a new list for this component
-    #     components_dict['components'][component].append(item)  # Add the item to the component's list
+    for item in environment_components['environment_components']:
+        # Check if 'component' is in the item, if not use 'deployment' as the component
+        component = item.pop('component', item['deployment'])
+        item.pop('deployment', None)  # Remove the 'deployment' key from the item
+        if component not in components_dict['components']:
+            components_dict['components'].append(component)  # Initialize a new list for this component
+        # components_dict['components'][component].append(item)  # Add the item to the component's list
 
     print(json.dumps(components_dict, indent=4, sort_keys=True))
     
@@ -644,7 +644,7 @@ def main():
             }
         }
 
-        for component in components_dict['components'].keys():
+        for component in components_dict['components']:
             print(f'component: {component}')
 
             # Construct the working directory path
