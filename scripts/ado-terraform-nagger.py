@@ -540,16 +540,26 @@ def transform_environment_components(environment_components=None):
     # Transform env_components into a dictionary where component is top level
     components_dict = {'components': []}
 
-    # for component in environment_components['environment_components']:
-    #     components_dict['components'].append(component)
+    # for item in environment_components['environment_components']:
+    #     # Check if 'component' is in the item, if not use 'deployment' as the component
+    #     component = item.pop('component', item['deployment'])
+    #     item.pop('deployment', None)  # Remove the 'deployment' key from the item
+    #     if component not in components_dict['components']:
+    #         components_dict['components'].append(component)  # Initialize a new list for this component
+    #     # components_dict['components'][component].append(item)  # Add the item to the component's list
 
-    for item in environment_components['environment_components']:
-        # Check if 'component' is in the item, if not use 'deployment' as the component
-        component = item.pop('component', item['deployment'])
-        item.pop('deployment', None)  # Remove the 'deployment' key from the item
-        if component not in components_dict['components']:
-            components_dict['components'].append(component)  # Initialize a new list for this component
-        # components_dict['components'][component].append(item)  # Add the item to the component's list
+        # Check if the first item is a dictionary to determine the structure
+    if isinstance(environment_components['environment_components'][0], dict):
+        for item in environment_components['environment_components']:
+            # Check if 'component' is in the item, if not use 'deployment', otherwise use None
+            component = item.get('component') or item.get('deployment')
+            if component not in components_dict['components']:
+                components_dict['components'].append(component)
+    else:
+        # If the structure is a list of strings
+        for component in environment_components['environment_components']:
+            if component not in components_dict['components']:
+                components_dict['components'].append(component)
 
     print(json.dumps(components_dict, indent=4, sort_keys=True))
     
