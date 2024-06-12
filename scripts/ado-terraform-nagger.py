@@ -703,11 +703,13 @@ def main():
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
             print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
-            log_message_slack(
-                slack_user_id,
-                slack_webhook_url,
-                complete_file
-            )
+            if (output_array['warning']['terraform_provider']['error_message'] or
+                output_array['error']['terraform_provider']['error_message']):
+                log_message_slack(
+                    slack_user_id,
+                    slack_webhook_url,
+                    complete_file
+                )
 
     except JSONDecodeError:
         # Fallback to regex when terraform version <= 0.13.0
