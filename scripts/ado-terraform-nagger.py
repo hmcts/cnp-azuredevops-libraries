@@ -541,7 +541,7 @@ def transform_environment_components(environment_components=None):
     components_dict = {'components': {}}
 
     for component in environment_components['environment_components']:
-        components_dict['components'][component]
+        components_dict['components'][component] = []
 
     # for item in environment_components['environment_components']:
     #     # Check if 'component' is in the item, if not use 'deployment' as the component
