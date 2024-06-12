@@ -548,10 +548,10 @@ def transform_environment_components(environment_components=None):
     #         components_dict['components'].append(component)  # Initialize a new list for this component
     #     # components_dict['components'][component].append(item)  # Add the item to the component's list
 
-        # Check if the first item is a dictionary to determine the structure
+    # Check if the first item is a dictionary to determine the structure
     if isinstance(environment_components['environment_components'][0], dict):
         for item in environment_components['environment_components']:
-            # Check if 'component' is in the item, if not use 'deployment', otherwise use None
+            # Check if 'component' is in the item, if not use 'deployment'
             component = item.get('component') or item.get('deployment')
             if component not in components_dict['components']:
                 components_dict['components'].append(component)
