@@ -553,6 +553,7 @@ def transform_environment_components(environment_components=None):
         component = item.pop('component', item['deployment'])
         if component not in components_dict['components']:
             components_dict['components'][component] = []  # Initialize a new list for this component
+            item.pop('deployment', None)  # Remove the 'deployment' key from the item
         components_dict['components'][component].append(item)  # Add the item to the component's list
 
     print(json.dumps(components_dict, indent=4, sort_keys=True))
