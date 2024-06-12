@@ -536,11 +536,21 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
 
 
 def transform_environment_components(environment_components=None):
+    # # Transform env_components into a dictionary where component is top level
+    # components_dict = {'components': {}}
+
+    # for item in environment_components['environment_components']:
+    #     component = item.pop('component')  # Remove the component from the item and store it
+    #     if component not in components_dict['components']:
+    #         components_dict['components'][component] = []  # Initialize a new list for this component
+    #     components_dict['components'][component].append(item)  # Add the item to the component's list
+
     # Transform env_components into a dictionary where component is top level
     components_dict = {'components': {}}
 
     for item in environment_components['environment_components']:
-        component = item.pop('component')  # Remove the component from the item and store it
+        # Check if 'component' is in the item, if not use 'deployment' as the component
+        component = item.pop('component', item['deployment'])
         if component not in components_dict['components']:
             components_dict['components'][component] = []  # Initialize a new list for this component
         components_dict['components'][component].append(item)  # Add the item to the component's list
@@ -611,7 +621,10 @@ def main():
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
         # Transform env_components into a dictionary where component is top level
+        # what to do if components is not specified in pipeline
+        # some can be called component or deployment
         components_dict = transform_environment_components(environment_components)
+
         output_array = {
             'warning': {
                 'terraform_version': {
