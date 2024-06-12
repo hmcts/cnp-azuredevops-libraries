@@ -536,25 +536,20 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
 
 
 def transform_environment_components(environment_components=None):
-    # # Transform env_components into a dictionary where component is top level
-    # components_dict = {'components': {}}
-
-    # for item in environment_components['environment_components']:
-    #     component = item.pop('component')  # Remove the component from the item and store it
-    #     if component not in components_dict['components']:
-    #         components_dict['components'][component] = []  # Initialize a new list for this component
-    #     components_dict['components'][component].append(item)  # Add the item to the component's list
-
+    #  will break if components or deployment is not in environment_components
     # Transform env_components into a dictionary where component is top level
     components_dict = {'components': {}}
 
-    for item in environment_components['environment_components']:
-        # Check if 'component' is in the item, if not use 'deployment' as the component
-        component = item.pop('component', item['deployment'])
-        item.pop('deployment', None)  # Remove the 'deployment' key from the item
-        if component not in components_dict['components']:
-            components_dict['components'][component] = []  # Initialize a new list for this component
-        components_dict['components'][component].append(item)  # Add the item to the component's list
+    for component in environment_components:
+        components_dict['components'].add(f"{component}")
+
+    # for item in environment_components['environment_components']:
+    #     # Check if 'component' is in the item, if not use 'deployment' as the component
+    #     component = item.pop('component', item['deployment'])
+    #     item.pop('deployment', None)  # Remove the 'deployment' key from the item
+    #     if component not in components_dict['components']:
+    #         components_dict['components'][component] = []  # Initialize a new list for this component
+    #     components_dict['components'][component].append(item)  # Add the item to the component's list
 
     print(json.dumps(components_dict, indent=4, sort_keys=True))
     
