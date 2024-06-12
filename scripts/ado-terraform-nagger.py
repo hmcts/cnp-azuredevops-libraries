@@ -538,10 +538,10 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
 def transform_environment_components(environment_components=None):
     # will break if components or deployment is not in environment_components
     # Transform env_components into a dictionary where component is top level
-    components_dict = {'components': {}}
+    components_dict = {'components': []}
 
     for component in environment_components['environment_components']:
-        components_dict['components'][component] = []
+        components_dict['components'].append(component)
 
     # for item in environment_components['environment_components']:
     #     # Check if 'component' is in the item, if not use 'deployment' as the component
