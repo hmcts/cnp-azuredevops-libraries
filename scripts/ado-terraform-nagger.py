@@ -145,7 +145,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
     slack_data = {
         "channel": channel,
         "username": username,
-        "text": 'Config Version Report',
+        "text": 'Deprecated Config Report',
         "icon_emoji": icon_emoji,
         "blocks": 
         [
@@ -245,7 +245,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             f"{provider} - {end_support_date}" 
             for provider, end_support_date in message['error']['terraform_provider']['provider'].items()
         ]
-        # Add the warning message block
+        # Add the error message block
         slack_data["blocks"].extend([
             {
                 "type": "divider"
@@ -345,7 +345,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         source_branch_name = os.getenv("BUILD_SOURCEBRANCHNAME")
         build_id = os.getenv("BUILD_BUILDID")
 
-        stage = os.getenv("SYSTEM_STAGEDISPLAYNAME")
+        # stage = os.getenv("SYSTEM_STAGEDISPLAYNAME")
         slack_sender = "cnp-azuredevops-libraries - terraform version nagger"
 
         # Differentiate PR from branch
@@ -509,8 +509,8 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             )
 
             message = (
-                f"Affected provider version(s) are out of date "
-                f"Please upgrade before deprecation deadline"
+                f"Affected provider version(s) will soon reach deprecation. "
+                f"Please upgrade version prior to the deprecation date."
             )
             return 'warning', message, end_support_date_str
     
