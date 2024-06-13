@@ -655,6 +655,8 @@ def main():
             else:
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
             
+            print(working_directory)
+            
             # copy the override.tf from system_default_working_directory/cnp-azuredevops-libraries/resources dir and 
             # paste it into the component working_directory to have a local provider_selection
             # shutil.copyfile(f"{system_default_working_directory}/cnp-azuredevops-libraries/resources/override.tf", f"{working_directory}/override.tf")
