@@ -10,7 +10,7 @@ import logging
 import argparse
 import requests
 import subprocess
-import shutil
+# import shutil
 from packaging import version
 from json.decoder import JSONDecodeError
 
@@ -657,14 +657,14 @@ def main():
             
             # copy the override.tf from system_default_working_directory/cnp-azuredevops-libraries/resources dir and 
             # paste it into the component working_directory to have a local provider_selection
-            shutil.copyfile(f"{system_default_working_directory}/cnp-azuredevops-libraries/resources/override.tf", f"{working_directory}/override.tf")
+            # shutil.copyfile(f"{system_default_working_directory}/cnp-azuredevops-libraries/resources/override.tf", f"{working_directory}/override.tf")
 
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
             command = ["tfswitch", "-b", terraform_binary_path]
             run_command(command, working_directory)
 
             # try and do the terraform init 
-            command = ["terraform", "init"]
+            command = ["terraform", "init", "-backend=false"]
             run_command(command, working_directory)
 
             command = ["terraform", "version", "--json"]
