@@ -617,6 +617,8 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
+        print('sys default dir: '+ system_default_working_directory)
+
         # Transform env_components into a dictionary where component is top level
         # what to do if components is not specified in pipeline
         # some can be called component or deployment
@@ -655,7 +657,7 @@ def main():
             else:
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
             
-            print(working_directory)
+            print('working dir: '+ working_directory)
             
             # copy the override.tf from system_default_working_directory/cnp-azuredevops-libraries/resources dir and 
             # paste it into the component working_directory to have a local provider_selection
