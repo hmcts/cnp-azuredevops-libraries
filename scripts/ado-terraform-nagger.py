@@ -620,7 +620,7 @@ def main():
         # Transform env_components into a dictionary where component is top level
         # what to do if components is not specified in pipeline
         # some can be called component or deployment
-        components_dict = transform_environment_components(environment_components)
+        components_array = transform_environment_components(environment_components)
 
         output_array = {
             'warning': {
@@ -645,7 +645,7 @@ def main():
             }
         }
 
-        for component in components_dict['components']:
+        for component in components_array:
             print(f'component: {component}')
 
             # Construct the working directory path
