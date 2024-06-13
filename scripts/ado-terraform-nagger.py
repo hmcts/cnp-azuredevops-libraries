@@ -617,7 +617,7 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
-        print('sys default dir: '+ system_default_working_directory)
+        print('build suffix dir: '+ build_repo_suffix)
 
         # Transform env_components into a dictionary where component is top level
         # what to do if components is not specified in pipeline
