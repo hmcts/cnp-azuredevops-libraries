@@ -536,34 +536,25 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
 
 
 def transform_environment_components(environment_components=None):
-    # will break if components or deployment is not in environment_components
     # Transform env_components into a dictionary where component is top level
-    components_dict = {'components': []}
-
-    # for item in environment_components['environment_components']:
-    #     # Check if 'component' is in the item, if not use 'deployment' as the component
-    #     component = item.pop('component', item['deployment'])
-    #     item.pop('deployment', None)  # Remove the 'deployment' key from the item
-    #     if component not in components_dict['components']:
-    #         components_dict['components'].append(component)  # Initialize a new list for this component
-    #     # components_dict['components'][component].append(item)  # Add the item to the component's list
+    components_array = []
 
     # Check if the first item is a dictionary to determine the structure
     if isinstance(environment_components['environment_components'][0], dict):
         for item in environment_components['environment_components']:
             # Check if 'component' is in the item, if not use 'deployment'
             component = item.get('component') or item.get('deployment')
-            if component not in components_dict['components']:
-                components_dict['components'].append(component)
+            if component not in components_array['components']:
+                components_array.append(component)
     else:
         # If the structure is a list of strings
         for component in environment_components['environment_components']:
-            if component not in components_dict['components']:
-                components_dict['components'].append(component)
+            if component not in components_array:
+                components_array.append(component)
 
-    print(json.dumps(components_dict, indent=4, sort_keys=True))
+    print(json.dumps(components_array, indent=4, sort_keys=True))
     
-    return components_dict
+    return components_array
 
 
 def main():
