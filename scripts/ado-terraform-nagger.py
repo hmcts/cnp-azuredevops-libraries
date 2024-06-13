@@ -544,7 +544,7 @@ def transform_environment_components(environment_components=None):
         for item in environment_components['environment_components']:
             # Check if 'component' is in the item, if not use 'deployment'
             component = item.get('component') or item.get('deployment')
-            if component not in components_array['components']:
+            if component not in components_array:
                 components_array.append(component)
     else:
         # If the structure is a list of strings
