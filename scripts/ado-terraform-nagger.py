@@ -620,8 +620,6 @@ def main():
         print('build suffix dir: '+ build_repo_suffix)
 
         # Transform env_components into a dictionary where component is top level
-        # what to do if components is not specified in pipeline
-        # some can be called component or deployment
         components_array = transform_environment_components(environment_components)
 
         output_array = {
