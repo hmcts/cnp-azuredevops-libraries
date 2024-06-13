@@ -536,7 +536,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
 
 
 def transform_environment_components(environment_components=None):
-    # Transform env_components into a dictionary where component is top level
+    # Transform env_components into a array of components
     components_array = []
 
     # Check if the first item is a dictionary to determine the structure
