@@ -617,8 +617,6 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
-        print('build suffix dir: '+ build_repo_suffix)
-
         # Transform env_components into a dictionary where component is top level
         components_array = transform_environment_components(environment_components)
 
@@ -653,8 +651,6 @@ def main():
         else:
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
         
-        print('working dir with child dir: '+ working_directory)
-
         # 
         # Get the list of all entries in the specified directory
         entries = os.listdir(working_directory)
@@ -663,6 +659,8 @@ def main():
         print(directories)
         # 
 
+        components_array = directories
+        
         for component in components_array:
             print(f'component: {component}')
 
