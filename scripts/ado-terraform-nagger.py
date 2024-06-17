@@ -426,10 +426,9 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             slack_webhook_url,
             "warning",
             f"Provider {provider} is missing from version config. "
-            "Please add it to the config in this file in order to "
-            "compare it's versions.",
+            f"Please add it to the config in this file in order to "
+            f"compare it's versions."
         )
-        return True, f"Provider {provider} is missing from version config. Please add it to the config in this file in order to compare it's versions.", ''
     else:
         # Handle providers
         # Get the date after which Terraform versions are no longer supported
