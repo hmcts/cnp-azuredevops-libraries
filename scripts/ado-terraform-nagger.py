@@ -645,6 +645,16 @@ def main():
             }
         }
 
+                    # Construct the working directory path
+        
+        base_directory = os.getenv('BASE_DIRECTORY')
+        if not base_directory or base_directory == '':
+            working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"
+        else:
+            working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
+        
+        print('working dir with child dir: '+ working_directory)
+
         for component in components_array:
             print(f'component: {component}')
 
