@@ -343,7 +343,6 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
     if is_ado:
         if message_type == "warning":
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
-
         if message_type == "error":
             logger.error(f"##vso[task.logissue type=error;]{message}")
             errors_detected = True
@@ -427,7 +426,6 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             "Please add it to the config in this file in order to "
             "compare it's versions.",
         )
-        print('debug')
         return True, f"Provider {provider} is missing from version config. Please add it to the config in this file in order to compare it's versions.", ''
     else:
         # Handle providers
@@ -580,12 +578,10 @@ def main():
                 warning, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
 
                 provider = provider.split('/')[-1]
-                print(provider)
                 if warning == 'warning':
                     output_warning['terraform_provider']['error_message'] = error_message
                     if provider not in output_warning['terraform_provider']['provider']:
                         output_warning['terraform_provider']['provider'][provider] = end_support_date_str
-                print(output_warning)
             
                 # Write the updated data back to the file
                 with open(output_file, 'w') as file:
