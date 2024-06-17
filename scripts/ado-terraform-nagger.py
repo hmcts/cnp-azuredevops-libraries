@@ -655,6 +655,14 @@ def main():
         
         print('working dir with child dir: '+ working_directory)
 
+        # 
+        # Get the list of all entries in the specified directory
+        entries = os.listdir(working_directory)
+        # Filter out entries that are directories
+        directories = [entry for entry in entries if os.path.isdir(os.path.join(working_directory, entry))]
+        print("Child dir: " + directories)
+        # 
+
         for component in components_array:
             print(f'component: {component}')
 
@@ -665,7 +673,6 @@ def main():
             else:
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
             
-            print('working dir: '+ working_directory)
             
             # copy the override.tf from system_default_working_directory/cnp-azuredevops-libraries/resources dir and 
             # paste it into the component working_directory to have a local provider_selection
