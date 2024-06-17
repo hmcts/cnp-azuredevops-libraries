@@ -572,7 +572,7 @@ def main():
             terraform_providers = result["provider_selections"]
 
             for provider, provider_version in terraform_providers.items():
-                print(f'provider: {provider}')
+                print(f'provider: {provider}, provider version: {provider_version}')
 
                 # Append warning/error if flagged
                 warning, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
