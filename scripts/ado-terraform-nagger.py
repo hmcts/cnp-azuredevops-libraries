@@ -473,7 +473,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             "Please add it to the config in this file in order to "
             "compare it's versions.",
         )
-        return True, f"Provider {provider} is missing from version config. Please add it to the config in this file in order to compare it's versions.", ''
+        return 'warning', f"Provider {provider} is missing from version config. Please add it to the config in this file in order to compare it's versions.", ''
     else:
         # Handle providers
         # Get the date after which Terraform versions are no longer supported
@@ -596,19 +596,18 @@ def main():
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"
         else:
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
-        print("Base dir: " + base_directory)
 
+        print("Base dir: " + base_directory)
         print("working directory: " + working_directory)
-        # 
-        # Get the list of all entries in the specified directory
-        entries = os.listdir(working_directory)
+        
+        # Get the list of all child dir in the specified parent directory
+        parent_dir = os.listdir(working_directory)
         # Filter out entries that are directories
-        directories = [entry for entry in entries if os.path.isdir(os.path.join(working_directory, entry))]
-        print(directories)
-        # 
+        components_list = [child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))]
+        print(components_list)
 
         # for loop over dir componenets, add working dir and current item of loop
-        for component in directories:
+        for component in components_list:
             full_path = f'{working_directory}{component}'
 
             print("Full path: " + full_path)
