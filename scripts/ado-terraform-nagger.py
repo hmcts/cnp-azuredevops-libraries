@@ -427,7 +427,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             "Please add it to the config in this file in order to "
             "compare it's versions.",
         )
-        return True, f"Provider {provider} is missing from version config. Please add it to the config in this file in order to compare it's versions.", ''
+        return False, f"Provider {provider} is missing from version config. Please add it to the config in this file in order to compare it's versions.", ''
     else:
         # Handle providers
         # Get the date after which Terraform versions are no longer supported
@@ -476,7 +476,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 f"no longer supported after deprecation deadline " 
                 "Please upgrade."
             ) 
-            return 'error', message, end_support_date_str
+            return True, message, end_support_date_str
 
     return False, 'All providers up to date', ''
 
@@ -578,11 +578,11 @@ def main():
                 print(f'provider: {provider}')
 
                 # Append warning/error if flagged
-                warning, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
+                provider_warning, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
 
                 provider = provider.split('/')[-1]
-
-                if warning is True:
+                
+                if provider_warning is True:
                     output_warning['terraform_provider']['error_message'] = error_message
                     if provider not in output_warning['terraform_provider']['provider']:
                         output_warning['terraform_provider']['provider'][provider] = end_support_date_str
