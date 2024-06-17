@@ -38,9 +38,6 @@ parameters:
     type: boolean
     default: false
 
-  - name: environment_components
-    type: object
-
   - name: baseDirectory
     default: ''
 
@@ -137,5 +134,4 @@ steps:
   - template: ./terraform-version-checker.yaml
     parameters:
       kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
-      environment_components: ${{ parameters.environment_components }}
       baseDirectory: ${{ parameters.baseDirectory }}

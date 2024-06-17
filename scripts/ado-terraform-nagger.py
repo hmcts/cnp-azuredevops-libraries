@@ -35,14 +35,6 @@ parser.add_argument(
     dest="filepath",
     required=True,
 )
-parser.add_argument(
-    "-e",
-    "--environment_components",
-    help="JSON string of environment components",
-    dest="environment_components",
-    type=str,
-    required=True,
-)
 args = parser.parse_args()
 
 logging.basicConfig(
@@ -535,28 +527,6 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
     return True, 'All providers up to date', ''
 
 
-def transform_environment_components(environment_components=None):
-    # Transform env_components into a array of components
-    components_array = []
-
-    # Check if the first item is a dictionary to determine the structure
-    if isinstance(environment_components['environment_components'][0], dict):
-        for item in environment_components['environment_components']:
-            # Check if 'component' is in the item, if not use 'deployment'
-            component = item.get('component') or item.get('deployment')
-            if component not in components_array:
-                components_array.append(component)
-    else:
-        # If the structure is a list of strings
-        for component in environment_components['environment_components']:
-            if component not in components_array:
-                components_array.append(component)
-
-    print(json.dumps(components_array, indent=4, sort_keys=True))
-    
-    return components_array
-
-
 def main():
     # initialise array of warnings/errors
     output_file = "nagger_output.json"
@@ -591,34 +561,9 @@ def main():
     terraform_binary_path = os.path.join(home_dir, '.local', 'bin', 'terraform')
 
     try:
-        # # Try to run `version --json` which is present in tf versions >= 0.13.0
-        # result = json.loads(run_command(command))
-        # terraform_version = result["terraform_version"]
-
-        # # Use terraform's `terraform_outdated` JSON object to notify if there
-        # # is a new terraform version available.
-        # if "terraform_outdated" in result and result["terraform_outdated"]:
-        #     log_message(
-        #         None,
-        #         None,
-        #         "warning",
-        #         f"Detected outdated terraform version: {terraform_version}. Newer version is available.",
-        #     )
-        try:
-            with open(args.environment_components, "r") as f:
-                environment_components = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"The file '{args.environment_components}' does not exist.")
-        except Exception as e:
-            logger.error(f"Error loading {args.environment_components}: {e}")
-
-
         # Retrieve the environment variables
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
-
-        # Transform env_components into a dictionary where component is top level
-        components_array = transform_environment_components(environment_components)
 
         output_array = {
             'warning': {

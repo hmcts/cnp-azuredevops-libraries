@@ -1,8 +1,6 @@
 ---
 parameters:
   - name: kvConnectedServiceName
-  - name: environment_components
-    type: object
   - name: workingDirectory
     default: $(System.DefaultWorkingDirectory)
   - name: baseDirectory
@@ -24,41 +22,15 @@ steps:
       ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'registry-slack-webhook'
-  
-  # - ${{ each deployment in parameters.environment_components }}:
-  #   - template: ./install-use-tfswitch.yaml
-  #     parameters:
-  #       tfswitchArgs: -b ~/.local/bin/terraform
-  #       ${{ if eq( parameters['baseDirectory'], '') }}:
-  #         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ deployment.component }}'
-  #       ${{ else }}:
-  #         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ deployment.component }}'
 
-  # - task: Bash@3
-  #   displayName: Serialize environment_components to JSON
-  #   inputs:
-  #     targetType: 'inline'
-  #     script: |
-  #       # Remove newlines from the object string
-  #       environment_components_no_newlines=$(echo "$(parameters.environment_components)" | tr -d '\n')
-
-  #       # Convert the modified object string to JSON
-  #       environment_components_json=$(echo "$environment_components_no_newlines" | jq -c .)
-
-  #       # Output the JSON
-  #       echo "$environment_components_json"
 
   - task: Bash@3
     displayName: Terraform Nagger
     inputs:
       targetType: 'inline'
       script: |
-        json=$(echo '${{ convertToJson(parameters.environment_components) }}')
-        echo "$json" | jq '{ environment_components: . }' > environment_components.json
-        echo "$json" | jq '{ environment_components: . }'
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-terraform-nagger.py \
-        -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml \
-        -e environment_components.json
+        -f $(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml
     env:
       SLACK_WEBHOOK_URL: $(registry-slack-webhook)
       BASE_DIRECTORY: ${{ parameters.baseDirectory }}
