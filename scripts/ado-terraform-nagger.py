@@ -346,6 +346,7 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
         if message_type == "error":
             logger.error(f"##vso[task.logissue type=error;]{message}")
             errors_detected = True
+            
 
 
 def extract_version(text, regex):
