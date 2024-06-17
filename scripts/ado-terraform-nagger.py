@@ -340,11 +340,12 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
     """
     global errors_detected
 
-    logger.warning(message)
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
         if message_type == "warning":
+            print('debug before warning')
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
+            print('debug after warning')
         if message_type == "error":
             logger.error(f"##vso[task.logissue type=error;]{message}")
             errors_detected = True
@@ -546,6 +547,7 @@ def main():
 
         # for loop over dir componenets, add working dir and current item of loop
         for component in components_list:
+            print(f'COMPONENT: {component}')
             full_path = f'{working_directory}{component}'
 
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
@@ -574,7 +576,7 @@ def main():
             terraform_providers = result["provider_selections"]
 
             for provider, provider_version in terraform_providers.items():
-                print(f'provider: {provider}, provider version: {provider_version}')
+                print(f'PROVIDER: {provider}, PROVIDER VERSION: {provider_version}')
 
                 # Append warning/error if flagged
                 warning, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
