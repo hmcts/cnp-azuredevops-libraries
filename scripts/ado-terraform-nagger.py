@@ -165,7 +165,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
         ]
     }
 
-    if message['warning']['terraform_version']['components']:
+    if message['terraform_version']['components']:
         # Add the warning message block
         slack_data["blocks"].extend([
             {
@@ -176,20 +176,20 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Warning:*\n" + message['warning']['terraform_version']['error_message']
+                        "text": "*Warning:*\n" + message['terraform_version']['error_message']
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Affected Components:*\n" + '\n'.join(message['warning']['terraform_version']['components'])
+                        "text": "*Affected Components:*\n" + '\n'.join(message['terraform_version']['components'])
                     }
                 ]
             }
         ])
 
-    if message['warning']['terraform_provider']['provider']:
+    if message['terraform_provider']['provider']:
         providers_info = [
             f"{provider} - {end_support_date}" 
-            for provider, end_support_date in message['warning']['terraform_provider']['provider'].items()
+            for provider, end_support_date in message['terraform_provider']['provider'].items()
         ]
         # Add the warning message block
         slack_data["blocks"].extend([
@@ -201,7 +201,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Warning:*\n" + message['warning']['terraform_provider']['error_message']
+                        "text": "*Warning:*\n" + message['terraform_provider']['error_message']
                     },
                     {
                         "type": "mrkdwn",
@@ -519,16 +519,14 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
-        output_array = {
-            'warning': {
-                'terraform_version': {
-                    'components': [],
-                    'error_message': ''
-                },
-                'terraform_provider': {
-                    'provider': {},
-                    'error_message': ''
-                }
+        output_warning = {
+            'terraform_version': {
+                'components': [],
+                'error_message': ''
+            },
+            'terraform_provider': {
+                'provider': {},
+                'error_message': ''
             }
         }
 
@@ -575,8 +573,8 @@ def main():
             warning, error_message = terraform_version_checker(terraform_version, config, current_date)
 
             if warning == 'warning':
-                output_array['warning']['terraform_version']['error_message'] = error_message
-                output_array['warning']['terraform_version']['components'].append(component)
+                output_warning['terraform_version']['error_message'] = error_message
+                output_warning['terraform_version']['components'].append(component)
 
             # Handle providers
             terraform_providers = result["provider_selections"]
@@ -590,19 +588,19 @@ def main():
                 provider = provider.split('/')[-1]
 
                 if warning == 'warning':
-                    output_array['warning']['terraform_provider']['error_message'] = error_message
-                    if provider not in output_array['warning']['terraform_provider']['provider']:
-                        output_array['warning']['terraform_provider']['provider'][provider] = end_support_date_str
+                    output_warning['terraform_provider']['error_message'] = error_message
+                    if provider not in output_warning['terraform_provider']['provider']:
+                        output_warning['terraform_provider']['provider'][provider] = end_support_date_str
             
                 # Write the updated data back to the file
                 with open(output_file, 'w') as file:
-                    json.dump(output_array, file, indent=4)
+                    json.dump(output_warning, file, indent=4)
 
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
             print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
-            if (output_array['warning']['terraform_version']['error_message'] or
-                output_array['warning']['terraform_provider']['error_message']):
+            if (output_warning['terraform_version']['error_message'] or
+                output_warning['terraform_provider']['error_message']):
                 log_message_slack(
                     slack_user_id,
                     slack_webhook_url,
