@@ -660,7 +660,7 @@ def main():
         entries = os.listdir(working_directory)
         # Filter out entries that are directories
         directories = [entry for entry in entries if os.path.isdir(os.path.join(working_directory, entry))]
-        print("Child dir: " + directories)
+        print(directories)
         # 
 
         for component in components_array:
