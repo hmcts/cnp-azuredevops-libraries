@@ -548,8 +548,8 @@ def main():
         # for loop over dir componenets, add working dir and current item of loop
         for component in components_list:
             print(f'COMPONENT: {component}')
-            print(f'FULL PATH: {full_path}{component}')
             full_path = f'{working_directory}{component}'
+            print(f'FULL PATH: {full_path}{component}')
 
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
             command = ["tfswitch", "-b", terraform_binary_path]
