@@ -314,7 +314,8 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
 
 def log_message(slack_recipient, slack_webhook_url, message_type, message):
     """
-    Log a message if running in Azure DevOps.
+    Log a message and, if running in Azure DevOps, log a warning issue and
+    attempt to send a Slack message.
 
     This function logs a message with the Python logging library, and if the
     system is running in Azure DevOps (as determined by the
@@ -339,6 +340,7 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
     """
     global errors_detected
 
+    logger.warning(message)
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
         if message_type == "warning":
@@ -346,7 +348,6 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
         if message_type == "error":
             logger.error(f"##vso[task.logissue type=error;]{message}")
             errors_detected = True
-            
 
 
 def extract_version(text, regex):
