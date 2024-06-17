@@ -427,7 +427,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             "Please add it to the config in this file in order to "
             "compare it's versions.",
         )
-        return False, f"Provider {provider} is missing from version config. Please add it to the config in this file in order to compare it's versions.", ''
+        return True, f"Provider {provider} is missing from version config. Please add it to the config in this file in order to compare it's versions.", ''
     else:
         # Handle providers
         # Get the date after which Terraform versions are no longer supported
@@ -453,7 +453,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 f"Affected provider version(s) will soon reach deprecation. "
                 f"Please upgrade version prior to the deprecation date."
             )
-            return True, message, end_support_date_str
+            return 'warning', message, end_support_date_str
     
         # Error if terraform provider version lower than specified & passed deadline.
         if version.parse(provider_version) < version.parse(
@@ -476,9 +476,9 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
                 f"no longer supported after deprecation deadline " 
                 "Please upgrade."
             ) 
-            return True, message, end_support_date_str
+            return 'error', message, end_support_date_str
 
-    return False, 'All providers up to date', ''
+    return True, 'All providers up to date', ''
 
 
 def main():
@@ -530,10 +530,8 @@ def main():
             }
         }
 
-                    # Construct the working directory path
-        
+        # Construct the working directory path
         base_directory = os.getenv('BASE_DIRECTORY')
-        
         if not base_directory or base_directory == '':
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"
         else:
@@ -578,14 +576,15 @@ def main():
                 print(f'provider: {provider}')
 
                 # Append warning/error if flagged
-                provider_warning, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
+                warning, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
 
                 provider = provider.split('/')[-1]
-                
-                if provider_warning is True:
+                print(provider)
+                if warning == 'warning':
                     output_warning['terraform_provider']['error_message'] = error_message
                     if provider not in output_warning['terraform_provider']['provider']:
                         output_warning['terraform_provider']['provider'][provider] = end_support_date_str
+                print(output_warning)
             
                 # Write the updated data back to the file
                 with open(output_file, 'w') as file:
