@@ -652,7 +652,7 @@ def main():
         else:
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
         print("Base dir: " + base_directory)
-        
+
         print("working directory: " + working_directory)
         # 
         # Get the list of all entries in the specified directory
@@ -662,33 +662,22 @@ def main():
         print(directories)
         # 
 
-        components_array = directories
+        # for loop over dir componenets, add working dir and current item of loop
+        for component in directories:
+            full_path = f'{working_directory}{component}'
 
-        for component in components_array:
-            print(f'component: {component}')
-
-            # Construct the working directory path
-            base_directory = os.getenv('BASE_DIRECTORY')
-            if not base_directory or base_directory == '':
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/{component}"
-            else:
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/{component}"
-            
-            
-            # copy the override.tf from system_default_working_directory/cnp-azuredevops-libraries/resources dir and 
-            # paste it into the component working_directory to have a local provider_selection
-            # shutil.copyfile(f"{system_default_working_directory}/cnp-azuredevops-libraries/resources/override.tf", f"{working_directory}/override.tf")
+            print("Full path: " + full_path)
 
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
             command = ["tfswitch", "-b", terraform_binary_path]
-            run_command(command, working_directory)
+            run_command(command, full_path)
 
             # try and do the terraform init 
             command = ["terraform", "init", "-backend=false"]
-            run_command(command, working_directory)
+            run_command(command, full_path)
 
             command = ["terraform", "version", "--json"]
-            result = json.loads(run_command(command, working_directory))
+            result = json.loads(run_command(command, full_path))
             terraform_version = result["terraform_version"]
 
             # Load deprecation map
