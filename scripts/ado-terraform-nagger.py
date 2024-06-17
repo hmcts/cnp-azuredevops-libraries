@@ -211,52 +211,6 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             }
         ])
 
-    if message['error']['terraform_version']['components']:
-        # Add the error message block
-        slack_data["blocks"].extend([
-            {
-                "type": "divider"
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Error:*\n" + message['error']['terraform_version']['error_message']
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Affected Components:*\n" + '\n'.join(message['error']['terraform_version']['components'])
-                    }
-                ]
-            }
-        ])
-
-    if message['error']['terraform_provider']['provider']:
-        providers_info = [
-            f"{provider} - {end_support_date}" 
-            for provider, end_support_date in message['error']['terraform_provider']['provider'].items()
-        ]
-        # Add the error message block
-        slack_data["blocks"].extend([
-            {
-                "type": "divider"
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Warning:*\n" + message['error']['terraform_provider']['error_message']
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Affected Providers:*\n" + '\n'.join(providers_info)
-                    }
-                ]
-            }
-        ])
-
     response = requests.post(webhook, json=slack_data)
     if response.status_code:
         return True
@@ -575,16 +529,6 @@ def main():
                     'provider': {},
                     'error_message': ''
                 }
-            },
-            'error': {
-                'terraform_version': {
-                    'components': [],
-                    'error_message': ''
-                },
-                'terraform_provider': {
-                    'provider': {},
-                    'error_message': ''
-                }
             }
         }
 
@@ -634,10 +578,6 @@ def main():
                 output_array['warning']['terraform_version']['error_message'] = error_message
                 output_array['warning']['terraform_version']['components'].append(component)
 
-            elif warning == 'error':
-                output_array['error']['terraform_version']['error_message'] = error_message
-                output_array['error']['terraform_version']['components'].append(component)
-
             # Handle providers
             terraform_providers = result["provider_selections"]
 
@@ -653,11 +593,6 @@ def main():
                     output_array['warning']['terraform_provider']['error_message'] = error_message
                     if provider not in output_array['warning']['terraform_provider']['provider']:
                         output_array['warning']['terraform_provider']['provider'][provider] = end_support_date_str
-
-                elif warning == 'error':
-                    output_array['error']['terraform_provider']['error_message'] = error_message
-                    if provider not in output_array['error']['terraform_provider']['provider']:
-                        output_array['error']['terraform_provider']['provider'][provider] = end_support_date_str
             
                 # Write the updated data back to the file
                 with open(output_file, 'w') as file:
@@ -666,8 +601,8 @@ def main():
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
             print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
-            if (output_array['warning']['terraform_provider']['error_message'] or
-                output_array['error']['terraform_provider']['error_message']):
+            if (output_array['warning']['terraform_version']['error_message'] or
+                output_array['warning']['terraform_provider']['error_message']):
                 log_message_slack(
                     slack_user_id,
                     slack_webhook_url,
