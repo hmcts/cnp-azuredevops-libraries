@@ -538,9 +538,6 @@ def main():
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"
         else:
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
-
-        print("Base dir: " + base_directory)
-        print("working directory: " + working_directory)
         
         # Get the list of all child dir in the specified parent directory
         parent_dir = os.listdir(working_directory)
@@ -551,8 +548,6 @@ def main():
         # for loop over dir componenets, add working dir and current item of loop
         for component in components_list:
             full_path = f'{working_directory}{component}'
-
-            print("Full path: " + full_path)
 
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
             command = ["tfswitch", "-b", terraform_binary_path]
