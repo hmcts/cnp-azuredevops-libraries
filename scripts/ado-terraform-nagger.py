@@ -537,8 +537,9 @@ def main():
         if not base_directory or base_directory == '':
             print(f'system defualt dir: {system_default_working_directory}')
             print(f'build repo suffix: {build_repo_suffix}')
-                       
-            working_directory = f"{system_default_working_directory}/{build_repo_suffix}"
+            
+            is_root_dir = True
+            working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
 
             if os.path.exists(os.path.join(working_directory, "components")):
                 is_root_dir = False
