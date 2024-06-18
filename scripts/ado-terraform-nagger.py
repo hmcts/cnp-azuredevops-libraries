@@ -550,7 +550,7 @@ def main():
             parent_dir = os.listdir(working_directory)
             # Filter out entries that are directories
             components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
-            print("\n".join(components_list))
+            print(f'Components:\n' + "\n".join(components_list))
 
         # for loop over dir componenets, add working dir and current item of loop
         for component in components_list:
