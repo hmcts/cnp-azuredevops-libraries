@@ -538,28 +538,27 @@ def main():
             print(f'system defualt dir: {system_default_working_directory}')
             print(f'build repo suffix: {build_repo_suffix}')
             
-            working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"
-            is_root_path = False
+            working_directory = f"{system_default_working_directory}/{build_repo_suffix}"
 
-            # if not os.getcwd().endswith(f"{system_default_working_directory}/{build_repo_suffix}/components/"):
-            #     # Set working directory to the default path
-            #     working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
-            #     is_root_path = True
+            if os.path.exists(os.path.join(working_directory, "components")):
+                is_root_path = False
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components"               
 
         else:
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
 
         print(f"working dir: {working_directory}")
 
-        # if not is_root_path:
-        # Get the list of all child dir in the specified parent directory
-        parent_dir = os.listdir(working_directory)
-        # Filter out entries that are directories
-        components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
+        if is_root_path:
+            working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
+            components_list = ['.']
+        else:
+            # Get the list of all child dir in the specified parent directory
+            parent_dir = os.listdir(working_directory)
+            # Filter out entries that are directories
+            components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
+            
         print(components_list)
-        # else:
-        #     working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
-        #     components_test_list = ['.']
 
         # for loop over dir componenets, add working dir and current item of loop
         for component in components_list:
