@@ -582,6 +582,7 @@ def main():
             # Handle providers
             terraform_providers = result["provider_selections"]
 
+            print(terraform_providers)
             for provider, provider_version in terraform_providers.items():
                 print(f'PROVIDER: {provider}, PROVIDER VERSION: {provider_version}')
 
