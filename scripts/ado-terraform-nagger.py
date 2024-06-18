@@ -542,7 +542,7 @@ def main():
 
             if os.path.exists(os.path.join(working_directory, "components")):
                 is_root_path = False
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components"               
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"               
 
         else:
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
@@ -557,7 +557,7 @@ def main():
             parent_dir = os.listdir(working_directory)
             # Filter out entries that are directories
             components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
-            
+
         print(components_list)
 
         # for loop over dir componenets, add working dir and current item of loop
