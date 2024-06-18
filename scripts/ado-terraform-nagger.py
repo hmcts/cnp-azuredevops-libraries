@@ -343,9 +343,7 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
         if message_type == "warning":
-            print('debug before warning')
             logger.warning(f"##vso[task.logissue type=warning;]{message}")
-            print('debug after warning')
         if message_type == "error":
             logger.error(f"##vso[task.logissue type=error;]{message}")
             errors_detected = True
@@ -535,21 +533,15 @@ def main():
         # Construct the working directory path
         base_directory = os.getenv('BASE_DIRECTORY')
         if not base_directory or base_directory == '':
-            print(f'system defualt dir: {system_default_working_directory}')
-            print(f'build repo suffix: {build_repo_suffix}')
-            
             is_root_dir = True
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
 
             if os.path.exists(os.path.join(working_directory, "components")):
                 is_root_dir = False
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"               
-
         else:
             is_root_dir = False
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
-
-        print(f"working dir: {working_directory}")
 
         if is_root_dir:
             components_list = ['.']
@@ -558,8 +550,6 @@ def main():
             parent_dir = os.listdir(working_directory)
             # Filter out entries that are directories
             components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
-
-        print(components_list)
 
         # for loop over dir componenets, add working dir and current item of loop
         for component in components_list:
