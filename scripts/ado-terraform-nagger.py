@@ -538,6 +538,8 @@ def main():
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"
         else:
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
+
+        print(f"build repo suffix: {system_default_working_directory}/{build_repo_suffix}")
         
         # Get the list of all child dir in the specified parent directory
         parent_dir = os.listdir(working_directory)
