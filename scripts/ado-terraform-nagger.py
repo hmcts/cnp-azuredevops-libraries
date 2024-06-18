@@ -540,6 +540,7 @@ def main():
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
 
         print(f"build repo suffix: {system_default_working_directory}/{build_repo_suffix}")
+
         
         # Get the list of all child dir in the specified parent directory
         parent_dir = os.listdir(working_directory)
@@ -547,8 +548,11 @@ def main():
         components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
         print(components_list)
 
+        working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
+        components_test_list = ['.']
+
         # for loop over dir componenets, add working dir and current item of loop
-        for component in components_list:
+        for component in components_test_list:
             print(f'COMPONENT: {component}')
             full_path = f'{working_directory}{component}'
             print(f'FULL PATH: {full_path}{component}')
