@@ -73,16 +73,16 @@ def run_command(command, working_directory):
     try:
         run_command = subprocess.run(command, capture_output=True)
         # # debug with 2 lines
-        # output = run_command.stdout.decode("utf-8")
-        # print("Command output try:", output)
+        output = run_command.stdout.decode("utf-8")
+        print("Command output try:", output)
         return run_command.stdout.decode("utf-8")
     except TypeError:
         run_command = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         # debug with 2 lines
-        # output = run_command.stdout.decode("utf-8")
-        # print("Command output except:", output)
+        output = run_command.stdout.decode("utf-8")
+        print("Command output except:", output)
         return run_command.stdout.decode("utf-8")
     except subprocess.CalledProcessError as e:
         raise subprocess.CalledProcessError(e.returncode, e.cmd, e.output, e.stderr)
@@ -586,7 +586,7 @@ def main():
             if terraform_providers:
                 print(json.dumps(terraform_providers, indent=4))
                 for provider, provider_version in terraform_providers.items():
-                    print(f'PROVIDER: {provider}, PROVIDER VERSION: {provider_version}')
+                    print(f'Provider: {provider}')
 
                     # Append warning/error if flagged
                     warning, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
