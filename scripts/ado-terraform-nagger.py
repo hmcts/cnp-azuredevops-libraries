@@ -74,7 +74,7 @@ def run_command(command, working_directory):
         run_command = subprocess.run(command, capture_output=True)
         # debug with 2 lines
         output = run_command.stdout.decode("utf-8")
-        print("Command output:", output)
+        print("Command output try:", output)
         return run_command.stdout.decode("utf-8")
     except TypeError:
         run_command = subprocess.run(
@@ -82,7 +82,7 @@ def run_command(command, working_directory):
         )
         # debug with 2 lines
         output = run_command.stdout.decode("utf-8")
-        print("Command output:", output)
+        print("Command output except:", output)
         return run_command.stdout.decode("utf-8")
     except subprocess.CalledProcessError as e:
         raise subprocess.CalledProcessError(e.returncode, e.cmd, e.output, e.stderr)
@@ -617,7 +617,7 @@ def main():
 
     except JSONDecodeError:
         # Fallback to regex when terraform version <= 0.13.0
-        # result = run_command(command, full_path)
+        result = run_command(command, full_path)
         terraform_regex = f"^([Tt]erraform(\\s))(?P<semver>{semver_regex})"
         terraform_version = extract_version(result, terraform_regex)
         log_message(
