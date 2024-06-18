@@ -550,6 +550,7 @@ def main():
             parent_dir = os.listdir(working_directory)
             # Filter out entries that are directories
             components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
+            print("\n".join(components_list))
 
         # for loop over dir componenets, add working dir and current item of loop
         for component in components_list:
@@ -583,6 +584,7 @@ def main():
             terraform_providers = result["provider_selections"]
 
             if terraform_providers:
+                print(json.dump(terraform_providers, indent=2))
                 for provider, provider_version in terraform_providers.items():
                     print(f'PROVIDER: {provider}, PROVIDER VERSION: {provider_version}')
 
