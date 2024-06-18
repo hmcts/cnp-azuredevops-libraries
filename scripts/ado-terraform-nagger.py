@@ -584,7 +584,7 @@ def main():
             terraform_providers = result["provider_selections"]
 
             if terraform_providers:
-                print(terraform_providers)
+                print(json.dumps(terraform_providers, indent=4))
                 for provider, provider_version in terraform_providers.items():
                     print(f'PROVIDER: {provider}, PROVIDER VERSION: {provider_version}')
 
