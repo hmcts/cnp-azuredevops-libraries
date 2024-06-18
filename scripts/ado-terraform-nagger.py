@@ -562,7 +562,7 @@ def main():
         #     components_test_list = ['.']
 
         # for loop over dir componenets, add working dir and current item of loop
-        for component in components_test_list:
+        for component in components_list:
             print(f'COMPONENT: {component}')
             full_path = f'{working_directory}{component}'
             print(f'FULL PATH: {full_path}')
