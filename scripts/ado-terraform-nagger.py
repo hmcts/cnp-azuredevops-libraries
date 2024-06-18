@@ -582,22 +582,27 @@ def main():
             # Handle providers
             terraform_providers = result["provider_selections"]
 
-            print(terraform_providers)
-            for provider, provider_version in terraform_providers.items():
-                print(f'PROVIDER: {provider}, PROVIDER VERSION: {provider_version}')
+            if terraform_providers:
+                for provider, provider_version in terraform_providers.items():
+                    print(f'PROVIDER: {provider}, PROVIDER VERSION: {provider_version}')
 
-                # Append warning/error if flagged
-                warning, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
+                    # Append warning/error if flagged
+                    warning, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
 
-                provider = provider.split('/')[-1]
-                if warning == 'warning':
-                    output_warning['terraform_provider']['error_message'] = error_message
-                    if provider not in output_warning['terraform_provider']['provider']:
-                        output_warning['terraform_provider']['provider'][provider] = end_support_date_str
-            
+                    provider = provider.split('/')[-1]
+                    if warning == 'warning':
+                        output_warning['terraform_provider']['error_message'] = error_message
+                        if provider not in output_warning['terraform_provider']['provider']:
+                            output_warning['terraform_provider']['provider'][provider] = end_support_date_str
+                
+                    # Write the updated data back to the file
+                    with open(output_file, 'w') as file:
+                        json.dump(output_warning, file, indent=4)
+            else:
                 # Write the updated data back to the file
                 with open(output_file, 'w') as file:
                     json.dump(output_warning, file, indent=4)
+
 
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
