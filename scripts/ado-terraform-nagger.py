@@ -551,7 +551,6 @@ def main():
         print(f"working dir: {working_directory}")
 
         if is_root_dir:
-            working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
             components_list = ['.']
         else:
             # Get the list of all child dir in the specified parent directory
