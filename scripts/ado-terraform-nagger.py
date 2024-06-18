@@ -541,7 +541,7 @@ def main():
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}"
 
             if os.path.exists(os.path.join(working_directory, "components")):
-                is_root_path = False
+                is_root_dir = False
                 working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"               
 
         else:
@@ -549,7 +549,7 @@ def main():
 
         print(f"working dir: {working_directory}")
 
-        if is_root_path:
+        if is_root_dir:
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
             components_list = ['.']
         else:
