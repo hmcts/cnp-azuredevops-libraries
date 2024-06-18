@@ -628,7 +628,7 @@ def main():
             "error",
             f"Detected terraform version {terraform_version} does not support "
             "checking provider versions in addition to the main binary. "
-            "Please upgrade your terraform version to at least v0.13.0",
+            "Please upgrade your terraform version to at least v0.13.0"
         )
     except Exception as e:
         logger.error("Unknown error occurred")
