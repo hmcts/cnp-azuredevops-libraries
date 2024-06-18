@@ -72,17 +72,17 @@ def run_command(command, working_directory):
     os.chdir(working_directory)
     try:
         run_command = subprocess.run(command, capture_output=True)
-        # debug with 2 lines
-        output = run_command.stdout.decode("utf-8")
-        print("Command output try:", output)
+        # # debug with 2 lines
+        # output = run_command.stdout.decode("utf-8")
+        # print("Command output try:", output)
         return run_command.stdout.decode("utf-8")
     except TypeError:
         run_command = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         # debug with 2 lines
-        output = run_command.stdout.decode("utf-8")
-        print("Command output except:", output)
+        # output = run_command.stdout.decode("utf-8")
+        # print("Command output except:", output)
         return run_command.stdout.decode("utf-8")
     except subprocess.CalledProcessError as e:
         raise subprocess.CalledProcessError(e.returncode, e.cmd, e.output, e.stderr)
@@ -631,12 +631,6 @@ def main():
             "checking provider versions in addition to the main binary. "
             "Please upgrade your terraform version to at least v0.13.0",
         )
-        # Strip preceding "v" for version comparison.
-        if terraform_version[0].lower() == "v":
-            terraform_version = terraform_version[1:]
-
-        # Handle terraform versions.
-        terraform_version_checker(terraform_version, config, current_date)
     except Exception as e:
         logger.error("Unknown error occurred")
         raise Exception(e)
