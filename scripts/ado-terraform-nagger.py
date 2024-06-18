@@ -562,14 +562,14 @@ def main():
             command = ["tfswitch", "-b", terraform_binary_path]
             run_command(command, full_path)
 
-            # try and do the terraform init 
-            command = ["terraform", "init", "-backend=false"]
-            run_command(command, full_path)
-
             print('debug for loop')
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
             terraform_version = result["terraform_version"]
+
+            # try and do the terraform init 
+            command = ["terraform", "init", "-backend=false"]
+            run_command(command, full_path)
 
             # Load deprecation map
             config = load_file(args.filepath)
