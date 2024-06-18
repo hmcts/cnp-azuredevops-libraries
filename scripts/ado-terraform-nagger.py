@@ -535,11 +535,17 @@ def main():
         # Construct the working directory path
         base_directory = os.getenv('BASE_DIRECTORY')
         if not base_directory or base_directory == '':
+            print(f'system defualt dir: {system_default_working_directory}')
+            print(f'build repo suffix: {build_repo_suffix}')
+            
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"
-            if not os.getcwd().endswith(f"{system_default_working_directory}/{build_repo_suffix}/components/"):
-                # Set working directory to the default path
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
-                is_root_path = True
+            is_root_path = False
+
+            # if not os.getcwd().endswith(f"{system_default_working_directory}/{build_repo_suffix}/components/"):
+            #     # Set working directory to the default path
+            #     working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
+            #     is_root_path = True
+
         else:
             working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
 
