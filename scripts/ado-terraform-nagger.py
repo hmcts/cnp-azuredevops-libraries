@@ -575,9 +575,15 @@ def main():
             full_path = f'{working_directory}{component}'
             print(f'FULL PATH: {full_path}')
             
-            if not os.path.exists(full_path):
-                errors_detected = True
-                print(f'full path does not exist please review repo structure: {full_path}')
+            # Try to check if the path exists
+            try:
+                if not os.path.exists(full_path):
+                    logger.error(f'Full path does not exist, please review repo structure: {full_path}')
+                    raise FileNotFoundError(f'Full path does not exist, please review repo structure: {full_path}')
+            except Exception as e:
+                logger.error("An error occurred while checking the path")
+                raise
+
 
             # Load deprecation map
             config = load_file(args.filepath)
