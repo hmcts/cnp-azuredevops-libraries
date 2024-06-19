@@ -582,9 +582,13 @@ def main():
             command = ["tfswitch", "-b", terraform_binary_path]
             run_command(command, full_path)
 
-            # try and do the terraform init 
-            command = ["terraform", "init", "-backend=false"]
-            run_command(command, full_path)
+            try:
+                # try and do the terraform init 
+                command = ["terraform", "init", "-backend=false"]
+                run_command(command, full_path)
+            except:
+                errors_detected = True
+
 
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
