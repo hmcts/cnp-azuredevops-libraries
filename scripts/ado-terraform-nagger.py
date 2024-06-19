@@ -164,9 +164,10 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             }
         ]
     }
-    print(f'debug message slack: {message}')
-    print(f'errors detected: {errors_detected}')
-    if errors_detected:
+
+    if isinstance(message, str):
+        error_message = message if isinstance(message, str) else '\n'.join(message['terraform_version']['components'])
+        print(f'error msg: {error_message}')
         # Add the warning message block
         slack_data["blocks"].extend([
             {
@@ -186,28 +187,6 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                 ]
             }
         ])
-        if isinstance(message, str):
-            error_message = message if isinstance(message, str) else '\n'.join(message['terraform_version']['components'])
-            print(f'error msg: {error_message}')
-            # Add the warning message block
-            slack_data["blocks"].extend([
-                {
-                    "type": "divider"
-                },
-                {
-                    "type": "section",
-                    "fields": [
-                        {
-                            "type": "mrkdwn",
-                            "text": "*Error:*\nPipeline detected errors, please see build id for more details"
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": "*Error Message:*\n" + error_message
-                        }
-                    ]
-                }
-            ])
 
     if not isinstance(message, str):
         if message['terraform_version']['components']:
@@ -351,7 +330,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
             build_origin = f"<{build_origin_url}|{repository_name}/tree/{source_branch_name}>"
         
         icon_emoji = ":warning:"
-        print(f'debug msg: {message}')
+
         send_slack_message(
             slack_webhook_url, slack_recipient, slack_sender, icon_emoji, build_origin, build_url, build_id, message
         )
