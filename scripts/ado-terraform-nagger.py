@@ -627,11 +627,17 @@ def main():
         log_message(
             slack_user_id,
             slack_webhook_url,
-            "error",
+            "warning",
             f"Detected terraform version {terraform_version} does not support "
             f"checking provider versions in addition to the main binary. "
             f"Please upgrade your terraform version to at least v0.13.0"
         )
+        # Strip preceding "v" for version comparison.
+        if terraform_version[0].lower() == "v":
+            terraform_version = terraform_version[1:]
+
+        # Handle terraform versions.
+        terraform_version_checker(terraform_version, config, current_date)
     except Exception as e:
         logger.error("Unknown error occurred")
         raise Exception(e)
