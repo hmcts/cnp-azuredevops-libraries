@@ -574,6 +574,10 @@ def main():
             print(f'COMPONENT: {component}')
             full_path = f'{working_directory}{component}'
             print(f'FULL PATH: {full_path}')
+            
+            if not os.path.exists(full_path):
+                errors_detected = True
+                print(f'full path does not exist please review repo structure: {full_path}')
 
             # Load deprecation map
             config = load_file(args.filepath)
@@ -582,13 +586,9 @@ def main():
             command = ["tfswitch", "-b", terraform_binary_path]
             run_command(command, full_path)
 
-            try:
-                # try and do the terraform init 
-                command = ["terraform", "init", "-backend=false"]
-                run_command(command, full_path)
-            except:
-                errors_detected = True
-
+            # try and do the terraform init 
+            command = ["terraform", "init", "-backend=false"]
+            run_command(command, full_path)
 
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
