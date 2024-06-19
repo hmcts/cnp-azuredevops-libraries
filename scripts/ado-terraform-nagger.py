@@ -519,7 +519,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
     test_path = os.path.join(working_directory, components_list[0])
     if not os.path.exists(test_path):
         global errors_detected
-        message = (f'Error, repo structure invalid please see docs for further information: {test_path}')
+        message = (f'Repo structure invalid please see docs for further information: {test_path}')
         logger.error(f"##vso[task.logissue type=error;]{message}")
         errors_detected = True
         log_message_slack(
