@@ -175,7 +175,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Warning:*\nPipeline detected errors, please see build id for more details"
+                        "text": "*Error:*\nPipeline detected errors, please see build id for more details"
                     }
                 ]
             }
