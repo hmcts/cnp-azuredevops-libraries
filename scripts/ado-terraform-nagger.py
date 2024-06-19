@@ -164,26 +164,29 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             }
         ]
     }
-    if errors_detected and not message['terraform_version']:
-        # Add the warning message block
-        slack_data["blocks"].extend([
-            {
-                "type": "divider"
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Error:*\nPipeline detected errors, please see build id for more details"
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Error Message:*\n" + message
-                    }
-                ]
-            }
-        ])
+    if errors_detected:
+        if isinstance(message, str):
+            error_message = message if isinstance(message, str) else '\n'.join(message['terraform_version']['components'])
+            
+            # Add the warning message block
+            slack_data["blocks"].extend([
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Error:*\nPipeline detected errors, please see build id for more details"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Error Message:*\n" + error_message
+                        }
+                    ]
+                }
+            ])
 
     if not isinstance(message, str):
         if message['terraform_version']['components']:
