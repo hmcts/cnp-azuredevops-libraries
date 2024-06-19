@@ -624,6 +624,7 @@ def main():
         result = run_command(command, full_path)
         terraform_regex = f"^([Tt]erraform(\\s))(?P<semver>{semver_regex})"
         terraform_version = extract_version(result, terraform_regex)
+        print(f'terraform vers: {terraform_version}')
         log_message(
             slack_user_id,
             slack_webhook_url,
@@ -647,7 +648,7 @@ def main():
             # Write the updated data back to the file
             with open(output_file, 'w') as file:
                 json.dump(output_warning, file, indent=4)
-                
+
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
             print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
