@@ -335,7 +335,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         )
 
 
-def log_message(slack_recipient, slack_webhook_url, message_type, message):
+def log_message(message_type, message):
     """
     Log a message and, if running in Azure DevOps, log a warning issue and
     attempt to send a Slack message.
@@ -404,8 +404,6 @@ def terraform_version_checker(terraform_version, config, current_date):
         config["terraform"]["terraform"]["version"]
     ) and current_date <= end_support_date:
         log_message(
-            slack_user_id,
-            slack_webhook_url,
             "warning",
             f"Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["terraform"]["version"]}. '
@@ -424,8 +422,6 @@ def terraform_version_checker(terraform_version, config, current_date):
         config["terraform"]["terraform"]["version"]
     ) and current_date > end_support_date:
         log_message(
-            slack_user_id,
-            slack_webhook_url,
             "error",
             f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
             "Please upgrade...",
@@ -443,8 +439,6 @@ def terraform_version_checker(terraform_version, config, current_date):
 def terraform_provider_checker(provider, provider_version, config, current_date):
     if provider not in config["terraform"]:
         log_message(
-            slack_user_id,
-            slack_webhook_url,
             "warning",
             f"Provider {provider} is missing from version config. "
             f"Please add it to the config in this file in order to "
@@ -462,8 +456,6 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             config["terraform"][provider]["version"]
         ) and current_date <= end_support_date:
             log_message(
-                slack_user_id,
-                slack_webhook_url,
                 "warning",
                 f"Detected provider {provider} version "
                 f"{provider_version} "
@@ -483,8 +475,6 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
             config["terraform"][provider]["version"]
         ) and current_date > end_support_date:
             log_message(
-                slack_user_id,
-                slack_webhook_url,
                 "error",
                 f"Detected provider {provider} version "
                 f"{provider_version} "
@@ -561,7 +551,7 @@ def main():
         hmcts_github_slack_user_mappings, github_user
     )
     if not slack_user_id:
-        log_message(None, None, "error", "Missing Slack user ID from github mapping. \
+        log_message("error", "Missing Slack user ID from github mapping. \
                     Please add yourself to the repo at https://github.com/hmcts/github-slack-user-mappings \
                     to proceed")
     
@@ -569,7 +559,7 @@ def main():
     global slack_webhook_url
     slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL")
     if not slack_webhook_url:
-        log_message(None, None, "error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
+        log_message("error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
 
     # Build correct path to terraform binary
     home_dir = os.path.expanduser('~')
@@ -681,8 +671,6 @@ def main():
                 json.dump(output_warning, file, indent=4)
 
         log_message(
-            slack_user_id,
-            slack_webhook_url,
             "error",
             f"Detected terraform version {terraform_version} does not support "
             f"checking provider versions in addition to the main binary. "
