@@ -165,6 +165,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
         ]
     }
     print(f'debug message slack: {message}')
+    print(f'errors detected: {errors_detected}')
     if errors_detected:
         # Add the warning message block
         slack_data["blocks"].extend([
