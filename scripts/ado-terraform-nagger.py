@@ -164,7 +164,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             }
         ]
     }
-    if errors_detected:
+    if errors_detected and not message['terraform_version']:
         # Add the warning message block
         slack_data["blocks"].extend([
             {
@@ -176,6 +176,10 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                     {
                         "type": "mrkdwn",
                         "text": "*Error:*\nPipeline detected errors, please see build id for more details"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Error Message:*\n" + message
                     }
                 ]
             }
@@ -577,10 +581,15 @@ def main():
             
             # Try to check if the path exists
             if not os.path.exists(full_path):
-                logger.error(f'Full path does not exist, please review repo structure: {full_path}')
+                message = (f'Full path does not exist, please review repo structure: {full_path}')
+                logger.error(message)
                 errors_detected = True
+                log_message_slack(
+                    slack_user_id,
+                    slack_webhook_url,
+                    message
+                )
                 raise SystemExit(1)
-
 
             # Load deprecation map
             config = load_file(args.filepath)
