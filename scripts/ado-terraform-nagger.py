@@ -504,6 +504,44 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
     return True, 'All providers up to date', ''
 
 
+def create_working_dir_list(base_directory, system_default_working_directory, build_repo_suffix):
+    if not base_directory or base_directory == '':
+            is_root_dir = True
+            working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
+
+            if os.path.exists(os.path.join(working_directory, "components")):
+                is_root_dir = False
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"               
+    else:
+        is_root_dir = False
+        working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
+
+    if is_root_dir:
+        components_list = ['test']
+    else:
+        # Get the list of all child dir in the specified parent directory
+        parent_dir = os.listdir(working_directory)
+        # Filter out entries that are directories
+        components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
+        print(f'Components:\n' + "\n".join(components_list))
+
+    # Try to check if the path exists
+    test_path = os.path.join(working_directory, components_list[0])
+    if not os.path.exists(test_path):
+        global errors_detected
+        message = (f'Error, repo structure invalid please see docs for further information: {test_path}')
+        logger.error(message)
+        errors_detected = True
+        log_message_slack(
+            slack_user_id,
+            slack_webhook_url,
+            message
+        )
+        raise SystemExit(1)
+    
+    return working_directory, components_list
+
+
 def main():
     # initialise array of warnings/errors
     output_file = "nagger_output.json"
@@ -542,6 +580,10 @@ def main():
         system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
         build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
 
+        # Construct the working directory path
+        base_directory = os.getenv('BASE_DIRECTORY')
+        working_directory, components_list = create_working_dir_list(base_directory, system_default_working_directory, build_repo_suffix)
+        
         output_warning = {
             'terraform_version': {
                 'components': [],
@@ -553,46 +595,11 @@ def main():
             }
         }
 
-        # Construct the working directory path
-        base_directory = os.getenv('BASE_DIRECTORY')
-        if not base_directory or base_directory == '':
-            is_root_dir = True
-            working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
-
-            if os.path.exists(os.path.join(working_directory, "components")):
-                is_root_dir = False
-                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"               
-        else:
-            is_root_dir = False
-            working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
-
-        if is_root_dir:
-            components_list = ['test']
-        else:
-            # Get the list of all child dir in the specified parent directory
-            parent_dir = os.listdir(working_directory)
-            # Filter out entries that are directories
-            components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
-            print(f'Components:\n' + "\n".join(components_list))
-
         # for loop over dir componenets, add working dir and current item of loop
         for component in components_list:
             print(f'COMPONENT: {component}')
             full_path = f'{working_directory}{component}'
             print(f'FULL PATH: {full_path}')
-            
-            # Try to check if the path exists
-            if not os.path.exists(full_path):
-                global errors_detected
-                message = (f'Full path does not exist, please review repo structure: {full_path}')
-                logger.error(message)
-                errors_detected = True
-                log_message_slack(
-                    slack_user_id,
-                    slack_webhook_url,
-                    message
-                )
-                raise SystemExit(1)
 
             # Load deprecation map
             config = load_file(args.filepath)
