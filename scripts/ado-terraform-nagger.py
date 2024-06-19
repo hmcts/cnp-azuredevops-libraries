@@ -185,52 +185,52 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             }
         ])
 
+    if not isinstance(message, str):
+        if message['terraform_version']['components']:
+            # Add the warning message block
+            slack_data["blocks"].extend([
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Warning:*\n" + message['terraform_version']['error_message']
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Affected Components:*\n" + '\n'.join(message['terraform_version']['components'])
+                        }
+                    ]
+                }
+            ])
 
-    if message['terraform_version']['components']:
-        # Add the warning message block
-        slack_data["blocks"].extend([
-            {
-                "type": "divider"
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Warning:*\n" + message['terraform_version']['error_message']
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Affected Components:*\n" + '\n'.join(message['terraform_version']['components'])
-                    }
-                ]
-            }
-        ])
-
-    if message['terraform_provider']['provider']:
-        providers_info = [
-            f"{provider} - {end_support_date}" 
-            for provider, end_support_date in message['terraform_provider']['provider'].items()
-        ]
-        # Add the warning message block
-        slack_data["blocks"].extend([
-            {
-                "type": "divider"
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Warning:*\n" + message['terraform_provider']['error_message']
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Affected Providers:*\n" + '\n'.join(providers_info)
-                    }
-                ]
-            }
-        ])
+        if message['terraform_provider']['provider']:
+            providers_info = [
+                f"{provider} - {end_support_date}" 
+                for provider, end_support_date in message['terraform_provider']['provider'].items()
+            ]
+            # Add the warning message block
+            slack_data["blocks"].extend([
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Warning:*\n" + message['terraform_provider']['error_message']
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Affected Providers:*\n" + '\n'.join(providers_info)
+                        }
+                    ]
+                }
+            ])
 
     response = requests.post(webhook, json=slack_data)
     if response.status_code:
