@@ -624,15 +624,7 @@ def main():
         result = run_command(command, full_path)
         terraform_regex = f"^([Tt]erraform(\\s))(?P<semver>{semver_regex})"
         terraform_version = extract_version(result, terraform_regex)
-        print(f'terraform vers: {terraform_version}')
-        log_message(
-            slack_user_id,
-            slack_webhook_url,
-            "warning",
-            f"Detected terraform version {terraform_version} does not support "
-            f"checking provider versions in addition to the main binary. "
-            f"Please upgrade your terraform version to at least v0.13.0"
-        )
+        
         # Strip preceding "v" for version comparison.
         if terraform_version[0].lower() == "v":
             terraform_version = terraform_version[1:]
@@ -659,6 +651,15 @@ def main():
                     slack_webhook_url,
                     complete_file
                 )
+
+        log_message(
+            slack_user_id,
+            slack_webhook_url,
+            "error",
+            f"Detected terraform version {terraform_version} does not support "
+            f"checking provider versions in addition to the main binary. "
+            f"Please upgrade your terraform version to at least v0.13.0"
+        )
 
     except Exception as e:
         logger.error("Unknown error occurred")
