@@ -328,7 +328,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
             build_origin_url = f"{repository}/tree/{source_branch_name}" # https://github.com/hmcts/cnp-dummy-library-test/tree/dtspo-17345-reinstate-nagger
             build_origin = f"<{build_origin_url}|{repository_name}/tree/{source_branch_name}>"
         
-        icon_emoji = ":warning:" if not errors_detected else ":error:"
+        icon_emoji = ":warning:"
 
         send_slack_message(
             slack_webhook_url, slack_recipient, slack_sender, icon_emoji, build_origin, build_url, build_id, message
