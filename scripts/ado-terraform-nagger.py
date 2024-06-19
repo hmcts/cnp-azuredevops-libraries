@@ -164,6 +164,23 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             }
         ]
     }
+    if errors_detected:
+        # Add the warning message block
+        slack_data["blocks"].extend([
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Warning:*\nPipeline detected errors, please see build id for more details"
+                    }
+                ]
+            }
+        ])
+
 
     if message['terraform_version']['components']:
         # Add the warning message block
