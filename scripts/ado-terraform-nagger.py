@@ -605,6 +605,7 @@ def main():
             
             # Try to check if the path exists
             if not os.path.exists(full_path):
+                global errors_detected
                 message = (f'Full path does not exist, please review repo structure: {full_path}')
                 logger.error(message)
                 errors_detected = True
