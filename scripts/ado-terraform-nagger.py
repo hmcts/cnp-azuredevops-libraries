@@ -558,6 +558,9 @@ def main():
             full_path = f'{working_directory}{component}'
             print(f'FULL PATH: {full_path}')
 
+            # Load deprecation map
+            config = load_file(args.filepath)
+
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
             command = ["tfswitch", "-b", terraform_binary_path]
             run_command(command, full_path)
@@ -570,9 +573,6 @@ def main():
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
             terraform_version = result["terraform_version"]
-
-            # Load deprecation map
-            config = load_file(args.filepath)
 
             # Append warning/error if flagged
             warning, error_message = terraform_version_checker(terraform_version, config, current_date)
