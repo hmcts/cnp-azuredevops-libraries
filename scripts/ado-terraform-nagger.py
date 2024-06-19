@@ -530,7 +530,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
     if not os.path.exists(test_path):
         global errors_detected
         message = (f'Error, repo structure invalid please see docs for further information: {test_path}')
-        logger.error(message)
+        logger.error(f"##vso[task.logissue type=error;]{message}")
         errors_detected = True
         log_message_slack(
             slack_user_id,
@@ -625,7 +625,6 @@ def main():
 
             # Handle providers
             terraform_providers = result["provider_selections"]
-
             if terraform_providers:
                 print(json.dumps(terraform_providers, indent=4))
                 for provider, provider_version in terraform_providers.items():
