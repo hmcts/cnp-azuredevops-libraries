@@ -586,7 +586,6 @@ def main():
             command = ["terraform", "init", "-backend=false"]
             run_command(command, full_path)
 
-            print('debug for loop')
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
             terraform_version = result["terraform_version"]
@@ -637,7 +636,6 @@ def main():
 
     except JSONDecodeError:
         # Fallback to regex when terraform version <= 0.13.0
-        print('debug jsondecode error')
         result = run_command(command, full_path)
         terraform_regex = f"^([Tt]erraform(\\s))(?P<semver>{semver_regex})"
         terraform_version = extract_version(result, terraform_regex)
