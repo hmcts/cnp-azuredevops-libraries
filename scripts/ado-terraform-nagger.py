@@ -579,10 +579,10 @@ def main():
             try:
                 if not os.path.exists(full_path):
                     logger.error(f'Full path does not exist, please review repo structure: {full_path}')
-            except Exception as e:
-                logger.error("An error occurred while checking the path")
-                raise Exception(e)
-
+                    errors_detected = True
+                    raise FileNotFoundError(f'Full path does not exist, please review repo structure: {full_path}')
+            except:
+                raise
 
             # Load deprecation map
             config = load_file(args.filepath)
