@@ -647,6 +647,8 @@ def main():
                     slack_webhook_url,
                     complete_file
                 )
+            else:
+                print(f'No warnings detected')
 
     except JSONDecodeError:
         # Fallback to regex when terraform version <= 0.13.0
