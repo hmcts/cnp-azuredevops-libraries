@@ -648,7 +648,7 @@ def main():
                 )
                 logger.info(f"##vso[task.logissue result=Succeeded;]No warnings detected")
             else:
-                logger.info(f"##vso[task.logissue result=Succeeded;]No warnings detected")
+                logger.info(f"##vso[task.complete result=Succeeded;]No warnings detected")
 
     except JSONDecodeError:
         # Fallback to regex when terraform version <= 0.13.0
