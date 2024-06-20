@@ -532,6 +532,25 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
     return working_directory, components_list
 
 
+# Function to add an error to the output_warning dictionary
+def add_error(warning, output_warning, error_message, component):
+    if warning == 'error':
+        # Create the 'error' key if it doesn't exist
+        if 'error' not in output_warning:
+            output_warning['error'] = {
+                'terraform_version': {
+                    'components': [],
+                    'error_message': ''
+                },
+                'terraform_provider': {
+                    'provider': {},
+                    'error_message': ''
+                }
+            }
+        # Add the error message and component
+        output_warning['error']['terraform_version']['error_message'] = error_message
+        output_warning['error']['terraform_version']['components'].append(component)
+
 def main():
     # initialise array of warnings/errors
     output_file = "nagger_output.json"
@@ -612,6 +631,8 @@ def main():
             if warning == 'warning':
                 output_warning['terraform_version']['error_message'] = error_message
                 output_warning['terraform_version']['components'].append(component)
+            
+            add_error(warning, output_warning, error_message, component)
 
             # Handle providers
             terraform_providers = result["provider_selections"]
@@ -646,9 +667,8 @@ def main():
                     slack_webhook_url,
                     complete_file
                 )
-                logger.info(f"##vso[task.logissue result=Succeeded;]No warnings detected")
             else:
-                logger.info(f"##vso[task.complete result=Succeeded;]No warnings detected")
+                print(f'No warnings detected')
 
     except JSONDecodeError:
         # Fallback to regex when terraform version <= 0.13.0
@@ -663,9 +683,7 @@ def main():
         # Handle terraform versions
         warning, error_message = terraform_version_checker(terraform_version, config, current_date)
 
-        if warning == 'warning':
-            output_warning['terraform_version']['error_message'] = error_message
-            output_warning['terraform_version']['components'].append(component)
+        add_error(warning, output_warning, error_message, component)
             
         # Write the updated data back to the file
         with open(output_file, 'w') as file:
