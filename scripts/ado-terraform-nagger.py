@@ -636,14 +636,12 @@ def main():
                 # Write the updated data back to the file
                 with open(output_file, 'w') as file:
                     json.dump(output_warning, file, indent=4)
-        
-            print(f'debug complete file: { json.dumps(output_warning, indent=4, sort_keys=True) }')
 
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
-            print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
             if (output_warning['terraform_version']['error_message'] or
                 output_warning['terraform_provider']['error_message']):
+                print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
                 log_message_slack(
                     slack_user_id,
                     slack_webhook_url,
@@ -687,9 +685,9 @@ def main():
     if errors_detected:
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
-            print(f'error detected complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
             if (output_warning['terraform_version']['error_message'] or
                 output_warning['terraform_provider']['error_message']):
+                print(f'error detected complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
                 log_message_slack(
                     slack_user_id,
                     slack_webhook_url,
