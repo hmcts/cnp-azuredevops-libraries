@@ -527,7 +527,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
             slack_webhook_url,
             message
         )
-        # raise SystemExit(1)
+        raise SystemExit(1)
     
     return working_directory, components_list
 
