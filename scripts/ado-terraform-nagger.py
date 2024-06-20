@@ -637,7 +637,7 @@ def main():
                 with open(output_file, 'w') as file:
                     json.dump(output_warning, file, indent=4)
         
-            print(f'debug complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
+            print(f'debug complete file: { json.dumps(output_warning, indent=4, sort_keys=True) }')
 
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
@@ -667,9 +667,9 @@ def main():
             output_warning['terraform_version']['error_message'] = error_message
             output_warning['terraform_version']['components'].append(component)
             
-            # Write the updated data back to the file
-            with open(output_file, 'w') as file:
-                json.dump(output_warning, file, indent=4)
+        # Write the updated data back to the file
+        with open(output_file, 'w') as file:
+            json.dump(output_warning, file, indent=4)
 
         log_message(
             "error",
