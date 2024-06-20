@@ -17,6 +17,7 @@ from json.decoder import JSONDecodeError
 # Global variable used to exit with error at the end of all checks.
 # To be updated from default value by logging function.
 errors_detected = False
+output_file = "nagger_output.json"
 
 parser = argparse.ArgumentParser(description="ADO Terraform version nagger")
 parser.add_argument(
@@ -431,7 +432,7 @@ def terraform_version_checker(terraform_version, config, current_date):
             f"Affected Terraform version(s) is no longer supported after deprecation deadline {end_support_date_str}. "
             "Please upgrade.",
         )
-        return 'error', f"Terraform version is no longer supported after deprecation deadline {end_support_date_str}. Please upgrade, more information found in pipeline output."
+        return 'error', message
     
     return True, 'Terraform version(s) up to date'
 
