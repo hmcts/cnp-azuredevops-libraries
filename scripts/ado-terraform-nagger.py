@@ -648,7 +648,7 @@ def main():
                     complete_file
                 )
             else:
-                print(f'No warnings detected')
+                logger.info(f"##vso[task.complete result=Succeeded;]No warnings detected")
 
     except JSONDecodeError:
         # Fallback to regex when terraform version <= 0.13.0
