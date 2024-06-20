@@ -616,7 +616,6 @@ def main():
             # Handle providers
             terraform_providers = result["provider_selections"]
             if terraform_providers:
-                print(json.dumps(terraform_providers, indent=4))
                 for provider, provider_version in terraform_providers.items():
                     print(f'Provider: {provider}')
 
@@ -647,8 +646,9 @@ def main():
                     slack_webhook_url,
                     complete_file
                 )
+                logger.info(f"##vso[task.logissue result=Succeeded;]No warnings detected")
             else:
-                logger.info(f"##vso[task.complete result=Succeeded;]No warnings detected")
+                logger.info(f"##vso[task.logissue result=Succeeded;]No warnings detected")
 
     except JSONDecodeError:
         # Fallback to regex when terraform version <= 0.13.0
