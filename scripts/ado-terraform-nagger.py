@@ -400,27 +400,27 @@ def terraform_version_checker(terraform_version, config, current_date):
     end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
 
     # Warn if terraform version is lower than specified & not past deadline.
-    if version.parse(terraform_version) < version.parse(
-        config["terraform"]["terraform"]["version"]
-    ) and current_date <= end_support_date:
-        log_message(
-            "warning",
-            f"Detected terraform version {terraform_version} "
-            f'is lower than {config["terraform"]["terraform"]["version"]}. '
-            f"Please upgrade before deprecation deadline {end_support_date_str}...",
-        )
+    # if version.parse(terraform_version) < version.parse(
+    #     config["terraform"]["terraform"]["version"]
+    # ) and current_date <= end_support_date:
+    #     log_message(
+    #         "warning",
+    #         f"Detected terraform version {terraform_version} "
+    #         f'is lower than {config["terraform"]["terraform"]["version"]}. '
+    #         f"Please upgrade before deprecation deadline {end_support_date_str}...",
+    #     )
 
-        message = (
-            f"Affected Terraform version(s) is lower than "
-            f'{config["terraform"]["terraform"]["version"]}. '
-            f"Please upgrade before deprecation deadline {end_support_date_str}."
-        )
-        return 'warning', message
+    #     message = (
+    #         f"Affected Terraform version(s) is lower than "
+    #         f'{config["terraform"]["terraform"]["version"]}. '
+    #         f"Please upgrade before deprecation deadline {end_support_date_str}."
+    #     )
+    #     return 'warning', message
 
     # Error if terraform version lower than specified & passed deadline.
     if version.parse(terraform_version) < version.parse(
         config["terraform"]["terraform"]["version"]
-    ) and current_date > end_support_date:
+    ) and current_date <= end_support_date:
         log_message(
             "error",
             f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
