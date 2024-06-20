@@ -17,7 +17,6 @@ from json.decoder import JSONDecodeError
 # Global variable used to exit with error at the end of all checks.
 # To be updated from default value by logging function.
 errors_detected = False
-output_file = "nagger_output.json"
 
 parser = argparse.ArgumentParser(description="ADO Terraform version nagger")
 parser.add_argument(
