@@ -551,6 +551,7 @@ def add_error(warning, output_warning, error_message, component):
         output_warning['error']['terraform_version']['error_message'] = error_message
         output_warning['error']['terraform_version']['components'].append(component)
 
+
 def main():
     # initialise array of warnings/errors
     output_file = "nagger_output.json"
@@ -706,7 +707,7 @@ def main():
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
             if (output_warning['terraform_version']['error_message'] or
-                output_warning['terraform_provider']['error_message']):
+                output_warning['terraform_provider']['error_message'] or output_warning['error']):
                 print(f'error detected complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
                 log_message_slack(
                     slack_user_id,
