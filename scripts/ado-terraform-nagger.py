@@ -527,7 +527,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
             slack_webhook_url,
             message
         )
-        raise SystemExit(1)
+        # raise SystemExit(1)
     
     return working_directory, components_list
 
@@ -585,7 +585,7 @@ def main():
             }
         }
 
-        # for loop over dir componenets, add working dir and current item of loop
+        # for loop over dir componenets
         for component in components_list:
             print(f'COMPONENT: {component}')
             full_path = f'{working_directory}{component}'
