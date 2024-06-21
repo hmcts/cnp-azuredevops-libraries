@@ -166,7 +166,10 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
     }
 
     if errors_detected:
-        error_message = message if '\n'.join(message['error']['terraform_version']['error_message']) else ''
+        if 'error' in message:
+            error_message = '\n'.join(message['error']['terraform_version']['error_message']) 
+        else: ''
+        
         error_details = message if isinstance(message, str) else '\n'.join(message['error']['terraform_version']['components'])
         # Add the warning message block
         slack_data["blocks"].extend([
@@ -187,7 +190,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                 ]
             }
         ])
-        
+
     if not isinstance(message, str):
         if message['terraform_version']['components']:
             # Add the warning message block
