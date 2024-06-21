@@ -158,7 +158,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Build:*\n<" + build_url + "|" + build_id + ">"
+                        "text": "*Build ID:*\n<" + build_url + "|" + build_id + ">"
                     }
                 ]
             }
@@ -180,7 +180,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Error Message:*\n" + '\n'.join(message['error']['terraform_version']['components'])
+                        "text": "*Affected Components:*\n" + '\n'.join(message['error']['terraform_version']['components'])
                     }
                 ]
             }
@@ -402,7 +402,7 @@ def terraform_version_checker(terraform_version, config, current_date):
         config["terraform"]["terraform"]["version"]
     ) and current_date <= end_support_date:
         log_message(
-            "error",
+            "warning",
             f"Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["terraform"]["version"]}. '
             f"Please upgrade before deprecation deadline {end_support_date_str}...",
@@ -413,7 +413,7 @@ def terraform_version_checker(terraform_version, config, current_date):
             f'{config["terraform"]["terraform"]["version"]}. '
             f"Please upgrade before deprecation deadline {end_support_date_str}."
         )
-        return 'error', message
+        return 'warning', message
 
     # Error if terraform version lower than specified & passed deadline.
     if version.parse(terraform_version) < version.parse(
@@ -530,8 +530,8 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
     return working_directory, components_list
 
 
-# Function to add an error to the output_warning dictionary
 def add_error(warning, output_warning, error_message, component):
+    # Function to add an error to the output_warning dictionary
     if warning == 'error':
         # Create the 'error' key if it doesn't exist
         if 'error' not in output_warning:
