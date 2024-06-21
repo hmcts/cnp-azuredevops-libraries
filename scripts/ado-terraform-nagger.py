@@ -512,7 +512,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
         working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
 
     if is_root_dir:
-        components_list = ['.', 'test']
+        components_list = ['.']
     else:
         # Get the list of all child dir in the specified parent directory
         parent_dir = os.listdir(working_directory)
