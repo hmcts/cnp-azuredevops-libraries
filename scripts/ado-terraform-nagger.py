@@ -526,8 +526,8 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
         if not os.path.exists(test_path):
             global errors_detected
             relative_test_path = os.path.relpath(test_path, '/home/vsts/work/1/s')
+            logger.error(f'##vso[task.logissue type=error;]Repo structure invalid please see docs for further information: {relative_test_path}')
             message = (f'Repo structure invalid please see docs for further information:\n{relative_test_path}')
-            logger.error(f"##vso[task.logissue type=error;]{message}")
             errors_detected = True
             log_message_slack(
                 slack_user_id,
