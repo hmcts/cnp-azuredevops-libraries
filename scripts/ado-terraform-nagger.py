@@ -187,6 +187,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                 ]
             }
         ])
+        
     if not isinstance(message, str):
         if message['terraform_version']['components']:
             # Add the warning message block
