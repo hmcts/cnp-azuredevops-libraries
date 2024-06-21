@@ -176,7 +176,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Error:*\nPipeline detected errors, please see build id for more details" + message['error']['terraform_version']['error_message']
+                        "text": "*Error:*\nPipeline detected errors, please see build id for more details\n" + message['error']['terraform_version']['error_message']
                     },
                     {
                         "type": "mrkdwn",
@@ -628,7 +628,7 @@ def main():
                 output_warning['terraform_version']['components'].append(component)
             
             add_error(warning, output_warning, error_message, component)
-            
+
             # Handle providers
             terraform_providers = result["provider_selections"]
             if terraform_providers:
