@@ -165,7 +165,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
         ]
     }
 
-    if errors_detected:
+    if message['error']:
         # Add the warning message block
         slack_data["blocks"].extend([
             {
@@ -628,8 +628,7 @@ def main():
                 output_warning['terraform_version']['components'].append(component)
             
             add_error(warning, output_warning, error_message, component)
-            print(f'debug output array: {json.dumps(output_warning, indent=4)}')
-
+            
             # Handle providers
             terraform_providers = result["provider_selections"]
             if terraform_providers:
@@ -656,15 +655,13 @@ def main():
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
             if (output_warning['terraform_version']['error_message'] or
-                output_warning['terraform_provider']['error_message'] and not errors_detected):
+                output_warning['terraform_provider']['error_message'] and not output_warning['error']):
                 print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
                 log_message_slack(
                     slack_user_id,
                     slack_webhook_url,
                     complete_file
                 )
-            else:
-                print(f'No warnings detected')
 
     except JSONDecodeError:
         # Fallback to regex when terraform version <= 0.13.0
