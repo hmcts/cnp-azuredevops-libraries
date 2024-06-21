@@ -404,7 +404,7 @@ def terraform_version_checker(terraform_version, config, current_date):
         config["terraform"]["terraform"]["version"]
     ) and current_date <= end_support_date:
         log_message(
-            "warning",
+            "error",
             f"Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["terraform"]["version"]}. '
             f"Please upgrade before deprecation deadline {end_support_date_str}...",
@@ -630,7 +630,7 @@ def main():
                 output_warning['terraform_version']['components'].append(component)
             
             add_error(warning, output_warning, error_message, component)
-            print(f'debug output array: {output_warning}')
+            print(f'debug output array: {json.dumps(output_warning, indent=4)}')
 
             # Handle providers
             terraform_providers = result["provider_selections"]
