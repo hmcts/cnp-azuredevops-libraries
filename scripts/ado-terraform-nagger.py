@@ -541,10 +541,6 @@ def add_error(warning, output_warning, error_message, component):
                 'terraform_version': {
                     'components': [],
                     'error_message': ''
-                },
-                'terraform_provider': {
-                    'provider': {},
-                    'error_message': ''
                 }
             }
         # Add the error message and component
@@ -634,6 +630,7 @@ def main():
                 output_warning['terraform_version']['components'].append(component)
             
             add_error(warning, output_warning, error_message, component)
+            print(f'debug output array: {output_warning}')
 
             # Handle providers
             terraform_providers = result["provider_selections"]
