@@ -512,7 +512,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
         working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
 
     if is_root_dir:
-        components_list = ['.']
+        components_list = ['test']
     else:
         # Get the list of all child dir in the specified parent directory
         parent_dir = os.listdir(working_directory)
@@ -520,19 +520,20 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
         components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
         print(f'Components:\n' + "\n".join(components_list))
 
-    # Try to check if the path exists
-    test_path = os.path.join(working_directory, components_list[0])
-    if not os.path.exists(test_path):
-        global errors_detected
-        message = (f'Repo structure invalid please see docs for further information: {test_path}')
-        logger.error(f"##vso[task.logissue type=error;]{message}")
-        errors_detected = True
-        log_message_slack(
-            slack_user_id,
-            slack_webhook_url,
-            message
-        )
-        raise SystemExit(1)
+    for component in components_list:
+        # Try to check if the path exists
+        test_path = os.path.join(working_directory, component)
+        if not os.path.exists(test_path):
+            global errors_detected
+            message = (f'Repo structure invalid please see docs for further information: {test_path}')
+            logger.error(f"##vso[task.logissue type=error;]{message}")
+            errors_detected = True
+            log_message_slack(
+                slack_user_id,
+                slack_webhook_url,
+                message
+            )
+            raise SystemExit(1)
     
     return working_directory, components_list
 
