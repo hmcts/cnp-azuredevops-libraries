@@ -658,7 +658,7 @@ def main():
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
             if (output_warning['terraform_version']['error_message'] or
-                output_warning['terraform_provider']['error_message'] and not output_warning['error']):
+                output_warning['terraform_provider']['error_message'] and not errors_detected):
                 print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
                 log_message_slack(
                     slack_user_id,
@@ -702,7 +702,7 @@ def main():
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
             if (output_warning['terraform_version']['error_message'] or
-                output_warning['terraform_provider']['error_message'] or output_warning['error']):
+                output_warning['terraform_provider']['error_message']):
                 print(f'error detected complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
                 log_message_slack(
                     slack_user_id,
