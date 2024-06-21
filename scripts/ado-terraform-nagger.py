@@ -415,7 +415,7 @@ def terraform_version_checker(terraform_version, config, current_date):
             f'{config["terraform"]["terraform"]["version"]}. '
             f"Please upgrade before deprecation deadline {end_support_date_str}."
         )
-        return 'warning', message
+        return 'error', message
 
     # Error if terraform version lower than specified & passed deadline.
     if version.parse(terraform_version) < version.parse(
