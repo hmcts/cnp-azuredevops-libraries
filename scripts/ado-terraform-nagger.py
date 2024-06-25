@@ -320,7 +320,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         build_id = os.getenv("BUILD_BUILDID")
 
         # stage = os.getenv("SYSTEM_STAGEDISPLAYNAME")
-        slack_sender = "cnp-azuredevops-libraries - terraform version nagger"
+        slack_sender = "cnp-azuredevops-libraries - tf version nagger"
 
         # Differentiate PR from branch
         if source_branch.startswith("refs/pull"):
@@ -539,20 +539,18 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
     return working_directory, components_list
 
 
-def add_error(warning, output_warning, error_message, component):
-    # Function to add an error to the output_warning dictionary
-    if warning == 'error':
-        # Create the 'error' key if it doesn't exist
-        if 'error' not in output_warning:
-            output_warning['error'] = {
-                'terraform_version': {
-                    'components': [],
-                    'error_message': ''
-                }
+def add_error(output_warning, error_message, component):
+    # Create the 'error' key if it doesn't exist
+    if 'error' not in output_warning:
+        output_warning['error'] = {
+            'terraform_version': {
+                'components': [],
+                'error_message': ''
             }
-        # Add the error message and component
-        output_warning['error']['terraform_version']['error_message'] = error_message
-        output_warning['error']['terraform_version']['components'].append(component)
+        }
+    # Add the error message and component
+    output_warning['error']['terraform_version']['error_message'] = error_message
+    output_warning['error']['terraform_version']['components'].append(component)
 
 
 def main():
@@ -635,8 +633,9 @@ def main():
             if warning == 'warning':
                 output_warning['terraform_version']['error_message'] = error_message
                 output_warning['terraform_version']['components'].append(component)
-            
-            add_error(warning, output_warning, error_message, component)
+
+            elif warning == 'error':
+                add_error(output_warning, error_message, component)
 
             # Handle providers
             terraform_providers = result["provider_selections"]
