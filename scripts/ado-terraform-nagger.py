@@ -535,7 +535,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
             )
             raise SystemExit(1)
         
-        command = ["terraform", "version", "--json"]
+        command = ["terraform", "init", "-backend=false"]
         output = run_command(command, test_path)
         if 'Terraform initialized in an empty directory!' in output:
             relative_test_path = os.path.relpath(test_path, '/home/vsts/work/1/s')
