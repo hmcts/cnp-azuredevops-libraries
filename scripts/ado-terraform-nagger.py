@@ -550,6 +550,7 @@ def add_error(output_warning, error_message, component):
     # Add the error message and component
     output_warning['error']['terraform_version']['error_message'] = error_message
     output_warning['error']['terraform_version']['components'].append(component)
+    print(json.dumps(output_warning, indent=4))
 
 
 def main():
@@ -681,10 +682,6 @@ def main():
 
         # Handle terraform versions
         warning, error_message = terraform_version_checker(terraform_version, config, current_date)
-            
-        # Write the updated data back to the file
-        with open(output_file, 'w') as file:
-            json.dump(output_warning, file, indent=4)
 
         log_message(
             "error",
@@ -693,6 +690,10 @@ def main():
             f"Please upgrade your terraform version to at least v0.13.0"
         )
         add_error(output_warning, error_message, component)
+        
+        # Write the updated data back to the file
+        with open(output_file, 'w') as file:
+            json.dump(output_warning, file, indent=4)
 
     except Exception as e:
         logger.error("Unknown error occurred")
