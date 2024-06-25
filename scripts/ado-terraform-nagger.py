@@ -550,7 +550,6 @@ def add_error(output_warning, error_message, component):
     # Add the error message and component
     output_warning['error']['terraform_version']['error_message'] = error_message
     output_warning['error']['terraform_version']['components'].append(component)
-    print(json.dumps(output_warning, indent=4))
 
 
 def main():
