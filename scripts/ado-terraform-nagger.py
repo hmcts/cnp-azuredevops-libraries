@@ -684,7 +684,7 @@ def main():
         # Handle terraform versions
         warning, error_message = terraform_version_checker(terraform_version, config, current_date)
 
-        add_error(warning, output_warning, error_message, component)
+        add_error(output_warning, error_message, component)
             
         # Write the updated data back to the file
         with open(output_file, 'w') as file:
