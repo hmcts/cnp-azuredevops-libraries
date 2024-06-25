@@ -539,7 +539,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
         command = ["terraform", "init", "-backend=false"]
         output = run_command(command, test_path)
         if 'Terraform initialized in an empty directory!' in output:
-            relative_test_path = os.path.relpath(test_path, '/home/vsts/work/1/s')
+            relative_test_path = os.path.relpath(test_path, '../../../../../azp/_work/1/s')
             logger.error(f'##vso[task.logissue type=error;]Repo structure invalid please see docs for further information: {relative_test_path}')
             message = (f'Repo structure invalid please see docs for further information:\n{relative_test_path}')
             errors_detected = True
