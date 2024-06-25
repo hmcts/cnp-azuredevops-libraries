@@ -319,7 +319,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         build_id = os.getenv("BUILD_BUILDID")
 
         # stage = os.getenv("SYSTEM_STAGEDISPLAYNAME")
-        slack_sender = "cnp-azuredevops-libraries - tf version nagger"
+        slack_sender = "PlatOps Terraform Nagger"
 
         # Differentiate PR from branch
         if source_branch.startswith("refs/pull"):
