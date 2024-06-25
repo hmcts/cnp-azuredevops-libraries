@@ -166,7 +166,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
 
     if errors_detected:
         if message['error']:
-            error_message = '\n'.join(message['error']['terraform_version']['error_message']) 
+            error_message = message['error']['terraform_version']['error_message']
             error_details = '\n'.join(message['error']['terraform_version']['components'])
         else: 
             error_message = message
