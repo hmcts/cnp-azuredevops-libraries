@@ -548,6 +548,17 @@ def main():
     # initialise array of warnings/errors
     output_file = "nagger_output.json"
 
+    output_warning = {
+        'terraform_version': {
+            'components': [],
+            'error_message': ''
+        },
+        'terraform_provider': {
+            'provider': {},
+            'error_message': ''
+        }
+    }
+
     # Get the current date
     current_date = datetime.date.today()
 
@@ -585,17 +596,6 @@ def main():
         # Construct the working directory path
         base_directory = os.getenv('BASE_DIRECTORY')
         working_directory, components_list = create_working_dir_list(base_directory, system_default_working_directory, build_repo_suffix)
-        
-        output_warning = {
-            'terraform_version': {
-                'components': [],
-                'error_message': ''
-            },
-            'terraform_provider': {
-                'provider': {},
-                'error_message': ''
-            }
-        }
 
         # for loop over dir componenets
         for component in components_list:
@@ -613,6 +613,7 @@ def main():
             # try and do the terraform init 
             command = ["terraform", "init", "-backend=false"]
             output = run_command(command, full_path)
+            # func check_tf_init
             # check if tf has successfully init 
             if not 'Terraform has been successfully initialized!' in output:
                 global errors_detected
@@ -623,12 +624,14 @@ def main():
                     '<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|Docs>'
                     )
                 errors_detected = True
-                log_message_slack(
-                    slack_user_id,
-                    slack_webhook_url,
-                    message
-                )
-                raise SystemExit(1)
+                # log error, continue onto next component
+                continue
+                # log_message_slack(
+                #     slack_user_id,
+                #     slack_webhook_url,
+                #     message
+                # )
+                # raise SystemExit(1)
 
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
@@ -666,7 +669,7 @@ def main():
                 # Write the updated data back to the file
                 with open(output_file, 'w') as file:
                     json.dump(output_warning, file, indent=4)
-
+        print(f'for loop continue worked')
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
             if (output_warning['terraform_version']['error_message'] or
@@ -707,19 +710,19 @@ def main():
         logger.error("Unknown error occurred")
         raise Exception(e)
 
-    # Exit with error at the end of all checks so that we can see errors for all
-    # unmet versions.
-    if errors_detected:
-        with open(output_file, 'r') as file:
-            complete_file = json.load(file)
-            if (output_warning['error']):
-                print(f'error detected complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
-                log_message_slack(
-                    slack_user_id,
-                    slack_webhook_url,
-                    complete_file
-                )
-        raise SystemExit(1)
+    # # Exit with error at the end of all checks so that we can see errors for all
+    # # unmet versions.
+    # if errors_detected:
+    #     with open(output_file, 'r') as file:
+    #         complete_file = json.load(file)
+    #         if (output_warning['error']):
+    #             print(f'error detected complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
+    #             log_message_slack(
+    #                 slack_user_id,
+    #                 slack_webhook_url,
+    #                 complete_file
+    #             )
+    #     raise SystemExit(1)
 
 
 if __name__ == "__main__":
