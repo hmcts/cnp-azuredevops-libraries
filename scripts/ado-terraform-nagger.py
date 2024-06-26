@@ -166,7 +166,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
 
     if errors_detected:
         if isinstance(message, str):
-            error_message = '<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|link to documentation>'
+            error_message = ''
             error_details = message
         else: 
             error_message = message['error']['terraform_version']['error_message']
@@ -442,59 +442,50 @@ def terraform_version_checker(terraform_version, config, current_date):
 
 
 def terraform_provider_checker(provider, provider_version, config, current_date):
-    if provider not in config["terraform"]:
+    # Handle providers
+    # Get the date after which Terraform versions are no longer supported
+    end_support_date_str = config["terraform"][provider]["date_deadline"]
+    end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
+
+    # Warn if terraform provider version is lower than specified & not past deadline.
+    if version.parse(provider_version) < version.parse(
+        config["terraform"][provider]["version"]
+    ) and current_date <= end_support_date:
         log_message(
             "warning",
-            f"Provider {provider} is missing from version config. "
-            f"Please add it to the config in this file in order to "
-            f"compare it's versions."
+            f"Detected provider {provider} version "
+            f"{provider_version} "
+            "is lower than "
+            f'{config["terraform"][provider]["version"]}. '
+            f"Please upgrade before deprecation deadline {end_support_date_str}...",
         )
-        return True, 'Provider not in config', ''
-    else:
-        # Handle providers
-        # Get the date after which Terraform versions are no longer supported
-        end_support_date_str = config["terraform"][provider]["date_deadline"]
-        end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
 
-        # Warn if terraform provider version is lower than specified & not past deadline.
-        if version.parse(provider_version) < version.parse(
-            config["terraform"][provider]["version"]
-        ) and current_date <= end_support_date:
-            log_message(
-                "warning",
-                f"Detected provider {provider} version "
-                f"{provider_version} "
-                "is lower than "
-                f'{config["terraform"][provider]["version"]}. '
-                f"Please upgrade before deprecation deadline {end_support_date_str}...",
-            )
+        message = (
+            f"Affected provider version(s) will soon reach deprecation. "
+            f"Please upgrade version prior to the deprecation date."
+        )
+        return 'warning', message, end_support_date_str
 
-            message = (
-                f"Affected provider version(s) will soon reach deprecation. "
-                f"Please upgrade version prior to the deprecation date."
-            )
-            return 'warning', message, end_support_date_str
-    
-        # Error if terraform provider version lower than specified & passed deadline.
-        if version.parse(provider_version) < version.parse(
-            config["terraform"][provider]["version"]
-        ) and current_date > end_support_date:
-            log_message(
-                "error",
-                f"Detected provider {provider} version "
-                f"{provider_version} "
-                "is lower than "
-                f'{config["terraform"][provider]["version"]}. '
-                f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
-                "Please upgrade...",
-            ) 
+    # Error if terraform provider version lower than specified & passed deadline.
+    if version.parse(provider_version) < version.parse(
+        config["terraform"][provider]["version"]
+    ) and current_date > end_support_date:
+        log_message(
+            "error",
+            f"Detected provider {provider} version "
+            f"{provider_version} "
+            "is lower than "
+            f'{config["terraform"][provider]["version"]}. '
+            f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
+            "Please upgrade...",
+        ) 
 
-            message = (
-                f"Affected provider version(s) are "
-                f"no longer supported after deprecation deadline " 
-                "Please upgrade."
-            ) 
-            return 'error', message, end_support_date_str
+        message = (
+            f"Affected provider version(s) are "
+            f"no longer supported after deprecation deadline " 
+            "Please upgrade."
+        ) 
+        return 'error', message, end_support_date_str
 
     return True, 'All providers up to date', ''
 
@@ -627,7 +618,10 @@ def main():
                 global errors_detected
                 relative_test_path = os.path.relpath(full_path, '../../../../../azp/_work/1/s')
                 logger.error(f'##vso[task.logissue type=error;]Repo structure invalid please see docs for further information: {relative_test_path}')
-                message = (f'Terraform initialized in an empty directory, Repo structure invalid please see docs for further information:\n{relative_test_path}')
+                message = (
+                    f'Repo structure invalid for use with terraform nagger. Please see docs for further information:\n'
+                    '<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|link to documentation>'
+                    )
                 errors_detected = True
                 log_message_slack(
                     slack_user_id,
@@ -641,12 +635,13 @@ def main():
             terraform_version = result["terraform_version"]
 
             # Append warning/error if flagged
-            warning, error_message = terraform_version_checker(terraform_version, config, current_date)
+            alert_level, error_message = terraform_version_checker(terraform_version, config, current_date)
 
-            if warning == 'warning':
+            if alert_level == 'warning':
                 output_warning['terraform_version']['error_message'] = error_message
                 output_warning['terraform_version']['components'].append(component)
-            if warning == 'error':
+
+            if alert_level == 'error':
                 add_error(output_warning, error_message, component)
 
             # Handle providers
@@ -656,10 +651,10 @@ def main():
                     print(f'Provider: {provider}')
 
                     # Append warning/error if flagged
-                    warning, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
+                    alert_level, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
 
                     provider = provider.split('/')[-1]
-                    if warning == 'warning':
+                    if alert_level == 'warning':
                         output_warning['terraform_provider']['error_message'] = error_message
                         if provider not in output_warning['terraform_provider']['provider']:
                             output_warning['terraform_provider']['provider'][provider] = end_support_date_str
