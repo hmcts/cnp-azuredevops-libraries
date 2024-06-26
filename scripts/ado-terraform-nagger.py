@@ -625,9 +625,10 @@ def main():
             # check if tf has successfully init 
             if not 'Terraform has been successfully initialized!' in output:
                 global errors_detected
+                docs = 'https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure'
                 relative_test_path = os.path.relpath(full_path, '../../../../../azp/_work/1/s')
                 logger.error(f'##vso[task.logissue type=error;]Repo structure invalid please see docs for further information: {relative_test_path}')
-                message = (f'Terraform initialized in an empty directory, Repo structure invalid please see docs for further information:\n{relative_test_path}')
+                message = (f'Terraform initialized in an empty directory, Repo structure invalid please see {docs} for further information:\n{relative_test_path}')
                 errors_detected = True
                 log_message_slack(
                     slack_user_id,
