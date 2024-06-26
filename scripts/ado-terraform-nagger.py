@@ -619,8 +619,8 @@ def main():
                 relative_test_path = os.path.relpath(full_path, '../../../../../azp/_work/1/s')
                 logger.error(f'##vso[task.logissue type=error;]Repo structure invalid please see docs for further information: {relative_test_path}')
                 message = (
-                    f'Repo structure invalid for use with terraform nagger. Please see docs for further information:\n'
-                    '<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|link to documentation>'
+                    f'Repo structure invalid for use with terraform nagger. Please see docs for further information: '
+                    '<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|Docs>'
                     )
                 errors_detected = True
                 log_message_slack(
