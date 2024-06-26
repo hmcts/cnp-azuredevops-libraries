@@ -522,9 +522,10 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
 
     for component in components_list:
         # Try to check if the path exists
-        global errors_detected
+        
         test_path = os.path.join(working_directory, component)
         if not os.path.exists(test_path):
+            global errors_detected
             relative_test_path = os.path.relpath(test_path, '/home/vsts/work/1/s')
             logger.error(f'##vso[task.logissue type=error;]Repo structure invalid please see docs for further information: {relative_test_path}')
             message = (f'Repo structure invalid please see docs for further information:\n{relative_test_path}')
@@ -623,6 +624,7 @@ def main():
             output = run_command(command, full_path)
             # check if tf has successfully init 
             if not 'Terraform has been successfully initialized!' in output:
+                global errors_detected
                 relative_test_path = os.path.relpath(full_path, '../../../../../azp/_work/1/s')
                 logger.error(f'##vso[task.logissue type=error;]Repo structure invalid please see docs for further information: {relative_test_path}')
                 message = (f'Terraform initialized in an empty directory, Repo structure invalid please see docs for further information:\n{relative_test_path}')
