@@ -534,22 +534,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
                 slack_webhook_url,
                 message
             )
-            raise SystemExit(1)
-        
-        command = ["terraform", "init", "-backend=false"]
-        output = run_command(command, test_path)
-        if 'Terraform initialized in an empty directory!' in output:
-            relative_test_path = os.path.relpath(test_path, '../../../../../azp/_work/1/s')
-            logger.error(f'##vso[task.logissue type=error;]Repo structure invalid please see docs for further information: {relative_test_path}')
-            message = (f'Terraform initialized in an empty directory, Repo structure invalid please see docs for further information:\n{relative_test_path}')
-            errors_detected = True
-            log_message_slack(
-                slack_user_id,
-                slack_webhook_url,
-                message
-            )
-            raise SystemExit(1)
-        
+            raise SystemExit(1)        
     return working_directory, components_list
 
 
@@ -635,7 +620,19 @@ def main():
 
             # try and do the terraform init 
             command = ["terraform", "init", "-backend=false"]
-            run_command(command, full_path)
+            output = run_command(command, full_path)
+            # check if tf has successfully init 
+            if not 'Terraform has been successfully initialized!' in output:
+                relative_test_path = os.path.relpath(full_path, '../../../../../azp/_work/1/s')
+                logger.error(f'##vso[task.logissue type=error;]Repo structure invalid please see docs for further information: {relative_test_path}')
+                message = (f'Terraform initialized in an empty directory, Repo structure invalid please see docs for further information:\n{relative_test_path}')
+                errors_detected = True
+                log_message_slack(
+                    slack_user_id,
+                    slack_webhook_url,
+                    message
+                )
+                raise SystemExit(1)
 
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
