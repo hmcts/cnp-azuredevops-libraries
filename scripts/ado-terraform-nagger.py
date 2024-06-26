@@ -530,18 +530,28 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
     return working_directory, components_list
 
 
-def add_error(output_warning, error_message, component):
+def add_error(output_warning, error_message, component, error_type=None):
     # Create the 'error' key if it doesn't exist
     if 'error' not in output_warning:
         output_warning['error'] = {
             'terraform_version': {
                 'components': [],
                 'error_message': ''
+            },
+            'failed_init': {
+                'components': [],
+                'error_message': ''
             }
         }
-    # Add the error message and component
-    output_warning['error']['terraform_version']['error_message'] = error_message
-    output_warning['error']['terraform_version']['components'].append(component)
+    if error_type == 'failed_init':
+        print(f'debug failed init')
+        # Add the error message and component
+        output_warning['error']['terraform_version']['error_message'] = error_message
+        output_warning['error']['terraform_version']['components'].append(component)
+    else:
+        # Add the error message and component
+        output_warning['error']['terraform_version']['error_message'] = error_message
+        output_warning['error']['terraform_version']['components'].append(component)
 
 
 def main():
@@ -625,6 +635,11 @@ def main():
                     )
                 errors_detected = True
                 # log error, continue onto next component
+                add_error(output_warning, error_message, component, 'failed_init')
+                # Write the updated data back to the file
+                with open(output_file, 'w') as file:
+                    json.dump(output_warning, file, indent=4)
+
                 continue
                 # log_message_slack(
                 #     slack_user_id,
@@ -670,6 +685,7 @@ def main():
                 with open(output_file, 'w') as file:
                     json.dump(output_warning, file, indent=4)
         print(f'for loop continue worked')
+
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
             if (output_warning['terraform_version']['error_message'] or
