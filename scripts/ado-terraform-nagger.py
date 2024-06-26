@@ -166,7 +166,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
 
     if errors_detected:
         if isinstance(message, str):
-            error_message = (f'[link to documentation](https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure)')
+            error_message = '<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|link to documentation>'
             error_details = message
         else: 
             error_message = message['error']['terraform_version']['error_message']
