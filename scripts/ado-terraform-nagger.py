@@ -442,51 +442,53 @@ def terraform_version_checker(terraform_version, config, current_date):
 
 
 def terraform_provider_checker(provider, provider_version, config, current_date):
-    # Handle providers
-    # Get the date after which Terraform versions are no longer supported
-    end_support_date_str = config["terraform"][provider]["date_deadline"]
-    end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
+    if provider not in config["terraform"]:
+        return True, 'Provider not in config', ''
+    else:
+        # Handle providers
+        # Get the date after which Terraform versions are no longer supported
+        end_support_date_str = config["terraform"][provider]["date_deadline"]
+        end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
 
-    # Warn if terraform provider version is lower than specified & not past deadline.
-    if version.parse(provider_version) < version.parse(
-        config["terraform"][provider]["version"]
-    ) and current_date <= end_support_date:
-        log_message(
-            "warning",
-            f"Detected provider {provider} version "
-            f"{provider_version} "
-            "is lower than "
-            f'{config["terraform"][provider]["version"]}. '
-            f"Please upgrade before deprecation deadline {end_support_date_str}...",
-        )
+        # Warn if terraform provider version is lower than specified & not past deadline.
+        if version.parse(provider_version) < version.parse(
+            config["terraform"][provider]["version"]
+        ) and current_date <= end_support_date:
+            log_message(
+                "warning",
+                f"Detected provider {provider} version "
+                f"{provider_version} "
+                "is lower than "
+                f'{config["terraform"][provider]["version"]}. '
+                f"Please upgrade before deprecation deadline {end_support_date_str}...",
+            )
 
-        message = (
-            f"Affected provider version(s) will soon reach deprecation. "
-            f"Please upgrade version prior to the deprecation date."
-        )
-        return 'warning', message, end_support_date_str
+            message = (
+                f"Affected provider version(s) will soon reach deprecation. "
+                f"Please upgrade version prior to the deprecation date."
+            )
+            return 'warning', message, end_support_date_str
 
-    # Error if terraform provider version lower than specified & passed deadline.
-    if version.parse(provider_version) < version.parse(
-        config["terraform"][provider]["version"]
-    ) and current_date > end_support_date:
-        log_message(
-            "error",
-            f"Detected provider {provider} version "
-            f"{provider_version} "
-            "is lower than "
-            f'{config["terraform"][provider]["version"]}. '
-            f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
-            "Please upgrade...",
-        ) 
+        # Error if terraform provider version lower than specified & passed deadline.
+        if version.parse(provider_version) < version.parse(
+            config["terraform"][provider]["version"]
+        ) and current_date > end_support_date:
+            log_message(
+                "error",
+                f"Detected provider {provider} version "
+                f"{provider_version} "
+                "is lower than "
+                f'{config["terraform"][provider]["version"]}. '
+                f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
+                "Please upgrade...",
+            ) 
 
-        message = (
-            f"Affected provider version(s) are "
-            f"no longer supported after deprecation deadline " 
-            "Please upgrade."
-        ) 
-        return 'error', message, end_support_date_str
-
+            message = (
+                f"Affected provider version(s) are "
+                f"no longer supported after deprecation deadline " 
+                "Please upgrade."
+            ) 
+            return 'error', message, end_support_date_str
     return True, 'All providers up to date', ''
 
 
