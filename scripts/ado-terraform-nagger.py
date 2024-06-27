@@ -442,9 +442,7 @@ def terraform_version_checker(terraform_version, config, current_date):
 
 
 def terraform_provider_checker(provider, provider_version, config, current_date):
-    if provider not in config["terraform"]:
-        return True, 'Provider not in config', ''
-    else:
+    if provider in config["terraform"]:
         # Handle providers
         # Get the date after which Terraform versions are no longer supported
         end_support_date_str = config["terraform"][provider]["date_deadline"]
