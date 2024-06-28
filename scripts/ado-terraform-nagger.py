@@ -190,8 +190,8 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             ])
 
         if message['error']['failed_init']['error_message']:
-            error_message_init = message['error']['terraform_version']['error_message']
-            error_details_init = '\n'.join(message['error']['terraform_version']['components'])
+            error_message_init = message['error']['failed_init']['error_message']
+            error_details_init = '\n'.join(message['error']['failed_init']['components'])
 
             # Add the warning message block
             slack_data["blocks"].extend([
@@ -533,23 +533,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
         # Filter out entries that are directories
         components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
         print(f'Components:\n' + "\n".join(components_list))
-
-    for component in components_list:
-        # Try to check if the path exists
-        
-        test_path = os.path.join(working_directory, component)
-        if not os.path.exists(test_path):
-            global errors_detected
-            relative_test_path = os.path.relpath(test_path, '/home/vsts/work/1/s')
-            logger.error(f'##vso[task.logissue type=error;]Repo structure invalid please see docs for further information: {relative_test_path}')
-            message = (f'Repo structure invalid please see docs for further information:\n{relative_test_path}')
-            errors_detected = True
-            log_message_slack(
-                slack_user_id,
-                slack_webhook_url,
-                message
-            )
-            raise SystemExit(1)        
+      
     return working_directory, components_list
 
 
@@ -568,11 +552,11 @@ def add_error(output_warning, error_message, component, error_type=None):
         }
     if error_type == 'failed_init':
         print(f'debug failed init')
-        # Add the error message and component
+        # Add the error message and component under error->failed_init
         output_warning['error']['failed_init']['error_message'] = error_message
         output_warning['error']['failed_init']['components'].append(component)
     else:
-        # Add the error message and component
+        # Add the error message and component under error->terraform_version
         output_warning['error']['terraform_version']['error_message'] = error_message
         output_warning['error']['terraform_version']['components'].append(component)
 
@@ -651,7 +635,7 @@ def main():
             
             # func check_tf_init
             # check if tf has successfully init 
-            if not 'Terraform has been successfully initialized!' in output:
+            if not 'Terraform has been successfully initialized!' in output or not os.path.exists(full_path):
                 global errors_detected
                 relative_test_path = os.path.relpath(full_path, '../../../../../azp/_work/1/s')
                 logger.error(f'##vso[task.logissue type=error;]Repo structure invalid please see docs for further information: {relative_test_path}')
