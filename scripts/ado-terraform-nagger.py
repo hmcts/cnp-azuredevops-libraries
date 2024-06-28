@@ -163,34 +163,60 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             }
         ]
     }
-
+        output_warning['error']['failed_init']['error_message'] = error_message
+        output_warning['error']['failed_init']['components'].append(component)
+    
     if errors_detected:
-        if isinstance(message, str):
-            error_message = ''
-            error_details = message
-        else: 
-            error_message = message['error']['terraform_version']['error_message']
-            error_details = '\n'.join(message['error']['terraform_version']['components'])
+        if not isinstance(message, str):
+            if message['error']['terraform_version']['error_message']:
+                error_message_version = message['error']['terraform_version']['error_message']
+                error_details_version = '\n'.join(message['error']['terraform_version']['components'])
 
-        # Add the warning message block
-        slack_data["blocks"].extend([
-            {
-                "type": "divider"
-            },
-            {
-                "type": "section",
-                "fields": [
+                # Add the warning message block
+                slack_data["blocks"].extend([
                     {
-                        "type": "mrkdwn",
-                        "text": "*Error:*\nPipeline detected errors, please see build id for more details\n" + error_message
+                        "type": "divider"
                     },
                     {
-                        "type": "mrkdwn",
-                        "text": "*Error Message:*\n" + error_details
+                        "type": "section",
+                        "fields": [
+                            {
+                                "type": "mrkdwn",
+                                "text": "*Error:*\n" + error_message_version
+                            },
+                            {
+                                "type": "mrkdwn",
+                                "text": "*Error Message:*\n" + error_details_version
+                            }
+                        ]
                     }
-                ]
-            }
-        ])
+                ])
+
+            if message['error']['failed_init']['error_message']:
+                error_message_init = message['error']['terraform_version']['error_message']
+                error_details_init = '\n'.join(message['error']['terraform_version']['components'])
+
+                # Add the warning message block
+                slack_data["blocks"].extend([
+                    {
+                        "type": "divider"
+                    },
+                    {
+                        "type": "section",
+                        "fields": [
+                            {
+                                "type": "mrkdwn",
+                                "text": "*Error:*\n" + error_message_init
+                            },
+                            {
+                                "type": "mrkdwn",
+                                "text": "*Error Message:*\n" + error_details_init
+                            }
+                        ]
+                    }
+                ])
+
+
 
     if not isinstance(message, str):
         if message['terraform_version']['components']:
