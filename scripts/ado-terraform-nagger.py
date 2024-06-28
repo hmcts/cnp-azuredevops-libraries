@@ -183,7 +183,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                         },
                         {
                             "type": "mrkdwn",
-                            "text": "*Errored Components:*\n" + error_details_init
+                            "text": "*Components:*\n" + error_details_init
                         }
                     ]
                 }
@@ -207,7 +207,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                         },
                         {
                             "type": "mrkdwn",
-                            "text": "*Error Message:*\n" + error_details_version
+                            "text": "*Message:*\n" + error_details_version
                         }
                     ]
                 }
@@ -230,7 +230,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Affected Components:*\n" + '\n'.join(message['terraform_version']['components'])
+                        "text": "*Components:*\n" + '\n'.join(message['terraform_version']['components'])
                     }
                 ]
             }
@@ -255,7 +255,7 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Affected Providers:*\n" + '\n'.join(providers_info)
+                        "text": "*Providers:*\n" + '\n'.join(providers_info)
                     }
                 ]
             }
@@ -739,20 +739,6 @@ def main():
     except Exception as e:
         logger.error("Unknown error occurred")
         raise Exception(e)
-
-    # # Exit with error at the end of all checks so that we can see errors for all
-    # # unmet versions.
-    # if errors_detected:
-    #     with open(output_file, 'r') as file:
-    #         complete_file = json.load(file)
-    #         if (output_warning['error']):
-    #             print(f'error detected complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
-    #             log_message_slack(
-    #                 slack_user_id,
-    #                 slack_webhook_url,
-    #                 complete_file
-    #             )
-    #     raise SystemExit(1)
 
 
 if __name__ == "__main__":
