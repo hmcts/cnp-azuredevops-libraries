@@ -546,8 +546,8 @@ def add_error(output_warning, error_message, component, error_type=None):
     if error_type == 'failed_init':
         print(f'debug failed init')
         # Add the error message and component
-        output_warning['error']['terraform_version']['error_message'] = error_message
-        output_warning['error']['terraform_version']['components'].append(component)
+        output_warning['error']['failed_init']['error_message'] = error_message
+        output_warning['error']['failed_init']['components'].append(component)
     else:
         # Add the error message and component
         output_warning['error']['terraform_version']['error_message'] = error_message
@@ -607,14 +607,14 @@ def main():
         base_directory = os.getenv('BASE_DIRECTORY')
         working_directory, components_list = create_working_dir_list(base_directory, system_default_working_directory, build_repo_suffix)
 
+        # Load deprecation map
+        config = load_file(args.filepath)
+
         # for loop over dir componenets
         for component in components_list:
             print(f'COMPONENT: {component}')
             full_path = f'{working_directory}{component}'
             print(f'FULL PATH: {full_path}')
-
-            # Load deprecation map
-            config = load_file(args.filepath)
 
             # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
             command = ["tfswitch", "-b", terraform_binary_path]
@@ -623,6 +623,9 @@ def main():
             # try and do the terraform init 
             command = ["terraform", "init", "-backend=false"]
             output = run_command(command, full_path)
+            
+            
+            
             # func check_tf_init
             # check if tf has successfully init 
             if not 'Terraform has been successfully initialized!' in output:
@@ -647,6 +650,8 @@ def main():
                 #     message
                 # )
                 # raise SystemExit(1)
+
+
 
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
