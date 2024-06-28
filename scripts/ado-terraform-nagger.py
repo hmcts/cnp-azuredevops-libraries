@@ -163,8 +163,6 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             }
         ]
     }
-        output_warning['error']['failed_init']['error_message'] = error_message
-        output_warning['error']['failed_init']['components'].append(component)
     
     if errors_detected:
         if not isinstance(message, str):
