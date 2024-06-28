@@ -364,14 +364,12 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
 
 def log_message(message_type, message):
     """
-    Log a message and, if running in Azure DevOps, log a warning issue and
-    attempt to send a Slack message.
+    Log a message and, if running in Azure DevOps, log a warning issue.
 
     This function logs a message with the Python logging library, and if the
     system is running in Azure DevOps (as determined by the
     SYSTEM_PIPELINESTARTTIME environment variable), it also logs a warning
-    issue with Azure DevOps and attempts to send a message via Slack to the
-    initiating GitHub user. If `message_type` is set to 'warning', the logger
+    issue with Azure DevOps. If `message_type` is set to 'warning', the logger
     will log a warning type. If `message_type` is set to 'error', the logger
     will log an error type, and Azure DevOps will also raise an error and stop
     task execution.
@@ -380,10 +378,6 @@ def log_message(message_type, message):
     - message_type (str): The type of message to log, either 'warning' or
         'error'.
     - message (str): The message to be logged.
-    - slack_recipient (str): The name or ID of the Slack channel or user to
-        send the message to (optional).
-    - slack_webhook_url (str): The webhook URL for the Slack integration to
-        send the message through (optional).
 
     Returns:
     - None
@@ -536,33 +530,51 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
     return working_directory, components_list
 
 
-def add_error(output_warning, error_message, component, error_type=None):
-    # Create the 'error' key if it doesn't exist
+def add_error(output_warning, error_message, component, error_type=None, provider=None, end_support_date=None):
+    # init error key if needed
     if 'error' not in output_warning:
         output_warning['error'] = {
             'terraform_version': {
                 'components': [],
                 'error_message': ''
             },
+            'terraform_provider': {
+            'provider': {},
+            'error_message': ''
+            },
             'failed_init': {
                 'components': [],
                 'error_message': ''
             }
         }
+                
+    # log error in appropriate key
     if error_type == 'failed_init':
-        # Add the error message and component
+        # failed_init
         output_warning['error']['failed_init']['error_message'] = error_message
         output_warning['error']['failed_init']['components'].append(component)
+    if error_type == 'provider_version':
+        output_warning['terraform_provider']['error_message'] = error_message
+        output_warning['terraform_provider']['provider'][provider] = end_support_date
     else:
-        # Add the error message and component
+        # terraform_version
         output_warning['error']['terraform_version']['error_message'] = error_message
         output_warning['error']['terraform_version']['components'].append(component)
 
 
 def main():
-    # initialise array of warnings/errors
-    output_file = "nagger_output.json"
+    global slack_user_id
+    global slack_webhook_url
 
+    # parse environment variables
+    system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
+    build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
+    base_directory = os.getenv('BASE_DIRECTORY')
+    github_user = os.getenv("BUILD_SOURCEVERSIONAUTHOR")
+    slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL")
+
+    # initialisation
+    output_file = "nagger_output.json"
     output_warning = {
         'terraform_version': {
             'components': [],
@@ -573,136 +585,102 @@ def main():
             'error_message': ''
         }
     }
-
-    # Get the current date
     current_date = datetime.date.today()
-
-    # Retrieve HMCTS github to slack user mappings
-    hmcts_github_slack_user_mappings = get_hmcts_github_slack_user_mappings()
-    
-    # Attempt to retrieve github username
-    github_user = os.getenv("BUILD_SOURCEVERSIONAUTHOR")
-    
-    # Attempt to map github user to slack username
-    global slack_user_id
     slack_user_id = get_github_slack_user_mapping(
-        hmcts_github_slack_user_mappings, github_user
+        get_hmcts_github_slack_user_mappings(), github_user
     )
+    
+   # ado error if slack user id missing
     if not slack_user_id:
         log_message("error", "Missing Slack user ID from github mapping. \
                     Please add yourself to the repo at https://github.com/hmcts/github-slack-user-mappings \
                     to proceed")
     
-    # Atempt to retrieve slack webhook URL
-    global slack_webhook_url
-    slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL")
+    # ado error if slack webhook url missing
     if not slack_webhook_url:
         log_message("error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
 
-    # Build correct path to terraform binary
+
+    # build path to terraform binary
     home_dir = os.path.expanduser('~')
     terraform_binary_path = os.path.join(home_dir, '.local', 'bin', 'terraform')
 
     try:
-        # Retrieve the environment variables
-        system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
-        build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
-
-        # Construct the working directory path
-        base_directory = os.getenv('BASE_DIRECTORY')
+        # construct working directory (./component/ or $baseDirectory)
         working_directory, components_list = create_working_dir_list(base_directory, system_default_working_directory, build_repo_suffix)
 
-        # Load deprecation map
-        config = load_file(args.filepath)
+        # load deprecation map
+        deprecation_map = load_file(args.filepath)
 
-        # for loop over dir componenets
+        # loop components
         for component in components_list:
-            print(f'COMPONENT: {component}')
             full_path = f'{working_directory}{component}'
-            print(f'FULL PATH: {full_path}')
 
-            # Try to run `tfswitch' and 'terraform version --json` which is present in tf versions >= 0.13.0
+            # fail out loop if terraform version <= 0.13.0
+            command = ["terraform", "version", "--json"]
+            result = json.loads(run_command(command, full_path))
+
+            ### catch terraform init errors
             command = ["tfswitch", "-b", terraform_binary_path]
             run_command(command, full_path)
-
-            # try and do the terraform init 
             command = ["terraform", "init", "-backend=false"]
             output = run_command(command, full_path)
             
-            
-            
-            # func check_tf_init
-            # check if tf has successfully init 
-                
             if not 'Terraform has been successfully initialized!' in output:
-                global errors_detected
-                relative_path = os.path.relpath(full_path, '../../../../../azp/_work/1/s')
-                
-                # ADO console error
-                logger.error(
-                    f'##vso[task.logissue type=error;]Terraform init failed for component: {relative_path}. Please see docs for further information: '
+                # trigger ado console
+                log_message( 'error',
+                    f'Terraform init failed for component: {component}. Please see docs for further information: '
                     'https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure'
                     )
-                # Slack error
+                # log error & save to file
                 error_message = (
                     f'Terraform init failed for specified components. Please see docs for further information: '
                     '<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|Docs>'
                     )
-                
-                errors_detected = True
-                # log error, continue onto next component
                 add_error(output_warning, error_message, component, 'failed_init')
-                # Write the updated data back to the file
                 with open(output_file, 'w') as file:
                     json.dump(output_warning, file, indent=4)
-
-                # contine breaks loop for curent interation but contines
-                # version/provider checks below not run
                 continue
 
-
-
+            ### rerun version --json to fetch providers post init
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
+
+            ### check terraform version against deprecation map
             terraform_version = result["terraform_version"]
-
-            # Append warning/error if flagged
-            alert_level, error_message = terraform_version_checker(terraform_version, config, current_date)
-
+            # warning/error logging - terraform_version_checker handles console log
+            alert_level, error_message = terraform_version_checker(terraform_version, deprecation_map, current_date)
             if alert_level == 'warning':
                 output_warning['terraform_version']['error_message'] = error_message
                 output_warning['terraform_version']['components'].append(component)
-
             if alert_level == 'error':
                 add_error(output_warning, error_message, component)
 
-            # Handle providers
+            ### check provider versions against deprecation map
             terraform_providers = result["provider_selections"]
             if terraform_providers:
                 for provider, provider_version in terraform_providers.items():
-                    print(f'Provider: {provider}')
-
-                    # Append warning/error if flagged
-                    alert_level, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, config, current_date)
-
+                    # warning/error logging - terraform_version_checker handles console log
+                    alert_level, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, deprecation_map, current_date)
                     provider = provider.split('/')[-1]
                     if alert_level == 'warning':
                         output_warning['terraform_provider']['error_message'] = error_message
                         if provider not in output_warning['terraform_provider']['provider']:
                             output_warning['terraform_provider']['provider'][provider] = end_support_date_str
+                    if alert_level == 'error':
+                        add_error(output_warning, error_message, component, 'provider_version', provider, end_support_date_str)
                 
-                    # Write the updated data back to the file
+                    # write back to file
                     with open(output_file, 'w') as file:
                         json.dump(output_warning, file, indent=4)
             else:
-                # Write the updated data back to the file
+                # write back to file
                 with open(output_file, 'w') as file:
                     json.dump(output_warning, file, indent=4)
-        print(f'for loop continue worked')
 
+        ### trigger slack message if we've collated warnings/errors
         with open(output_file, 'r') as file:
             complete_file = json.load(file)
-            # If we have returns that need sending trigger slack message sending pathway
             if complete_file['error'] or complete_file['terraform_version']['components'] or complete_file['terraform_provider']['provider']:
                 print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
                 log_message_slack(
@@ -711,34 +689,39 @@ def main():
                     complete_file
                 )
 
+    ### fallback to regex when terraform version <= 0.13.0
     except JSONDecodeError:
-        # Fallback to regex when terraform version <= 0.13.0
         result = run_command(command, full_path)
         terraform_regex = f"^([Tt]erraform(\\s))(?P<semver>{semver_regex})"
         terraform_version = extract_version(result, terraform_regex)
 
-        # Strip preceding "v" for version comparison.
+        # strip preceding "v" for version comparison
         if terraform_version[0].lower() == "v":
             terraform_version = terraform_version[1:]
 
-        # Handle terraform versions
-        warning, error_message = terraform_version_checker(terraform_version, config, current_date)
+        # handle terraform versions
+        warning, error_message = terraform_version_checker(terraform_version, deprecation_map, current_date)
 
+        # trigger ado console
         log_message(
             "error",
             f"Detected terraform version {terraform_version} does not support "
             f"checking provider versions in addition to the main binary. "
             f"Please upgrade your terraform version to at least v0.13.0"
         )
+        # log error & save to file
         add_error(output_warning, error_message, component)
-        
-        # Write the updated data back to the file
         with open(output_file, 'w') as file:
             json.dump(output_warning, file, indent=4)
 
+    ### script failues etc
     except Exception as e:
         logger.error("Unknown error occurred")
         raise Exception(e)
+    
+    ### exit code 1 if errors
+    if errors_detected:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
