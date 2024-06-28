@@ -169,42 +169,25 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
             error_message_init = message['error']['failed_init']['error_message']
             error_details_init = '\n'.join(message['error']['failed_init']['components'])
 
-            if error_details_init == '.':
-                # Add the warning message block
-                slack_data["blocks"].extend([
-                    {
-                        "type": "divider"
-                    },
-                    {
-                        "type": "section",
-                        "fields": [
-                            {
-                                "type": "mrkdwn",
-                                "text": "*Error:*\n" + error_message_init
-                            },
-                        ]
-                    }
-                ])
-            else:
-                # Add the warning message block
-                slack_data["blocks"].extend([
-                    {
-                        "type": "divider"
-                    },
-                    {
-                        "type": "section",
-                        "fields": [
-                            {
-                                "type": "mrkdwn",
-                                "text": "*Error:*\n" + error_message_init
-                            },
-                            {
-                                "type": "mrkdwn",
-                                "text": "*Errored Components:*\n" + error_details_init
-                            }
-                        ]
-                    }
-                ])
+            # Add the warning message block
+            slack_data["blocks"].extend([
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Error:*\n" + error_message_init
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Errored Components:*\n" + error_details_init
+                        }
+                    ]
+                }
+            ])
 
         if message['error']['terraform_version']['error_message']:
             error_message_version = message['error']['terraform_version']['error_message']
@@ -542,7 +525,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
         working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
 
     if is_root_dir:
-        components_list = ['.']
+        components_list = ['/']
     else:
         # Get the list of all child dir in the specified parent directory
         parent_dir = os.listdir(working_directory)
@@ -567,12 +550,11 @@ def add_error(output_warning, error_message, component, error_type=None):
             }
         }
     if error_type == 'failed_init':
-        print(f'debug failed init')
-        # Add the error message and component under error->failed_init
+        # Add the error message and component
         output_warning['error']['failed_init']['error_message'] = error_message
         output_warning['error']['failed_init']['components'].append(component)
     else:
-        # Add the error message and component under error->terraform_version
+        # Add the error message and component
         output_warning['error']['terraform_version']['error_message'] = error_message
         output_warning['error']['terraform_version']['components'].append(component)
 
@@ -651,14 +633,22 @@ def main():
             
             # func check_tf_init
             # check if tf has successfully init 
-            if not 'Terraform has been successfully initialized!' in output or not os.path.exists(full_path):
+                
+            if not 'Terraform has been successfully initialized!' in output:
                 global errors_detected
-                relative_test_path = os.path.relpath(full_path, '../../../../../azp/_work/1/s')
-                logger.error(f'##vso[task.logissue type=error;]Repo structure invalid please see docs for further information: {relative_test_path}')
+                relative_path = os.path.relpath(full_path, '../../../../../azp/_work/1/s')
+                
+                # ADO console error
+                logger.error(
+                    f'##vso[task.logissue type=error;]Terraform init failed for component: {relative_path}. Please see docs for further information: '
+                    'https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure'
+                    )
+                # Slack error
                 error_message = (
-                    f'Repo structure invalid for use with terraform nagger. Please see docs for further information: '
+                    f'Terraform init failed for specified components. Please see docs for further information: '
                     '<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|Docs>'
                     )
+                
                 errors_detected = True
                 # log error, continue onto next component
                 add_error(output_warning, error_message, component, 'failed_init')
