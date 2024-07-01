@@ -468,7 +468,7 @@ def terraform_version_checker(terraform_version, config, current_date, component
 
         message = (
             f"Affected Terraform version(s) is no longer supported after deprecation deadline {end_support_date_str}. "
-            f"Please upgrade.",
+            f"Please upgrade."
         )
         return 'error', message
     
