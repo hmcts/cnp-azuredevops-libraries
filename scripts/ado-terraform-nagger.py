@@ -634,9 +634,10 @@ def main():
     # load deprecation map
     deprecation_map = load_file(args.filepath)
     
+    print('Analysing components...')
+    
     for component in components_list:
         try:
-            print('Analysing components...')
             print(f'component: {component}')
             full_path = f'{working_directory}{component}'
 
