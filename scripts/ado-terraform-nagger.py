@@ -635,7 +635,7 @@ def main():
     deprecation_map = load_file(args.filepath)
     
     print('Analysing components...')
-    
+
     for component in components_list:
         try:
             print(f'component: {component}')
@@ -735,11 +735,13 @@ def main():
     with open(output_file, 'r') as file:
         complete_file = json.load(file)
         if complete_file['error'] or complete_file['terraform_version']['components'] or complete_file['terraform_provider']['provider']:
-            log_message_slack(
-                slack_user_id,
-                slack_webhook_url,
-                complete_file
-                )
+            # skip slack message send for renovate/gh apps
+            if slack_user_id != 'iamabotuser':
+                log_message_slack(
+                    slack_user_id,
+                    slack_webhook_url,
+                    complete_file
+                    )
         
     ### exit code 1 if errors
     if errors_detected:
