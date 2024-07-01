@@ -12,8 +12,8 @@ steps:
   - template: ./set-build-repo-suffix-env-var.yaml
 
   - script: |
-      git clone https://github.com/hmcts/cnp-deprecation-map.git
-    displayName: Clone Depreciation Map
+      git clone https://github.com/hmcts/cnp-deprecation-maptree/past-deadline.git
+    displayName: clone deprecation map
   
   - task: AzureKeyVault@1
     displayName: 'Retrieve slack webhook URL from Keyvault'
