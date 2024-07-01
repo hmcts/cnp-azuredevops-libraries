@@ -381,9 +381,9 @@ def log_message(message_type, message=None):
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
         if message_type == "group":
-            logger.info(f"##vso[group] {message}")
+            logger.info(f"##[group] {message}")
         if message_type == "group_close":
-            logger.info(f"##vso[endgroup]")
+            logger.info(f"##[endgroup]")
         if message_type == "warning":
             logger.warning(f"##vso[task.logissue type=warning;] {message}")
         if message_type == "error":
