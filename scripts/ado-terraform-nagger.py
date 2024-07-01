@@ -468,7 +468,7 @@ def terraform_version_checker(terraform_version, config, current_date, component
 
         message = (
             f"Affected Terraform version(s) is no longer supported after deprecation deadline {end_support_date_str}. "
-            "Please upgrade.",
+            f"Please upgrade.",
         )
         return 'error', message
     
@@ -518,7 +518,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date,
             message = (
                 f"Affected provider version(s) are "
                 f"no longer supported after deprecation deadline " 
-                "Please upgrade."
+                f"Please upgrade."
             ) 
             return 'error', message, end_support_date_str
     return True, 'All providers up to date', ''
@@ -660,7 +660,7 @@ def main():
                 # log error & save to file
                 error_message = (
                     f'Terraform init failed for specified components. Please see docs for further information: '
-                    '<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|Docs>'
+                    f'<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|Docs>'
                     )
                 add_error(output_warning, error_message, component, 'failed_init')
                 with open(output_file, 'w') as file:
