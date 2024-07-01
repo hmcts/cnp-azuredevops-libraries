@@ -381,9 +381,9 @@ def log_message(message_type, message):
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
         if message_type == "warning":
-            logger.warning(f"##vso[task.logissue type=warning;]{message}")
+            logger.warning(f"vso[task.logissue type=warning;]{message}")
         if message_type == "error":
-            logger.error(f"##vso[task.logissue type=error;]{message}")
+            logger.error(f"vso[task.logissue type=error;]{message}")
             errors_detected = True
 
 
@@ -409,7 +409,7 @@ def extract_version(text, regex):
         return None
 
 
-def terraform_version_checker(terraform_version, config, current_date):
+def terraform_version_checker(terraform_version, config, current_date, component):
     # Get the date after which Terraform versions are no longer supported
     end_support_date_str = config["terraform"]["terraform"]["date_deadline"]
     end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
@@ -420,7 +420,7 @@ def terraform_version_checker(terraform_version, config, current_date):
     ) and current_date <= end_support_date:
         log_message(
             "warning",
-            f"Detected terraform version {terraform_version} "
+            f"{component} - Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["terraform"]["version"]}. '
             f"Please upgrade before deprecation deadline {end_support_date_str}...",
         )
@@ -438,7 +438,7 @@ def terraform_version_checker(terraform_version, config, current_date):
     ) and current_date > end_support_date:
         log_message(
             "error",
-            f"Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
+            f"{component} - Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
             "Please upgrade...",
         )
 
@@ -451,7 +451,7 @@ def terraform_version_checker(terraform_version, config, current_date):
     return True, 'Terraform version(s) up to date'
 
 
-def terraform_provider_checker(provider, provider_version, config, current_date):
+def terraform_provider_checker(provider, provider_version, config, current_date, component):
     if provider in config["terraform"]:
         # Handle providers
         # Get the date after which Terraform versions are no longer supported
@@ -464,7 +464,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
         ) and current_date <= end_support_date:
             log_message(
                 "warning",
-                f"Detected provider {provider} version "
+                f"{component} - Detected provider {provider} version "
                 f"{provider_version} "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
@@ -483,7 +483,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date)
         ) and current_date > end_support_date:
             log_message(
                 "error",
-                f"Detected provider {provider} version "
+                f"{component} - Detected provider {provider} version "
                 f"{provider_version} "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
@@ -620,7 +620,7 @@ def main():
             if not 'Terraform has been successfully initialized!' in output:
                 # trigger ado console
                 log_message( 'error',
-                    f'Terraform init failed for component: {component}. Please see docs for further information: '
+                    f'{component} - Terraform init failed. Please see docs for further information: '
                     'https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure'
                     )
                 # log error & save to file
@@ -640,7 +640,7 @@ def main():
             ### check terraform version against deprecation map
             terraform_version = result["terraform_version"]
             # warning/error logging - terraform_version_checker handles console log
-            alert_level, error_message = terraform_version_checker(terraform_version, deprecation_map, current_date)
+            alert_level, error_message = terraform_version_checker(terraform_version, deprecation_map, current_date, component)
             if alert_level == 'warning':
                 output_warning['terraform_version']['error_message'] = error_message
                 output_warning['terraform_version']['components'].append(component)
@@ -652,7 +652,7 @@ def main():
             if terraform_providers:
                 for provider, provider_version in terraform_providers.items():
                     # warning/error logging - terraform_version_checker handles console log
-                    alert_level, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, deprecation_map, current_date)
+                    alert_level, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, deprecation_map, current_date, component)
                     provider = provider.split('/')[-1]
                     if alert_level == 'warning':
                         output_warning['terraform_provider']['error_message'] = error_message
@@ -680,12 +680,12 @@ def main():
                 terraform_version = terraform_version[1:]
 
             # handle terraform versions
-            warning, error_message = terraform_version_checker(terraform_version, deprecation_map, current_date)
+            warning, error_message = terraform_version_checker(terraform_version, deprecation_map, current_date, component)
 
             # trigger ado console
             log_message(
                 "error",
-                f"Detected terraform version {terraform_version} does not support "
+                f"{component} - Detected terraform version {terraform_version} does not support "
                 f"checking provider versions in addition to the main binary. "
                 f"Please upgrade your terraform version to at least v0.13.0"
             )
