@@ -617,12 +617,12 @@ def main():
             full_path = f'{working_directory}{component}'
 
             # fail out loop if terraform version <= 0.13.0
+            command = ["tfswitch", "-b", terraform_binary_path]
+            run_command(command, full_path)
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
 
             ### catch terraform init errors
-            command = ["tfswitch", "-b", terraform_binary_path]
-            run_command(command, full_path)
             command = ["terraform", "init", "-backend=false"]
             output = run_command(command, full_path)
             
