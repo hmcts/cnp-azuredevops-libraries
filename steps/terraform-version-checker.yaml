@@ -12,7 +12,8 @@ steps:
   - template: ./set-build-repo-suffix-env-var.yaml
 
   - script: |
-      git clone https://github.com/hmcts/cnp-deprecation-map/tree/past-deadline.git
+      git clone https://github.com/hmcts/cnp-deprecation-map.git
+      git checkout past-deadline
     displayName: clone deprecation map
   
   - task: AzureKeyVault@1
