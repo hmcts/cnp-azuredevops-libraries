@@ -183,6 +183,30 @@ def send_slack_message(webhook, channel, username, icon_emoji, build_origin, bui
                 }
             ])
 
+        if message['error']['below_0.13']['error_message']:
+            error_message_below = message['error']['below_0.13']['error_message']
+            error_details_below = '\n'.join(message['error']['below_0.13']['components'])
+
+            # Add the warning message block
+            slack_data["blocks"].extend([
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Error:*\n" + error_message_below
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Components:*\n" + error_details_below
+                        }
+                    ]
+                }
+            ])
+
         if message['error']['terraform_version']['error_message']:
             error_message_version = message['error']['terraform_version']['error_message']
             error_details_version = '\n'.join(message['error']['terraform_version']['components'])
@@ -539,6 +563,10 @@ def add_error(output_warning, error_message, component, error_type=None, provide
             'failed_init': {
                 'components': [],
                 'error_message': ''
+            },
+            'below_0.13': {
+                'components': [],
+                'error_message': ''
             }
         }
                 
@@ -547,6 +575,11 @@ def add_error(output_warning, error_message, component, error_type=None, provide
         # failed_init
         output_warning['error']['failed_init']['error_message'] = error_message
         output_warning['error']['failed_init']['components'].append(component)
+    if error_type == 'below_0.13':
+        # below_0.13
+        output_warning['error']['below_0.13']['error_message'] = error_message
+        output_warning['error']['below_0.13']['components'].append(component)
+        # provider version
     if error_type == 'provider_version':
         output_warning['terraform_provider']['error_message'] = error_message
         output_warning['terraform_provider']['provider'][provider] = end_support_date
@@ -676,9 +709,6 @@ def main():
             if terraform_version[0].lower() == "v":
                 terraform_version = terraform_version[1:]
 
-            # handle terraform versions
-            warning, error_message = terraform_version_checker(terraform_version, deprecation_map, current_date, component)
-
             # trigger ado console
             log_message(
                 "error",
@@ -686,6 +716,11 @@ def main():
                 f"checking provider versions in addition to the main binary. "
                 f"Please upgrade your terraform version to at least v0.13.0"
             )
+            error_message = (
+                    f'Detected terraform version does not support '
+                    'checking provider versions in addition to the main binary. '
+                    'Please upgrade your terraform version to at least v0.13.0'
+                    )
             # log error & save to file
             add_error(output_warning, error_message, component)
             with open(output_file, 'w') as file:
