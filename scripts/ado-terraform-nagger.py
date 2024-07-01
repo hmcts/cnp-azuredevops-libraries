@@ -663,9 +663,6 @@ def main():
                     f'<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|Docs>'
                     )
                 add_error(output_warning, error_message, component, 'failed_init')
-                with open(output_file, 'w') as file:
-                    json.dump(output_warning, file, indent=4)
-                continue
 
             ### rerun version --json to fetch providers post init
             command = ["terraform", "version", "--json"]
@@ -694,7 +691,11 @@ def main():
                             output_warning['terraform_provider']['provider'][provider] = end_support_date_str
                     if alert_level == 'error':
                         add_error(output_warning, error_message, component, 'provider_version', provider, end_support_date_str)
-                
+                    # write back to file
+                    with open(output_file, 'w') as file:
+                        json.dump(output_warning, file, indent=4)
+                    log_message('group_close') 
+
             # write back to file
             with open(output_file, 'w') as file:
                 json.dump(output_warning, file, indent=4)
