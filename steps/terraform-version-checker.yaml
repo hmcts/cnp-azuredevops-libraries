@@ -13,6 +13,7 @@ steps:
 
   - script: |
       git clone https://github.com/hmcts/cnp-deprecation-map.git
+      cd ./cnp-deprecation-map
       git checkout past-deadline
     displayName: clone deprecation map
   
