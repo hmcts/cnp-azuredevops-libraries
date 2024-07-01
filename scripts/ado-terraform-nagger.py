@@ -612,6 +612,7 @@ def main():
         try:
             # loop components
             for component in components_list:
+                print(f'component: ${component}')
                 full_path = f'{working_directory}{component}'
 
                 # fail out loop if terraform version <= 0.13.0
