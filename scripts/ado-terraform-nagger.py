@@ -717,9 +717,7 @@ def main():
                 f"Please upgrade your terraform version to at least v0.13.0"
             )
             error_message = (
-                    f'Detected terraform version does not support '
-                    'checking provider versions in addition to the main binary. '
-                    'Please upgrade your terraform version to at least v0.13.0'
+                    f'Please upgrade your terraform version to at least v0.13.0'
                     )
             # log error & save to file
             add_error(output_warning, error_message, component)
