@@ -356,7 +356,7 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
         )
 
 
-def log_message(message_type, message):
+def log_message(message_type, message=None):
     """
     Log a message and, if running in Azure DevOps, log a warning issue.
 
@@ -380,10 +380,14 @@ def log_message(message_type, message):
 
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
+        if message_type == "group":
+            logger.error(f"##vso[group] {message}")
+        if message_type == "group_close":
+            logger.error(f"##vso[endgroup]")
         if message_type == "warning":
-            logger.warning(f"vso[task.logissue type=warning;]{message}")
+            logger.warning(f"##vso[task.logissue type=warning;] {message}")
         if message_type == "error":
-            logger.error(f"vso[task.logissue type=error;]{message}")
+            logger.error(f"##vso[task.logissue type=error;] {message}")
             errors_detected = True
 
 
@@ -604,7 +608,7 @@ def main():
     
     for component in components_list:
         try:
-            print(f'component: {component}')
+            log_message('group', f'component: {component}')
             full_path = f'{working_directory}{component}'
 
             # fail out loop if terraform version <= 0.13.0
@@ -661,13 +665,10 @@ def main():
                     if alert_level == 'error':
                         add_error(output_warning, error_message, component, 'provider_version', provider, end_support_date_str)
                 
-                    # write back to file
-                    with open(output_file, 'w') as file:
-                        json.dump(output_warning, file, indent=4)
-            else:
-                # write back to file
-                with open(output_file, 'w') as file:
-                    json.dump(output_warning, file, indent=4)
+            # write back to file
+            with open(output_file, 'w') as file:
+                json.dump(output_warning, file, indent=4)
+            log_message('group_close')
 
         ### fallback to regex when terraform version <= 0.13.0
         except JSONDecodeError:
@@ -693,6 +694,7 @@ def main():
             add_error(output_warning, error_message, component)
             with open(output_file, 'w') as file:
                 json.dump(output_warning, file, indent=4)
+            log_message('group_close')
             # continue
 
         ### script failues etc
