@@ -691,10 +691,6 @@ def main():
                             output_warning['terraform_provider']['provider'][provider] = end_support_date_str
                     if alert_level == 'error':
                         add_error(output_warning, error_message, component, 'provider_version', provider, end_support_date_str)
-                    # write back to file
-                    with open(output_file, 'w') as file:
-                        json.dump(output_warning, file, indent=4)
-                    log_message('group_close') 
 
             # write back to file
             with open(output_file, 'w') as file:
@@ -722,10 +718,9 @@ def main():
                     f'Please upgrade your terraform version to at least v0.13.0'
                     )
             # log error & save to file
-            add_error(output_warning, error_message, component)
+            add_error(output_warning, error_message, component, 'below_0.13')
             with open(output_file, 'w') as file:
                 json.dump(output_warning, file, indent=4)
-            log_message('group_close')
 
         ### script failues etc
         except Exception as e:
