@@ -736,6 +736,7 @@ def main():
         complete_file = json.load(file)
         if complete_file['error'] or complete_file['terraform_version']['components'] or complete_file['terraform_provider']['provider']:
             # skip slack message send for renovate/gh apps
+            print(complete_file)
             if slack_user_id != 'iamabotuser':
                 log_message_slack(
                     slack_user_id,
