@@ -380,10 +380,6 @@ def log_message(message_type, message=None):
 
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
-        if message_type == "group":
-            logger.info(f"##[group] {message}")
-        if message_type == "group_close":
-            logger.info(f"##[endgroup]")
         if message_type == "warning":
             logger.warning(f"##vso[task.logissue type=warning;] {message}")
         if message_type == "error":
@@ -608,7 +604,7 @@ def main():
     
     for component in components_list:
         try:
-            log_message('group', f'component: {component}')
+            print(f'component: {component}')
             full_path = f'{working_directory}{component}'
 
             # fail out loop if terraform version <= 0.13.0
