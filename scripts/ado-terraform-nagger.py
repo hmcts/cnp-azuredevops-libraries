@@ -543,7 +543,6 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
         parent_dir = os.listdir(working_directory)
         # Filter out entries that are directories
         components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
-        print(f'Components:\n' + "\n".join(components_list))
       
     return working_directory, components_list
 
@@ -637,6 +636,7 @@ def main():
     
     for component in components_list:
         try:
+            print('Analysing components...')
             print(f'component: {component}')
             full_path = f'{working_directory}{component}'
 
@@ -724,7 +724,6 @@ def main():
             with open(output_file, 'w') as file:
                 json.dump(output_warning, file, indent=4)
             log_message('group_close')
-            # continue
 
         ### script failues etc
         except Exception as e:
@@ -735,7 +734,6 @@ def main():
     with open(output_file, 'r') as file:
         complete_file = json.load(file)
         if complete_file['error'] or complete_file['terraform_version']['components'] or complete_file['terraform_provider']['provider']:
-            print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
             log_message_slack(
                 slack_user_id,
                 slack_webhook_url,
