@@ -610,83 +610,70 @@ def main():
     
     for component in components_list:
         try:
-            # loop components
-            for component in components_list:
-                print(f'component: ${component}')
-                full_path = f'{working_directory}{component}'
+            print(f'component: {component}')
+            full_path = f'{working_directory}{component}'
 
-                # fail out loop if terraform version <= 0.13.0
-                command = ["tfswitch", "-b", terraform_binary_path]
-                run_command(command, full_path)
-                command = ["terraform", "version", "--json"]
-                result = json.loads(run_command(command, full_path))
+            # fail out loop if terraform version <= 0.13.0
+            command = ["tfswitch", "-b", terraform_binary_path]
+            run_command(command, full_path)
+            command = ["terraform", "version", "--json"]
+            result = json.loads(run_command(command, full_path))
 
-                ### catch terraform init errors
-                command = ["terraform", "init", "-backend=false"]
-                output = run_command(command, full_path)
+            ### catch terraform init errors
+            command = ["terraform", "init", "-backend=false"]
+            output = run_command(command, full_path)
+            
+            if not 'Terraform has been successfully initialized!' in output:
+                # trigger ado console
+                log_message( 'error',
+                    f'Terraform init failed for component: {component}. Please see docs for further information: '
+                    'https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure'
+                    )
+                # log error & save to file
+                error_message = (
+                    f'Terraform init failed for specified components. Please see docs for further information: '
+                    '<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|Docs>'
+                    )
+                add_error(output_warning, error_message, component, 'failed_init')
+                with open(output_file, 'w') as file:
+                    json.dump(output_warning, file, indent=4)
+                continue
+
+            ### rerun version --json to fetch providers post init
+            command = ["terraform", "version", "--json"]
+            result = json.loads(run_command(command, full_path))
+
+            ### check terraform version against deprecation map
+            terraform_version = result["terraform_version"]
+            # warning/error logging - terraform_version_checker handles console log
+            alert_level, error_message = terraform_version_checker(terraform_version, deprecation_map, current_date)
+            if alert_level == 'warning':
+                output_warning['terraform_version']['error_message'] = error_message
+                output_warning['terraform_version']['components'].append(component)
+            if alert_level == 'error':
+                add_error(output_warning, error_message, component)
+
+            ### check provider versions against deprecation map
+            terraform_providers = result["provider_selections"]
+            if terraform_providers:
+                for provider, provider_version in terraform_providers.items():
+                    # warning/error logging - terraform_version_checker handles console log
+                    alert_level, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, deprecation_map, current_date)
+                    provider = provider.split('/')[-1]
+                    if alert_level == 'warning':
+                        output_warning['terraform_provider']['error_message'] = error_message
+                        if provider not in output_warning['terraform_provider']['provider']:
+                            output_warning['terraform_provider']['provider'][provider] = end_support_date_str
+                    if alert_level == 'error':
+                        add_error(output_warning, error_message, component, 'provider_version', provider, end_support_date_str)
                 
-                if not 'Terraform has been successfully initialized!' in output:
-                    # trigger ado console
-                    log_message( 'error',
-                        f'Terraform init failed for component: {component}. Please see docs for further information: '
-                        'https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure'
-                        )
-                    # log error & save to file
-                    error_message = (
-                        f'Terraform init failed for specified components. Please see docs for further information: '
-                        '<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|Docs>'
-                        )
-                    add_error(output_warning, error_message, component, 'failed_init')
-                    with open(output_file, 'w') as file:
-                        json.dump(output_warning, file, indent=4)
-                    continue
-
-                ### rerun version --json to fetch providers post init
-                command = ["terraform", "version", "--json"]
-                result = json.loads(run_command(command, full_path))
-
-                ### check terraform version against deprecation map
-                terraform_version = result["terraform_version"]
-                # warning/error logging - terraform_version_checker handles console log
-                alert_level, error_message = terraform_version_checker(terraform_version, deprecation_map, current_date)
-                if alert_level == 'warning':
-                    output_warning['terraform_version']['error_message'] = error_message
-                    output_warning['terraform_version']['components'].append(component)
-                if alert_level == 'error':
-                    add_error(output_warning, error_message, component)
-
-                ### check provider versions against deprecation map
-                terraform_providers = result["provider_selections"]
-                if terraform_providers:
-                    for provider, provider_version in terraform_providers.items():
-                        # warning/error logging - terraform_version_checker handles console log
-                        alert_level, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, deprecation_map, current_date)
-                        provider = provider.split('/')[-1]
-                        if alert_level == 'warning':
-                            output_warning['terraform_provider']['error_message'] = error_message
-                            if provider not in output_warning['terraform_provider']['provider']:
-                                output_warning['terraform_provider']['provider'][provider] = end_support_date_str
-                        if alert_level == 'error':
-                            add_error(output_warning, error_message, component, 'provider_version', provider, end_support_date_str)
-                    
-                        # write back to file
-                        with open(output_file, 'w') as file:
-                            json.dump(output_warning, file, indent=4)
-                else:
                     # write back to file
                     with open(output_file, 'w') as file:
                         json.dump(output_warning, file, indent=4)
-
-            ### trigger slack message if we've collated warnings/errors
-            with open(output_file, 'r') as file:
-                complete_file = json.load(file)
-                if complete_file['error'] or complete_file['terraform_version']['components'] or complete_file['terraform_provider']['provider']:
-                    print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
-                    log_message_slack(
-                        slack_user_id,
-                        slack_webhook_url,
-                        complete_file
-                    )
+            else:
+                # write back to file
+                with open(output_file, 'w') as file:
+                    json.dump(output_warning, file, indent=4)
 
         ### fallback to regex when terraform version <= 0.13.0
         except JSONDecodeError:
@@ -719,9 +706,20 @@ def main():
             logger.error("Unknown error occurred")
             raise Exception(e)
         
-        ### exit code 1 if errors
-        if errors_detected:
-            raise SystemExit(1)
+    ### trigger slack message if we've collated warnings/errors
+    with open(output_file, 'r') as file:
+        complete_file = json.load(file)
+        if complete_file['error'] or complete_file['terraform_version']['components'] or complete_file['terraform_provider']['provider']:
+            print(f'complete file: { json.dumps(complete_file, indent=4, sort_keys=True) }')
+            log_message_slack(
+                slack_user_id,
+                slack_webhook_url,
+                complete_file
+                )
+        
+    ### exit code 1 if errors
+    if errors_detected:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
