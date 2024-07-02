@@ -12,7 +12,6 @@ import requests
 import subprocess
 from packaging import version
 from json.decoder import JSONDecodeError
-from pprint import pprint
 
 # Global variable used to exit with error at the end of all checks.
 # To be updated from default value by logging function.
