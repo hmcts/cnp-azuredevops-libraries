@@ -12,6 +12,7 @@ import requests
 import subprocess
 from packaging import version
 from json.decoder import JSONDecodeError
+from pprint import pprint
 
 # Global variable used to exit with error at the end of all checks.
 # To be updated from default value by logging function.
@@ -730,6 +731,7 @@ def main():
     ### trigger slack message if we've collated warnings/errors
     with open(output_file, 'r') as file:
         complete_file = json.load(file)
+        pprint(complete_file)
         
         # only slack send if we have collated errors/warnings
         if ('error' in complete_file or
