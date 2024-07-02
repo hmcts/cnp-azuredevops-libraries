@@ -1,7 +1,11 @@
+#!/usr/bin/env python3
+
 import os
 import re
 import sys
+import datetime
 import json
+import yaml
 import logging
 import argparse
 import requests
@@ -23,6 +27,13 @@ parser.add_argument(
     const=logging.DEBUG,
     default=logging.INFO,
 )
+parser.add_argument(
+    "-f",
+    "--filepath",
+    help="Filepath to nagger-versions.json",
+    dest="filepath",
+    required=True,
+)
 args = parser.parse_args()
 
 logging.basicConfig(
@@ -42,7 +53,7 @@ semver_regex = (
 )
 
 
-def run_command(command):
+def run_command(command, working_directory):
     """Run a command and return the output.
     Args:
         command (list): A list of command arguments.
@@ -57,6 +68,7 @@ def run_command(command):
         it will fall back to using the `stdout` and `stderr` parameters instead.
 
     """
+    os.chdir(working_directory)
     try:
         run_command = subprocess.run(command, capture_output=True)
         return run_command.stdout.decode("utf-8")
@@ -88,13 +100,17 @@ def load_file(filename):
     # Open and read the file
     try:
         with open(file_path, "r") as f:
-            contents = f.read()
+            contents = yaml.safe_load(f)
+            return contents
     except FileNotFoundError:
         raise FileNotFoundError(f"The file '{filename}' does not exist.")
-    return contents
+    except yaml.YAMLError as e:
+        raise yaml.YAMLError(f"Error parsing YAML data: {e}")
+    except Exception as e:
+        logger.error(f"Error loading {filename}: {e}")
 
 
-def send_slack_message(webhook, channel, username, text, icon_emoji):
+def send_slack_message(webhook, channel, username, icon_emoji, build_origin, build_url, build_id, message):
     """
     Sends a message to a Slack channel using a webhook.
 
@@ -102,7 +118,7 @@ def send_slack_message(webhook, channel, username, text, icon_emoji):
         webhook (str): The webhook URL for the Slack app.
         channel (str): The name or ID of the Slack channel to send the message to.
         username (str): The username to display as the sender of the message.
-        text (str): The message text to send.
+        message (str): The message text to send.
         icon_emoji (str): The emoji to use as the sender's icon, e.g. "smile" or "rocket".
 
     Returns:
@@ -114,9 +130,155 @@ def send_slack_message(webhook, channel, username, text, icon_emoji):
     slack_data = {
         "channel": channel,
         "username": username,
-        "text": text,
-        "icon_emoji": f":{icon_emoji}:",
+        "text": 'Deprecated Config Report',
+        "icon_emoji": icon_emoji,
+        "blocks": 
+        [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Deprecated Config",
+                    "emoji": True,
+                }
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Source:*\n" + build_origin
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Build ID:*\n<" + build_url + "|" + build_id + ">"
+                    }
+                ]
+            }
+        ]
     }
+    
+    if errors_detected:
+        if message['error']['failed_init']['error_message']:
+            error_message_init = message['error']['failed_init']['error_message']
+            error_details_init = '\n'.join(message['error']['failed_init']['components'])
+
+            # Add the warning message block
+            slack_data["blocks"].extend([
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Error:*\n" + error_message_init
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Components:*\n" + error_details_init
+                        }
+                    ]
+                }
+            ])
+
+        if message['error']['below_0.13']['error_message']:
+            error_message_below = message['error']['below_0.13']['error_message']
+            error_details_below = '\n'.join(message['error']['below_0.13']['components'])
+
+            # Add the warning message block
+            slack_data["blocks"].extend([
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Error:*\n" + error_message_below
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Components:*\n" + error_details_below
+                        }
+                    ]
+                }
+            ])
+
+        if message['error']['terraform_version']['error_message']:
+            error_message_version = message['error']['terraform_version']['error_message']
+            error_details_version = '\n'.join(message['error']['terraform_version']['components'])
+
+            # Add the warning message block
+            slack_data["blocks"].extend([
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Error:*\n" + error_message_version
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*Message:*\n" + error_details_version
+                        }
+                    ]
+                }
+            ])
+
+
+
+    if message['terraform_version']['components']:
+        # Add the warning message block
+        slack_data["blocks"].extend([
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Warning:*\n" + message['terraform_version']['error_message']
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Components:*\n" + '\n'.join(message['terraform_version']['components'])
+                    }
+                ]
+            }
+        ])
+
+    if message['terraform_provider']['provider']:
+        providers_info = [
+            f"{provider} - {end_support_date}" 
+            for provider, end_support_date in message['terraform_provider']['provider'].items()
+        ]
+        # Add the warning message block
+        slack_data["blocks"].extend([
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Warning:*\n" + message['terraform_provider']['error_message']
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Providers:*\n" + '\n'.join(providers_info)
+                    }
+                ]
+            }
+        ])
+
     response = requests.post(webhook, json=slack_data)
     if response.status_code:
         return True
@@ -189,36 +351,43 @@ def log_message_slack(slack_recipient=None, slack_webhook_url=None, message=None
     - None
     """
     if slack_recipient and slack_webhook_url:
+        # https://dev.azure.com/hmcts/PlatformOperations/_build/results?buildId=579391
+        build_url = f'{os.getenv("SYSTEM_COLLECTIONURI")}{os.getenv("SYSTEM_TEAMPROJECT")}/_build/results?buildId={os.getenv("BUILD_BUILDID")}'
         repository = os.getenv("BUILD_REPOSITORY_URI")
-        branch = os.getenv("BUILD_SOURCEBRANCHNAME")
-        default_workdir = os.getenv("SYSTEM_DEFAULTWORKINGDIRECTORY")
-        workdir = os.getenv("WORKDIR").replace(default_workdir + "/", "")
-        stage = os.getenv("SYSTEM_STAGEDISPLAYNAME")
-        slack_sender = "cnp-azuredevops-libraries - terraform version nagger"
-        # Format message with useful information to quickly identify the stage,
-        # component, repository and its branch.
-        slack_message = (
-            f"\nREPOSITORY: {repository}/tree/{branch}\n"
-            + f"STAGE: {stage}\n"
-            + f"WORKDIR: {workdir}\n"
-            + f"MESSAGE: {message}\n"
-        )
-        slack_icon = "warning"
+        repository_name = repository.split("/")[-1]
+        source_branch = os.getenv("BUILD_SOURCEBRANCH")
+        source_branch_name = os.getenv("BUILD_SOURCEBRANCHNAME")
+        build_id = os.getenv("BUILD_BUILDID")
+
+        # stage = os.getenv("SYSTEM_STAGEDISPLAYNAME")
+        slack_sender = "PlatOps Terraform Nagger"
+
+        # Differentiate PR from branch
+        if source_branch.startswith("refs/pull"):
+            # It's a pull request. Extract the pull request number       
+            pull_request_number = source_branch.split("/")[2]
+            build_origin_url = f"{repository}/pull/{pull_request_number}" # https://github.com/hmcts/cnp-dummy-library-test/pull/37
+            build_origin = f"<{build_origin_url}|{repository_name}/pull/{pull_request_number}>"
+        else:
+            # It's a branch
+            build_origin_url = f"{repository}/tree/{source_branch_name}" # https://github.com/hmcts/cnp-dummy-library-test/tree/dtspo-17345-reinstate-nagger
+            build_origin = f"<{build_origin_url}|{repository_name}/tree/{source_branch_name}>"
+        
+        icon_emoji = ":warning:"
+
         send_slack_message(
-            slack_webhook_url, slack_recipient, slack_sender, slack_message, slack_icon
+            slack_webhook_url, slack_recipient, slack_sender, icon_emoji, build_origin, build_url, build_id, message
         )
 
 
-def log_message(slack_recipient, slack_webhook_url, message_type, message):
+def log_message(message_type, message=None):
     """
-    Log a message and, if running in Azure DevOps, log a warning issue and
-    attempt to send a Slack message.
+    Log a message and, if running in Azure DevOps, log a warning issue.
 
     This function logs a message with the Python logging library, and if the
     system is running in Azure DevOps (as determined by the
     SYSTEM_PIPELINESTARTTIME environment variable), it also logs a warning
-    issue with Azure DevOps and attempts to send a message via Slack to the
-    initiating GitHub user. If `message_type` is set to 'warning', the logger
+    issue with Azure DevOps. If `message_type` is set to 'warning', the logger
     will log a warning type. If `message_type` is set to 'error', the logger
     will log an error type, and Azure DevOps will also raise an error and stop
     task execution.
@@ -227,26 +396,18 @@ def log_message(slack_recipient, slack_webhook_url, message_type, message):
     - message_type (str): The type of message to log, either 'warning' or
         'error'.
     - message (str): The message to be logged.
-    - slack_recipient (str): The name or ID of the Slack channel or user to
-        send the message to (optional).
-    - slack_webhook_url (str): The webhook URL for the Slack integration to
-        send the message through (optional).
 
     Returns:
     - None
     """
     global errors_detected
 
-    logger.warning(message)
     is_ado = os.getenv("SYSTEM_PIPELINESTARTTIME")
     if is_ado:
         if message_type == "warning":
-            # Attempt to send slack message
-            log_message_slack(slack_recipient, slack_webhook_url, message)
-        if message_type == "warning":
-            logger.warning(f"##vso[task.logissue type=warning;]{message}")
+            logger.warning(f"##vso[task.logissue type=warning;] {message}")
         if message_type == "error":
-            logger.error(f"##vso[task.logissue type=error;]{message}")
+            logger.error(f"##vso[task.logissue type=error;] {message}")
             errors_detected = True
 
 
@@ -272,152 +433,317 @@ def extract_version(text, regex):
         return None
 
 
-def terraform_version_checker(terraform_version):
-    # Load config file with pre-defined versions
-    try:
-        filename = "ado-terraform-nagger-versions.json"
-        global config
-        config = json.loads(load_file(filename))
-    except json.JSONDecodeError:
-        logger.error(f"{filename} contains invalid JSON")
-    except Exception as e:
-        logger.error(f"Error loading {filename}: {e}")
+def terraform_version_checker(terraform_version, config, current_date, component):
+    # Get the date after which Terraform versions are no longer supported
+    end_support_date_str = config["terraform"]["terraform"]["date_deadline"]
+    end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
 
-    # Error if terraform version is lower than specified within config.
+    # Warn if terraform version is lower than specified & not past deadline.
     if version.parse(terraform_version) < version.parse(
-        config["terraform"]["error_below"]
-    ):
+        config["terraform"]["terraform"]["version"]
+    ) and current_date <= end_support_date:
         log_message(
-            slack_user_id,
-            slack_webhook_url,
-            "error",
-            f"Detected terraform version {terraform_version} "
-            f'is lower than {config["terraform"]["error_below"]}. '
-            "This is no longer allowed, please upgrade...",
+            "warning",
+            f"{component} - Detected terraform version {terraform_version} "
+            f'is lower than {config["terraform"]["terraform"]["version"]}. '
+            f"Please upgrade before deprecation deadline {end_support_date_str}...",
         )
 
-    # Warn if terraform version is lower than specified within config.
+        message = (
+            f"Affected Terraform version(s) is lower than "
+            f'{config["terraform"]["terraform"]["version"]}. '
+            f"Please upgrade before deprecation deadline {end_support_date_str}."
+        )
+        return 'warning', message
+
+    # Error if terraform version lower than specified & passed deadline.
     if version.parse(terraform_version) < version.parse(
-        config["terraform"]["warn_below"]
-    ):
+        config["terraform"]["terraform"]["version"]
+    ) and current_date > end_support_date:
         log_message(
-            slack_user_id,
-            slack_webhook_url,
-            "warning",
-            f"Detected terraform version {terraform_version} "
-            f'is lower than {config["terraform"]["warn_below"]}. '
+            "error",
+            f"{component} - Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
             "Please upgrade...",
         )
 
+        message = (
+            f"Affected Terraform version(s) is no longer supported after deprecation deadline {end_support_date_str}. "
+            f"Please upgrade."
+        )
+        return 'error', message
+    
+    return True, 'Terraform version(s) up to date'
 
-def main():
 
-    # Retrieve HMCTS github to slack user mappings
-    hmcts_github_slack_user_mappings = get_hmcts_github_slack_user_mappings()
-    # Attempt to retrieve github username
-    github_user = os.getenv("BUILD_SOURCEVERSIONAUTHOR")
-    # Attempt to map github user to slack username
-    global slack_user_id
-    slack_user_id = get_github_slack_user_mapping(
-        hmcts_github_slack_user_mappings, github_user
-    )
-    if not slack_user_id:
-        log_message(None, None, "warning", "Missing slack user ID from github mapping")
-    # Atempt to retrieve slack webhook URL
-    global slack_webhook_url
-    slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL")
-    if not slack_webhook_url:
-        log_message(None, None, "warning", "Missing slack webhook URL")
+def terraform_provider_checker(provider, provider_version, config, current_date, component):
+    if provider in config["terraform"]:
+        # Handle providers
+        # Get the date after which Terraform versions are no longer supported
+        end_support_date_str = config["terraform"][provider]["date_deadline"]
+        end_support_date = datetime.datetime.strptime(end_support_date_str, "%Y-%m-%d").date()
 
-    command = ["terraform", "version", "--json"]
-
-    try:
-        # Try to run `version --json` which is present in tf versions >= 0.13.0
-        result = json.loads(run_command(command))
-        terraform_version = result["terraform_version"]
-
-        # Use terraform's `terraform_outdated` JSON object to notify if there
-        # is a new terraform version available.
-        if "terraform_outdated" in result and result["terraform_outdated"]:
+        # Warn if terraform provider version is lower than specified & not past deadline.
+        if version.parse(provider_version) < version.parse(
+            config["terraform"][provider]["version"]
+        ) and current_date <= end_support_date:
             log_message(
-                None,
-                None,
                 "warning",
-                f"Detected outdated terraform version: {terraform_version}",
+                f"{component} - Detected provider {provider} version "
+                f"{provider_version} "
+                "is lower than "
+                f'{config["terraform"][provider]["version"]}. '
+                f"Please upgrade before deprecation deadline {end_support_date_str}...",
             )
 
-        # Handle terraform versions
-        terraform_version_checker(terraform_version)
+            message = (
+                f"Affected provider version(s) will soon reach deprecation. "
+                f"Please upgrade version prior to the deprecation date."
+            )
+            return 'warning', message, end_support_date_str
 
-        # Handle providers
-        terraform_providers = result["provider_selections"]
+        # Error if terraform provider version lower than specified & passed deadline.
+        if version.parse(provider_version) < version.parse(
+            config["terraform"][provider]["version"]
+        ) and current_date > end_support_date:
+            log_message(
+                "error",
+                f"{component} - Detected provider {provider} version "
+                f"{provider_version} "
+                "is lower than "
+                f'{config["terraform"][provider]["version"]}. '
+                f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
+                "Please upgrade...",
+            ) 
 
-        for provider in terraform_providers:
-            if provider not in config["providers"]:
-                log_message(
+            message = (
+                f"Affected provider version(s) are "
+                f"no longer supported after deprecation deadline " 
+                f"Please upgrade."
+            ) 
+            return 'error', message, end_support_date_str
+    return True, 'All providers up to date', ''
+
+
+def create_working_dir_list(base_directory, system_default_working_directory, build_repo_suffix):
+    if not base_directory or base_directory == '':
+            is_root_dir = True
+            working_directory = f"{system_default_working_directory}/{build_repo_suffix}/"
+
+            if os.path.exists(os.path.join(working_directory, "components")):
+                is_root_dir = False
+                working_directory = f"{system_default_working_directory}/{build_repo_suffix}/components/"               
+    else:
+        is_root_dir = False
+        working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
+
+    if is_root_dir:
+        components_list = ['/']
+    else:
+        # Get the list of all child dir in the specified parent directory
+        parent_dir = os.listdir(working_directory)
+        # Filter out entries that are directories
+        components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
+      
+    return working_directory, components_list
+
+
+def add_error(output_warning, error_message, component, error_type=None, provider=None, end_support_date=None):
+    # init error key if needed
+    if 'error' not in output_warning:
+        output_warning['error'] = {
+            'terraform_version': {
+                'components': [],
+                'error_message': ''
+            },
+            'terraform_provider': {
+            'provider': {},
+            'error_message': ''
+            },
+            'failed_init': {
+                'components': [],
+                'error_message': ''
+            },
+            'below_0.13': {
+                'components': [],
+                'error_message': ''
+            }
+        }
+                
+    # log error in appropriate key
+    if error_type == 'failed_init':
+        # failed_init
+        output_warning['error']['failed_init']['error_message'] = error_message
+        output_warning['error']['failed_init']['components'].append(component)
+    if error_type == 'below_0.13':
+        # below_0.13
+        output_warning['error']['below_0.13']['error_message'] = error_message
+        output_warning['error']['below_0.13']['components'].append(component)
+        # provider version
+    if error_type == 'provider_version':
+        output_warning['terraform_provider']['error_message'] = error_message
+        output_warning['terraform_provider']['provider'][provider] = end_support_date
+    else:
+        # terraform_version
+        output_warning['error']['terraform_version']['error_message'] = error_message
+        output_warning['error']['terraform_version']['components'].append(component)
+
+
+def main():
+    global slack_user_id
+    global slack_webhook_url
+
+    # parse environment variables
+    system_default_working_directory = os.getenv('SYSTEM_DEFAULT_WORKING_DIRECTORY')
+    build_repo_suffix = os.getenv('BUILD_REPO_SUFFIX')
+    base_directory = os.getenv('BASE_DIRECTORY')
+    github_user = os.getenv("BUILD_SOURCEVERSIONAUTHOR")
+    slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL")
+
+    # initialisation
+    output_file = "nagger_output.json"
+    output_warning = {
+        'terraform_version': {
+            'components': [],
+            'error_message': ''
+        },
+        'terraform_provider': {
+            'provider': {},
+            'error_message': ''
+        }
+    }
+    current_date = datetime.date.today()
+    slack_user_id = get_github_slack_user_mapping(
+        get_hmcts_github_slack_user_mappings(), github_user
+    )
+    
+   # ado error if slack user id missing
+    if not slack_user_id:
+        log_message("error", "Missing Slack user ID from github mapping. \
+                    Please add yourself to the repo at https://github.com/hmcts/github-slack-user-mappings \
+                    to proceed")
+    
+    # ado error if slack webhook url missing
+    if not slack_webhook_url:
+        log_message("error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
+
+    # build path to terraform binary
+    home_dir = os.path.expanduser('~')
+    terraform_binary_path = os.path.join(home_dir, '.local', 'bin', 'terraform')
+    # construct working directory (./component/ or $baseDirectory)
+    working_directory, components_list = create_working_dir_list(base_directory, system_default_working_directory, build_repo_suffix)
+    # load deprecation map
+    deprecation_map = load_file(args.filepath)
+    
+    print('Analysing components...')
+
+    for component in components_list:
+        try:
+            print(f'component: {component}')
+            full_path = f'{working_directory}{component}'
+
+            # fail out loop if terraform version <= 0.13.0
+            command = ["tfswitch", "-b", terraform_binary_path]
+            run_command(command, full_path)
+            command = ["terraform", "version", "--json"]
+            result = json.loads(run_command(command, full_path))
+
+            ### catch terraform init errors
+            command = ["terraform", "init", "-backend=false"]
+            output = run_command(command, full_path)
+            
+            if not 'Terraform has been successfully initialized!' in output:
+                # trigger ado console
+                log_message( 'error',
+                    f'{component} - Terraform init failed. Please see docs for further information: '
+                    'https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure'
+                    )
+                # log error & save to file
+                error_message = (
+                    f'Terraform init failed for specified components. Please see docs for further information: '
+                    f'<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|Docs>'
+                    )
+                add_error(output_warning, error_message, component, 'failed_init')
+
+            ### rerun version --json to fetch providers post init
+            command = ["terraform", "version", "--json"]
+            result = json.loads(run_command(command, full_path))
+
+            ### check terraform version against deprecation map
+            terraform_version = result["terraform_version"]
+            # warning/error logging - terraform_version_checker handles console log
+            alert_level, error_message = terraform_version_checker(terraform_version, deprecation_map, current_date, component)
+            if alert_level == 'warning':
+                output_warning['terraform_version']['error_message'] = error_message
+                output_warning['terraform_version']['components'].append(component)
+            if alert_level == 'error':
+                add_error(output_warning, error_message, component)
+
+            ### check provider versions against deprecation map
+            terraform_providers = result["provider_selections"]
+            if terraform_providers:
+                for provider, provider_version in terraform_providers.items():
+                    # warning/error logging - terraform_version_checker handles console log
+                    alert_level, error_message, end_support_date_str = terraform_provider_checker(provider, provider_version, deprecation_map, current_date, component)
+                    provider = provider.split('/')[-1]
+                    if alert_level == 'warning':
+                        output_warning['terraform_provider']['error_message'] = error_message
+                        if provider not in output_warning['terraform_provider']['provider']:
+                            output_warning['terraform_provider']['provider'][provider] = end_support_date_str
+                    if alert_level == 'error':
+                        add_error(output_warning, error_message, component, 'provider_version', provider, end_support_date_str)
+
+            # write back to file
+            with open(output_file, 'w') as file:
+                json.dump(output_warning, file, indent=4)
+            log_message('group_close')
+
+        ### fallback to regex when terraform version <= 0.13.0
+        except JSONDecodeError:
+            result = run_command(command, full_path)
+            terraform_regex = f"^([Tt]erraform(\\s))(?P<semver>{semver_regex})"
+            terraform_version = extract_version(result, terraform_regex)
+
+            # strip preceding "v" for version comparison
+            if terraform_version[0].lower() == "v":
+                terraform_version = terraform_version[1:]
+
+            # trigger ado console
+            log_message(
+                "error",
+                f"{component} - Detected terraform version {terraform_version} does not support "
+                f"checking provider versions in addition to the main binary. "
+                f"Please upgrade your terraform version to at least v0.13.0"
+            )
+            error_message = (
+                    f'Please upgrade your terraform version to at least v0.13.0'
+                    )
+            # log error & save to file
+            add_error(output_warning, error_message, component, 'below_0.13')
+            with open(output_file, 'w') as file:
+                json.dump(output_warning, file, indent=4)
+
+        ### script failues etc
+        except Exception as e:
+            logger.error("Unknown error occurred")
+            raise Exception(e)
+        
+    ### trigger slack message if we've collated warnings/errors
+    with open(output_file, 'r') as file:
+        complete_file = json.load(file)
+        
+        # only slack send if we have collated errors/warnings
+        if ('error' in complete_file or
+    (complete_file.get('terraform_version', {}).get('components')) or
+    (complete_file.get('terraform_provider', {}).get('provider'))): 
+            # skip slack message send for renovate/gh apps
+            if slack_user_id != 'iamabotuser':
+                log_message_slack(
                     slack_user_id,
                     slack_webhook_url,
-                    "warning",
-                    f"Provider {provider} is missing from version config. "
-                    "Please add it to the config in this file in order to "
-                    "compare it's versions.",
-                )
-            else:
-                # Handle providers
-                # Error if provider version is lower than specified within config.
-                if version.parse(terraform_providers[provider]) < version.parse(
-                    config["providers"][provider]["error_below"]
-                ):
-                    log_message(
-                        slack_user_id,
-                        slack_webhook_url,
-                        "error",
-                        f"Detected provider {provider} version "
-                        f"{terraform_providers[provider]} "
-                        "is lower than "
-                        f'{config["providers"][provider]["error_below"]}. '
-                        "This is no longer allowed, please upgrade...",
+                    complete_file
                     )
-
-                # Warn if provider version is lower than specified within config.
-                if version.parse(terraform_providers[provider]) < version.parse(
-                    config["providers"][provider]["warn_below"]
-                ):
-                    log_message(
-                        slack_user_id,
-                        slack_webhook_url,
-                        "warning",
-                        f"Detected provider {provider} version "
-                        f"{terraform_providers[provider]} "
-                        "is lower than "
-                        f'{config["providers"][provider]["warn_below"]}. '
-                        "Please upgrade...",
-                    )
-
-    except JSONDecodeError:
-        # Fallback to regex when terraform version <= 0.13.0
-        result = run_command(command)
-        terraform_regex = f"^([Tt]erraform(\\s))(?P<semver>{semver_regex})"
-        terraform_version = extract_version(result, terraform_regex)
-        log_message(
-            slack_user_id,
-            slack_webhook_url,
-            f"Detected terraform version {terraform_version} does not support "
-            "checking provider versions in addition to the main binary. "
-            "Please upgrade your terraform version to at least v0.13.0",
-        )
-        # Strip preceding "v" for version comparison.
-        if terraform_version[0].lower() == "v":
-            terraform_version = terraform_version[1:]
-
-        # Handle terraform versions.
-        terraform_version_checker(terraform_version)
-    except Exception as e:
-        logger.error("Unknown error occurred")
-        raise Exception(e)
-
-    # Exit with error at the end of all checks so that we can see errors for all
-    # unmet versions.
+        
+    ### exit code 1 if errors
     if errors_detected:
         raise SystemExit(1)
 
