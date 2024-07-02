@@ -730,7 +730,7 @@ def main():
     ### trigger slack message if we've collated warnings/errors
     with open(output_file, 'r') as file:
         complete_file = json.load(file)
-        if complete_file['error'] or complete_file['terraform_version']['components'] or complete_file['terraform_provider']['provider']:
+        if complete_file.get['error'] or complete_file.get['terraform_version']['components'] or complete_file.get['terraform_provider']['provider']:
             # skip slack message send for renovate/gh apps
             if slack_user_id != 'iamabotuser':
                 log_message_slack(
