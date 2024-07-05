@@ -77,7 +77,7 @@ def run_command(command, working_directory, is_tf_switch=False):
             run_command = subprocess.run(command, capture_output=True)
         return run_command.stdout.decode("utf-8")
     except subprocess.TimeoutExpired:
-        print("tfswitch command timed out, using latest tf version...")
+        return
     except TypeError:
         run_command = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
