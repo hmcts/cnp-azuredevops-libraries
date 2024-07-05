@@ -10,6 +10,7 @@ import logging
 import argparse
 import requests
 import subprocess
+import fnmatch
 from packaging import version
 from json.decoder import JSONDecodeError
 
@@ -542,7 +543,8 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
         # Get the list of all child dir in the specified parent directory
         parent_dir = os.listdir(working_directory)
         # Filter out entries that are directories
-        components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
+        components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir)) 
+                                  and any(fnmatch.fnmatch(file_name, '*.tf') for file_name in os.listdir(os.path.join(working_directory, child_dir)))])
     
     print(f'working dir: {working_directory}\nComponents list: {components_list}')
     return working_directory, components_list
