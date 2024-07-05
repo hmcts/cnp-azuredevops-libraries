@@ -54,7 +54,7 @@ semver_regex = (
 )
 
 
-def run_command(command, working_directory):
+def run_command(command, working_directory, is_tf_switch=None):
     """Run a command and return the output.
     Args:
         command (list): A list of command arguments.
@@ -71,8 +71,13 @@ def run_command(command, working_directory):
     """
     os.chdir(working_directory)
     try:
-        run_command = subprocess.run(command, capture_output=True)
+        if is_tf_switch:
+            run_command = subprocess.run(command, capture_output=True, timeout=15)
+        else:
+            run_command = subprocess.run(command, capture_output=True)
         return run_command.stdout.decode("utf-8")
+    except subprocess.TimeoutExpired:
+        print("Command timed out, continuing to next command...")
     except TypeError:
         run_command = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -648,7 +653,7 @@ def main():
 
             # fail out loop if terraform version <= 0.13.0
             command = ["tfswitch", "-b", terraform_binary_path]
-            run_command(command, full_path)
+            run_command(command, full_path, True)
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
 
