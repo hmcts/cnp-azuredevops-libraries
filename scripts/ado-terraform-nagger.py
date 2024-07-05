@@ -537,7 +537,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
         working_directory = f"{system_default_working_directory}/{build_repo_suffix}/{base_directory}/"
 
     if is_root_dir:
-        components_list = ['/.']
+        components_list = ['/']
     else:
         # Get the list of all child dir in the specified parent directory
         parent_dir = os.listdir(working_directory)
@@ -629,7 +629,9 @@ def main():
 
     # build path to terraform binary
     home_dir = os.path.expanduser('~')
+    print(f'home_dir: {home_dir}')
     terraform_binary_path = os.path.join(home_dir, '.local', 'bin', 'terraform')
+    print(f'tf bin path: {terraform_binary_path}')
     # construct working directory (./component/ or $baseDirectory)
     working_directory, components_list = create_working_dir_list(base_directory, system_default_working_directory, build_repo_suffix)
     # load deprecation map
