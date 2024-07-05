@@ -10,6 +10,7 @@ import logging
 import argparse
 import requests
 import subprocess
+import fnmatch
 from packaging import version
 from json.decoder import JSONDecodeError
 
@@ -53,7 +54,7 @@ semver_regex = (
 )
 
 
-def run_command(command, working_directory):
+def run_command(command, working_directory, is_tf_switch=False):
     """Run a command and return the output.
     Args:
         command (list): A list of command arguments.
@@ -70,8 +71,14 @@ def run_command(command, working_directory):
     """
     os.chdir(working_directory)
     try:
-        run_command = subprocess.run(command, capture_output=True)
+        if is_tf_switch:
+            run_command = subprocess.run(command, capture_output=True, timeout=15)
+        else:
+            run_command = subprocess.run(command, capture_output=True)
         return run_command.stdout.decode("utf-8")
+    except subprocess.TimeoutExpired:
+        return
+    
     except TypeError:
         run_command = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -542,8 +549,9 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
         # Get the list of all child dir in the specified parent directory
         parent_dir = os.listdir(working_directory)
         # Filter out entries that are directories
-        components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir))])
-      
+        components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir)) 
+                                  and any(fnmatch.fnmatch(file_name, '*.tf') for file_name in os.listdir(os.path.join(working_directory, child_dir)))])
+        
     return working_directory, components_list
 
 
@@ -643,7 +651,7 @@ def main():
 
             # fail out loop if terraform version <= 0.13.0
             command = ["tfswitch", "-b", terraform_binary_path]
-            run_command(command, full_path)
+            run_command(command, full_path, True)
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
 
