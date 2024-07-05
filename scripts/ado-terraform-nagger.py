@@ -76,8 +76,8 @@ def run_command(command, working_directory, is_tf_switch=None):
         else:
             run_command = subprocess.run(command, capture_output=True)
         return run_command.stdout.decode("utf-8")
-    except subprocess.TimeoutExpired:
-        print("Command timed out, continuing to next command...")
+    # except subprocess.TimeoutExpired:
+    #     print("tfswitch command timed out, using latest tf version...")
     except TypeError:
         run_command = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -551,7 +551,7 @@ def create_working_dir_list(base_directory, system_default_working_directory, bu
         components_list = sorted([child_dir for child_dir in parent_dir if os.path.isdir(os.path.join(working_directory, child_dir)) 
                                   and any(fnmatch.fnmatch(file_name, '*.tf') for file_name in os.listdir(os.path.join(working_directory, child_dir)))])
     
-    print(f'working dir: {working_directory}\nComponents list: {components_list}')
+    # print(f'working dir: {working_directory}\nComponents list: {components_list}')
     return working_directory, components_list
 
 
@@ -636,9 +636,9 @@ def main():
 
     # build path to terraform binary
     home_dir = os.path.expanduser('~')
-    print(f'home_dir: {home_dir}')
+    # print(f'home_dir: {home_dir}')
     terraform_binary_path = os.path.join(home_dir, '.local', 'bin', 'terraform')
-    print(f'tf bin path: {terraform_binary_path}')
+    # print(f'tf bin path: {terraform_binary_path}')
     # construct working directory (./component/ or $baseDirectory)
     working_directory, components_list = create_working_dir_list(base_directory, system_default_working_directory, build_repo_suffix)
     # load deprecation map
