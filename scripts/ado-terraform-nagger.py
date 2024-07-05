@@ -54,7 +54,7 @@ semver_regex = (
 )
 
 
-def run_command(command, working_directory, is_tf_switch=None):
+def run_command(command, working_directory, is_tf_switch=False):
     """Run a command and return the output.
     Args:
         command (list): A list of command arguments.
