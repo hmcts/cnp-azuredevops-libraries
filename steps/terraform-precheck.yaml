@@ -38,9 +38,6 @@ parameters:
     type: boolean
     default: false
 
-  - name: baseDirectory
-    default: ''
-
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -130,8 +127,3 @@ steps:
         --organization "hmcts" \
         --project "$(System.TeamProject)" \
         --pipelineid "$(System.DefinitionId)"
-
-  - template: ./terraform-version-checker.yaml
-    parameters:
-      kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
-      baseDirectory: ${{ parameters.baseDirectory }}
