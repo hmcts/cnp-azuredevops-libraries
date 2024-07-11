@@ -628,7 +628,7 @@ def main():
     )
     
    # ado error if slack user id missing
-    if slack_user_id:
+    if not slack_user_id:
         log_message("error", 
                     f"This step sends alerts through Slack & requires the Github PR author "
                     f"or last commit author to the branch to have an entry in https://github.com/hmcts/github-slack-user-mappings "
