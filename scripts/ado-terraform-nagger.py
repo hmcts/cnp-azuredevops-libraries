@@ -628,7 +628,7 @@ def main():
     )
     
    # ado error if slack user id missing
-    if slack_user_id:
+    if not slack_user_id:
         log_message("error", 
                     f"Your Slack user ID is not found in the GitHub mapping. "
                     f"Please review the readme and add the user running this pipeline "
