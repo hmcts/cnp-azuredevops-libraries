@@ -629,7 +629,7 @@ def main():
     
    # ado error if slack user id missing
     if not slack_user_id:
-        log_message("error", 
+        log_message("warning", 
                     f"This step sends alerts through Slack & requires the Github PR author "
                     f"or last commit author to the branch to have an entry in https://github.com/hmcts/github-slack-user-mappings "
                     f"which maps Github users to their Slack IDs. This is self service - "
@@ -638,7 +638,7 @@ def main():
     
     # ado error if slack webhook url missing
     if not slack_webhook_url:
-        log_message("error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
+        log_message("warning", "Missing slack webhook URL. Please report via #platops-help on Slack.")
 
     # build path to terraform binary
     home_dir = os.path.expanduser('~')
@@ -750,7 +750,8 @@ def main():
     (complete_file.get('terraform_version', {}).get('components')) or
     (complete_file.get('terraform_provider', {}).get('provider'))): 
             # skip slack message send for renovate/gh apps
-            if slack_user_id != 'iamabotuser':
+            # skip slack message if slack_id is not present
+            if slack_user_id and slack_user_id != 'iamabotuser':
                 log_message_slack(
                     slack_user_id,
                     slack_webhook_url,
