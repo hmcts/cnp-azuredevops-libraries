@@ -742,7 +742,7 @@ def main():
             get_hmcts_github_slack_user_mappings(), github_user
         )
         # ado error if slack user id missing
-        if slack_user_id:
+        if not slack_user_id:
             log_message("warning",
                         f"Cannot send slack report: Requires the Github PR author "
                         f"or last commit author to have an entry in https://github.com/hmcts/github-slack-user-mappings "
@@ -752,7 +752,7 @@ def main():
 
         # skip slack message send for renovate/gh apps
         # skip slack message if slack_id is not present
-        if not slack_user_id and slack_user_id != 'iamabotuser':
+        if slack_user_id and slack_user_id != 'iamabotuser':
             log_message_slack(
                 slack_user_id,
                 slack_webhook_url,
