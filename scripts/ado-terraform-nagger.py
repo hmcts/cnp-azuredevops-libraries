@@ -628,11 +628,11 @@ def main():
     )
     
    # ado error if slack user id missing
-    if slack_user_id:
-        log_message("warning", 
+    if not slack_user_id:
+        log_message("warning",
                     f"Cannot send slack report: Requires the Github PR author "
                     f"or last commit author to have an entry in https://github.com/hmcts/github-slack-user-mappings "
-                    f"which maps Github users to their Slack IDs. This is self service - "
+                    f"This is a self service repo - "
                     f"please review the README, PR & merge your entry and re-run the pipeline."
                     )
     
