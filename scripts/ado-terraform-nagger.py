@@ -750,7 +750,8 @@ def main():
     (complete_file.get('terraform_version', {}).get('components')) or
     (complete_file.get('terraform_provider', {}).get('provider'))): 
             # skip slack message send for renovate/gh apps
-            if slack_user_id != 'iamabotuser':
+            # or no slack id present
+            if slack_user_id != 'iamabotuser' and slack_user_id:
                 log_message_slack(
                     slack_user_id,
                     slack_webhook_url,
