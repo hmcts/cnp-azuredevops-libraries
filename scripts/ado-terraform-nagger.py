@@ -628,7 +628,7 @@ def main():
     )
     
    # ado error if slack user id missing
-    if not slack_user_id:
+    if slack_user_id:
         log_message("warning", 
                     f"This step sends alerts through Slack & requires the Github PR author "
                     f"or last commit author to the branch to have an entry in https://github.com/hmcts/github-slack-user-mappings "
@@ -637,8 +637,8 @@ def main():
                     )
     
     # ado error if slack webhook url missing
-    if not slack_webhook_url:
-        log_message("error", "Missing slack webhook URL. Please report via #platops-help on Slack.")
+    if slack_webhook_url:
+        log_message("warning", "Missing slack webhook URL. Please report via #platops-help on Slack.")
 
     # build path to terraform binary
     home_dir = os.path.expanduser('~')
