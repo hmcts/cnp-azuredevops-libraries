@@ -629,9 +629,12 @@ def main():
     
    # ado error if slack user id missing
     if not slack_user_id:
-        log_message("error", f"""Missing Slack user ID from github mapping. 
-                    Please add yourself to the repo at https://github.com/hmcts/github-slack-user-mappings 
-                    to proceed""")
+        log_message("error", 
+                    f"Your Slack user ID is not found in the GitHub mapping. "
+                    f"Please review the readme and add the user running this pipeline "
+                    f"to the repo at https://github.com/hmcts/github-slack-user-mappings "
+                    f"to proceed"
+                    )
     
     # ado error if slack webhook url missing
     if not slack_webhook_url:
