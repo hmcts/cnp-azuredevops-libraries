@@ -623,18 +623,6 @@ def main():
         }
     }
     current_date = datetime.date.today()
-    slack_user_id = get_github_slack_user_mapping(
-        get_hmcts_github_slack_user_mappings(), github_user
-    )
-    
-   # ado error if slack user id missing
-    if not slack_user_id:
-        log_message("warning",
-                    f"Cannot send slack report: Requires the Github PR author "
-                    f"or last commit author to have an entry in https://github.com/hmcts/github-slack-user-mappings "
-                    f"This is a self service repo - "
-                    f"please review the README, PR & merge your entry and re-run the pipeline."
-                    )
     
     # ado error if slack webhook url missing
     if not slack_webhook_url:
@@ -745,18 +733,31 @@ def main():
     with open(output_file, 'r') as file:
         complete_file = json.load(file)
         
-        # only slack send if we have collated errors/warnings
-        if ('error' in complete_file or
-    (complete_file.get('terraform_version', {}).get('components')) or
-    (complete_file.get('terraform_provider', {}).get('provider'))): 
-            # skip slack message send for renovate/gh apps
-            # skip slack message if slack_id is not present
-            if slack_user_id and slack_user_id != 'iamabotuser':
-                log_message_slack(
-                    slack_user_id,
-                    slack_webhook_url,
-                    complete_file
-                    )
+    # only slack send if we have collated errors/warnings
+    if ('error' in complete_file or
+        (complete_file.get('terraform_version', {}).get('components')) or
+        (complete_file.get('terraform_provider', {}).get('provider'))):
+
+        slack_user_id = get_github_slack_user_mapping(
+            get_hmcts_github_slack_user_mappings(), github_user
+        )
+        # ado error if slack user id missing
+        if not slack_user_id:
+            log_message("warning",
+                        f"Cannot send slack report: Requires the Github PR author "
+                        f"or last commit author to have an entry in https://github.com/hmcts/github-slack-user-mappings "
+                        f"This is a self service repo - "
+                        f"please review the README, PR & merge your entry and re-run the pipeline."
+                        )
+
+        # skip slack message send for renovate/gh apps
+        # skip slack message if slack_id is not present
+        if slack_user_id and slack_user_id != 'iamabotuser':
+            log_message_slack(
+                slack_user_id,
+                slack_webhook_url,
+                complete_file
+                )
         
     ### exit code 1 if errors
     if errors_detected:
