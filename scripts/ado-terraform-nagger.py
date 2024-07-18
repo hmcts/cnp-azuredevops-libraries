@@ -666,6 +666,8 @@ def main():
                     )
                 add_error(output_warning, error_message, component, 'failed_init')
 
+                print(output)
+
             ### rerun version --json to fetch providers post init
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
