@@ -667,6 +667,7 @@ def main():
                 add_error(output_warning, error_message, component, 'failed_init')
 
                 print(output)
+                logger.error(f"##vso[task.logissue type=error;] Error returned\n{output}")
 
             ### rerun version --json to fetch providers post init
             command = ["terraform", "version", "--json"]
