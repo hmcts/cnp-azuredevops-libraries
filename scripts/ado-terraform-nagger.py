@@ -54,6 +54,12 @@ semver_regex = (
 )
 
 
+def err_run_command(command, working_directory):
+    os.chdir(working_directory)
+    run_command = subprocess.run(command, capture_output=True)
+    return run_command.stdout.decode("utf-8"), run_command.stderr.decode("utf-8")
+
+
 def run_command(command, working_directory, is_tf_switch=False):
     """Run a command and return the output.
     Args:
@@ -75,8 +81,7 @@ def run_command(command, working_directory, is_tf_switch=False):
             run_command = subprocess.run(command, capture_output=True, timeout=15)
         else:
             run_command = subprocess.run(command, capture_output=True)
-        return run_command.stderr.decode("utf-8")
-        # return run_command.stdout.decode("utf-8")
+        return run_command.stdout.decode("utf-8")
     except subprocess.TimeoutExpired:
         # get latest stable version if tfswitch hangs
         command = ["tfswitch", "--latest"]
@@ -652,9 +657,9 @@ def main():
 
             ### catch terraform init errors
             command = ["terraform", "init", "-backend=false"]
-            output = run_command(command, full_path)
+            stdout, stderr = err_run_command(command, full_path)
             
-            if not 'Terraform has been successfully initialized!' in output:
+            if not 'Terraform has been successfully initialized!' in stdout:
                 # trigger ado console
                 log_message( 'error',
                     f'{component} - Terraform init failed. Please see docs for further information: '
@@ -667,7 +672,7 @@ def main():
                     )
                 add_error(output_warning, error_message, component, 'failed_init')
 
-                logger.error(f"##vso[task.logissue type=error;] Error returned\n{output}")
+                logger.error(f"##vso[task.logissue type=error;] Error returned\n{stderr}")
 
             ### rerun version --json to fetch providers post init
             command = ["terraform", "version", "--json"]
