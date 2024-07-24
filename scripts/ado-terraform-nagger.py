@@ -75,7 +75,8 @@ def run_command(command, working_directory, is_tf_switch=False):
             run_command = subprocess.run(command, capture_output=True, timeout=15)
         else:
             run_command = subprocess.run(command, capture_output=True)
-        return run_command.stdout.decode("utf-8")
+        return run_command.stderr.decode("utf-8")
+        # return run_command.stdout.decode("utf-8")
     except subprocess.TimeoutExpired:
         # get latest stable version if tfswitch hangs
         command = ["tfswitch", "--latest"]
@@ -666,8 +667,7 @@ def main():
                     )
                 add_error(output_warning, error_message, component, 'failed_init')
 
-                tf_init_error = subprocess.check_output(output, stderr=subprocess.STDOUT, shell=True)
-                logger.error(f"##vso[task.logissue type=error;] Error returned\n{tf_init_error}")
+                logger.error(f"##vso[task.logissue type=error;] Error returned\n{output}")
 
             ### rerun version --json to fetch providers post init
             command = ["terraform", "version", "--json"]
