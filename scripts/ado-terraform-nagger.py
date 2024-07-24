@@ -672,7 +672,7 @@ def main():
                     )
                 add_error(output_warning, error_message, component, 'failed_init')
                 print(output)
-                sdterr = subprocess.check_output(command, stderr=output)
+                sdterr = subprocess.check_output(command, stderr=output, cwd=full_path)
                 logger.error(f"##vso[task.logissue type=error;] Error returned\n{sdterr}")
 
             ### rerun version --json to fetch providers post init
