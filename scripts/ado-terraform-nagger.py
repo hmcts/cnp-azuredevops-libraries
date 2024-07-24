@@ -657,9 +657,9 @@ def main():
 
             ### catch terraform init errors
             command = ["terraform", "init", "-backend=false"]
-            output = err_run_command(command, full_path)
+            output = run_command(command, full_path)
             
-            if not 'Terraform has been successfully initialized!' in output.stdout.decode("utf-8"):
+            if not 'Terraform has been successfully initialized!' in output:
                 # trigger ado console
                 log_message( 'error',
                     f'{component} - Terraform init failed. Please see docs for further information: '
@@ -671,8 +671,9 @@ def main():
                     f'<https://github.com/hmcts/cnp-azuredevops-libraries?tab=readme-ov-file#required-terraform-folder-structure|Docs>'
                     )
                 add_error(output_warning, error_message, component, 'failed_init')
-                print(output.stdout.decode("utf-8"))
-                logger.error(f"##vso[task.logissue type=error;] Error returned\n{output.stderr.decode('utf-8')}")
+                print(output)
+                sdterr = subprocess.check_output(stderr=output)
+                logger.error(f"##vso[task.logissue type=error;] Error returned\n{sdterr}")
 
             ### rerun version --json to fetch providers post init
             command = ["terraform", "version", "--json"]
