@@ -51,7 +51,7 @@ steps:
       tfswitchArgs: -b ~/.local/bin/terraform --latest
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  - task: AzureKeyVault@1
+  - task: AzureKeyVault@2
     displayName: 'Retrieve keyvault secret for ADO token'
     inputs:
       ConnectedServiceName: ${{ parameters.serviceConnection }}
@@ -59,7 +59,7 @@ steps:
       secretsFilter: ${{ parameters.keyvaultSecret }}
       runAsPreJob: false
 
-  - task: AzureKeyVault@1
+  - task: AzureKeyVault@2
     displayName: 'Get GitHub API token from Keyvault'
     inputs:
       runAsPreJob: false

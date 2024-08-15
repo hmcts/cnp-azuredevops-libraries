@@ -2,7 +2,7 @@ parameters:
   serviceConnection: ''
 
 steps:
-- task: AzureKeyVault@1
+- task: AzureKeyVault@2
   displayName: 'Get secrets from Keyvault'
   inputs:
     azureSubscription: ${{ parameters.serviceConnection }}

@@ -89,7 +89,7 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/install-tfcmt.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  - task: AzureKeyVault@1
+  - task: AzureKeyVault@2
     displayName: 'Get GitHub API token from Keyvault'
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:

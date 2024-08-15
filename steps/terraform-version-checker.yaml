@@ -15,7 +15,7 @@ steps:
       git clone https://github.com/hmcts/cnp-deprecation-map.git
     displayName: clone deprecation map
   
-  - task: AzureKeyVault@1
+  - task: AzureKeyVault@2
     displayName: 'Retrieve slack webhook URL from Keyvault'
     inputs:
       runAsPreJob: false
