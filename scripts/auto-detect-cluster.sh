@@ -61,7 +61,7 @@ check_pod_in_cluster() {
         --resource-group "$resourceGroupName" \
         --name "$aksClusterName" --admin
     local pod_exists=true
-    pod_exists=$(kubectl get pods --context "$aksClusterName-admin" -n admin -o jsonpath='{range .items[*]}{@.metadata.name}{"\t"}{@.spec.containers[0].args}{"\n"}{end}' | grep "external-dns-private" | grep -- "--txt-owner-id=$environmentName-active")
+    pod_exists=$(kubectl get pods --context "$aksClusterName-admin" -n admin -o jsonpath='{range .items[*]}{@.metadata.name}{"\t"}{@.spec.containers[0].args}{"\n"}{end}' | grep "external-dns" | grep -- "--txt-owner-id=$environmentName-active")
     if [ -n "$pod_exists" ]; then
         setAksResourceGroup="$resourceGroupName"
         setAksCluster="$aksClusterName"
