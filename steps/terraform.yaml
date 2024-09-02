@@ -196,7 +196,7 @@ steps:
           --pr $(System.PullRequest.PullRequestNumber) \
           --var target:"$(System.StageName) - $(System.JobDisplayName)" \
           --var ado_url:$SYSTEM_COLLECTIONURI \
-          --var log_lebel:debug
+          --var log_lebel:debug \
           --var ado_project:"$SYSTEM_TEAMPROJECT" \
           --var build_id:$BUILD_BUILDID \
           --var sensitive:${{ parameters.sensitive }} \
