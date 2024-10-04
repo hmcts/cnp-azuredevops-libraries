@@ -96,5 +96,6 @@ steps:
       scriptType: bash
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
-        CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*)
-        az acr helm push --name ${{ parameters.acrName }} $CHART_FILE
+        CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*.tgz)
+        az acr helm repo add --name ${{ parameters.acrName }}
+        helm push $CHART_FILE oci://${{ parameters.acrName }}.azurecr.io/helm/${{ parameters.chartName }}
