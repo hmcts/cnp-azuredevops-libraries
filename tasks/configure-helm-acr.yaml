@@ -10,5 +10,4 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       ACR_NAME=hmctssandbox
-      az configure --defaults acr=hmctssandbox
       helm repo add $ACR_NAME https://$ACR_NAME.azurecr.io/helm/v1/repo
