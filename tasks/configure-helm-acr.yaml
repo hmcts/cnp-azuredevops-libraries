@@ -4,6 +4,7 @@ parameters:
 steps:
 - task: AzureCLI@2
   displayName: 'Configure Helm with ACR'
+  enabled: true
   inputs:
     azureSubscription: ${{ parameters.serviceConnection }}
     scriptLocation: 'inlineScript'
