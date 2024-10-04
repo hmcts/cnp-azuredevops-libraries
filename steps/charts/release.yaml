@@ -16,32 +16,31 @@ parameters:
     - aksResourceGroupName: cft-preview-01-rg
       aksClusterName: cft-preview-01-aks
       aksEnvironment: preview
-      
-steps:
 
+steps:
   - checkout: self
     clean: true
-  
+
   - checkout: cnp-azuredevops-libraries
     clean: true
 
   - template: ../set-build-repo-suffix-env-var.yaml
 
   - task: HelmInstaller@1
-    displayName: 'Install Helm ${{parameters.helmVersion}}'
+    displayName: "Install Helm ${{parameters.helmVersion}}"
     inputs:
       helmVersionToInstall: ${{parameters.helmVersion}}
 
   - ${{ if eq(parameters.aksCluster, '') }}:
-    - ${{ each cluster in parameters.clustersToCheck}} :
-      - task: AzureCLI@2
-        displayName: "Checking if ${{ cluster.aksClusterName }} is Active"
-        name: CheckActiveCluster_${{ replace(cluster.aksClusterName, '-', '_') }}
-        inputs:
-          azureSubscription: ${{ parameters.serviceConnection }}
-          scriptType: bash
-          scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/auto-detect-cluster.sh
-          scriptArguments: --resourceGroupName ${{ cluster.aksResourceGroupName }} --aksClusterName ${{ cluster.aksClusterName }} --environmentName ${{ cluster.aksEnvironment }}
+      - ${{ each cluster in parameters.clustersToCheck}}:
+          - task: AzureCLI@2
+            displayName: "Checking if ${{ cluster.aksClusterName }} is Active"
+            name: CheckActiveCluster_${{ replace(cluster.aksClusterName, '-', '_') }}
+            inputs:
+              azureSubscription: ${{ parameters.serviceConnection }}
+              scriptType: bash
+              scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/auto-detect-cluster.sh
+              scriptArguments: --resourceGroupName ${{ cluster.aksResourceGroupName }} --aksClusterName ${{ cluster.aksClusterName }} --environmentName ${{ cluster.aksEnvironment }}
 
   - task: AzureCLI@2
     displayName: "AKS Authenticate"
@@ -67,12 +66,21 @@ steps:
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo
 
   - ${{ if eq(parameters.chartPath, './') }}:
-    - script: helm dependency update ${{ parameters.chartName }}
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Retrieve helm dependencies (if any)"
+      - script: helm dependency update ${{ parameters.chartName }}
+        workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+        displayName: "Retrieve helm dependencies (if any)"
   - ${{ else }}:
-    - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
-      displayName: "Retrieve helm dependencies (if any)"
+      - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
+        displayName: "Retrieve helm dependencies (if any)"
+
+  - task: AzureCLI@2
+    displayName: "Login to ACR"
+    inputs:
+      azureSubscription: ${{ parameters.registryServiceConnection }}
+      scriptLocation: "inlineScript"
+      scriptType: "bash"
+      inlineScript: |
+        az acr login --name ${{ parameters.acrName }}
 
   - task: AzureCLI@2
     displayName: "Helm Package"
