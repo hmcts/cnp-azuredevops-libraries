@@ -75,6 +75,15 @@ steps:
       displayName: "Retrieve helm dependencies (if any)"
 
   - task: AzureCLI@2
+    displayName: "Login to ACR"
+    inputs:
+      azureSubscription: ${{ parameters.registryServiceConnection }}
+      scriptLocation: "inlineScript"
+      scriptType: "bash"
+      inlineScript: |
+        az acr login --name ${{ parameters.acrName }}
+
+  - task: AzureCLI@2
     displayName: "Helm Package"
     inputs:
       azureSubscription: ${{ parameters.registryServiceConnection }}
@@ -96,5 +105,6 @@ steps:
       scriptType: bash
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
-        CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*)
-        az acr helm push --name ${{ parameters.acrName }} $CHART_FILE
+        CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*.tgz)
+        helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo || true
+        helm push $CHART_FILE oci://${{ parameters.acrName }}.azurecr.io/helm/${{ parameters.chartName }}
