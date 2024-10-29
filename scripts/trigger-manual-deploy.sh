@@ -3,11 +3,8 @@ echo "Starting Auto Manual Start workflows ..."
 github_token="$1"
 project="$2"
 environment="$3"
-cluster="$4"
 on_demand_environments=("sbox")
-
-# Default to 00 if cluster is passed as all - point is only one cluster started in the env for cost-saving
-cluster=$cluster && [[ "${cluster}" == "All" ]] && cluster=00
+MODE="start"
 
 # Only run for currently approved on demand environments
 if [[ ! " ${on_demand_environments[@]} " =~ " ${environment}" ]]; then
@@ -27,12 +24,12 @@ function trigger_workflow() {
          -H "Accept: application/vnd.github+json" \
          -H "Authorization: Bearer $1" \
          -H "X-GitHub-Api-Version: 2022-11-28" \
-         https://api.github.com/repos/hmcts/auto-shutdown/actions/workflows/manual-start.yaml/dispatches \
+         https://api.github.com/repos/hmcts/auto-shutdown/actions/workflows/manual-start-stop.yaml/dispatches \
          -d "{ \"ref\": \"master\",
                 \"inputs\": {
-                  \"PROJECT\": \"$2\",
-                  \"SELECTED_ENV\": \"$3\",
-                  \"AKS-INSTANCES\": \"$4\"
+                  \"SELECTED_MODE\": \"$2\",
+                  \"SELECTED_AREA\": \"$3\",
+                  \"SELECTED_ENV\": \"$4\"
                 }
               }"
 }
@@ -69,14 +66,13 @@ function start_unhealthy_environments() {
   github_token="$1"
   project="$2"
   environment="$3"
-  cluster="$4"
 
   if check_environment_health $project $environment; then
     echo "$project in $environment is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
   else
-    echo "[info] $project in $environment not healthy, triggering auto manual start workflow for $project in $environment for cluster $cluster"
-    trigger_workflow "$github_token" "$project" "$environment" "$cluster"
-    echo "[info] Manual start workflow for $project in $environment for cluster $cluster triggered.. waiting 5 minutes for environment to start"
+    echo "[info] $project in $environment not healthy, triggering auto manual start workflow for $project in $environment"
+    trigger_workflow "$github_token" "$MODE" "$project" "$environment"
+    echo "[info] Manual start workflow for $project in $environment triggered.. waiting 5 minutes for environment to start"
     # Wait 5 minutes for environment to start
     sleep 300
     MAX_ATTEMPTS=5
@@ -104,9 +100,9 @@ function start_unhealthy_environments() {
 
 if [[ $project == "PANORAMA" ]]; then
   echo "Triggering auto manual start workflow for all projects in $environment"
-  start_unhealthy_environments "$github_token" "SDS" "$environment" "$cluster"
-  start_unhealthy_environments "$github_token" "CFT" "$environment" "$cluster"
+  start_unhealthy_environments "$github_token" "SDS" "$environment"
+  start_unhealthy_environments "$github_token" "CFT" "$environment"
   exit 0
 fi
 
-start_unhealthy_environments "$github_token" "$project" "$environment" "$cluster"
+start_unhealthy_environments "$github_token" "$project" "$environment"

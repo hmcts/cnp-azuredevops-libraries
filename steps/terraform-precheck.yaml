@@ -28,9 +28,6 @@ parameters:
   - name: projectName
     default: 'ss'
 
-  - name: cluster
-    default: '00'
-
   - name: environment
     default: 'sbox'
 
@@ -74,7 +71,7 @@ steps:
       scriptType: 'bash'
       scriptLocation: 'scriptPath'
       scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh
-      arguments: "$(github-api-token) ${{parameters.projectName}} ${{parameters.environment}} ${{parameters.cluster}}"
+      arguments: "$(github-api-token) ${{parameters.projectName}} ${{parameters.environment}}"
     condition: ${{ eq(parameters.runManualStart, true) }}
 
   - task: PowerShell@2
