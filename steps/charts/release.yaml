@@ -107,4 +107,4 @@ steps:
       inlineScript: |
         CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*.tgz)
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo || true
-        helm push $CHART_FILE oci://${{ parameters.acrName }}.azurecr.io/helm/${{ parameters.chartName }}
+        helm push $CHART_FILE oci://${{ parameters.acrName }}.azurecr.io/helm/
