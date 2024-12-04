@@ -7,13 +7,13 @@ if ($TfFiles.Count -eq 0)
 }
 else
 {
-  Describe 'Terraform files validation' {
+  Describe 'Terraform Config' {
     $TfTestCases = @()
     $TfFiles.ForEach{$TfTestCases += @{Instance = $_}}
 
 
-    Context "Check for non zero length files" {
-      It "<Instance> file is greater than 0" -TestCases $TfTestCases {
+    Context "When inspected for empty files" {
+      It "Should contain <Instance> file with length greater than 0" -TestCases $TfTestCases {
         Param($Instance)
         (Get-ChildItem $Instance -Verbose).Length | should -BeGreaterThan 0
       }
@@ -21,10 +21,12 @@ else
 
     $TfFolderTestCases=@()
     ((($TfFiles).DirectoryName | Select-Object -Unique)).ForEach{$TfFolderTestCases += @{Instance = $_}}
-      Context "Are correctly formatted" {
-        It "All files in <Instance> are correctly formatted. By running 'terraform fmt'" -TestCases $TfFolderTestCases {
+      Context "When validated for linting errors" {
+        It "Should not return any linting errors for files in <Instance> directory" -TestCases $TfFolderTestCases {
           Param($Instance)
-          Invoke-Expression "terraform fmt -check=true $Instance"  | should -BeNullOrEmpty
+          $output = Invoke-Expression "terraform fmt -check=true -diff $Instance"
+          $output | ForEach-Object { Write-Output $_ }
+          $output | should -BeNullOrEmpty
       }
     }
   }
