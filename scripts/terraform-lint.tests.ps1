@@ -25,7 +25,7 @@ else
         It "Should not return any linting errors for files in <Instance>" -TestCases $TfFolderTestCases {
           Param($Instance)
           $output = Invoke-Expression "terraform fmt -check=true -diff $Instance"
-          $output | ForEach-Object { Write-Output $_ }
+          $output | ForEach-Object { Write-Host $_ }
           $output | should -BeNullOrEmpty
       }
     }
