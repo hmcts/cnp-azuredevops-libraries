@@ -22,7 +22,7 @@ else
     $TfFolderTestCases=@()
     ((($TfFiles).DirectoryName | Select-Object -Unique)).ForEach{$TfFolderTestCases += @{Instance = $_}}
       Context "When validated for linting errors" {
-        It "Should not return any linting errors for files in <Instance> directory" -TestCases $TfFolderTestCases {
+        It "Should not return any linting errors for files in <Instance>" -TestCases $TfFolderTestCases {
           Param($Instance)
           $output = Invoke-Expression "terraform fmt -check=true -diff $Instance"
           $output | ForEach-Object { Write-Output $_ }
