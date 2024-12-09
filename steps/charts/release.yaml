@@ -63,8 +63,8 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
         helm repo add bitnami https://charts.bitnami.com/bitnami
-        helm repo remove ${{ parameters.acrName }} # workaround expired auth token
-        helm repo add ${{ parameters.acrName }} https://${{ parameters.acrName }}.azurecr.io/helm/v1/repo
+        helm repo remove hmctspublic # workaround expired auth token
+        helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo
 
   - ${{ if eq(parameters.chartPath, './') }}:
     - script: helm dependency update ${{ parameters.chartName }}
