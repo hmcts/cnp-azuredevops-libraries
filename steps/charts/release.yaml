@@ -81,8 +81,7 @@ steps:
       scriptLocation: "inlineScript"
       scriptType: "bash"
       inlineScript: |
-        az login
-        az account set --subscription ${{ parameters.serviceConnection }}
+        az login --identity
         TOKEN=$(az acr login --name ${{ parameters.acrName }} --expose-token --output tsv --query accessToken)
         helm registry login ${{ parameters.acrName }}.azurecr.io --username 00000000-0000-0000-0000-000000000000 --password $TOKEN
 
