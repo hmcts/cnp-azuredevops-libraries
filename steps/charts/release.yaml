@@ -63,8 +63,8 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
         helm repo add bitnami https://charts.bitnami.com/bitnami
-        helm repo remove hmctspublic # workaround expired auth token
-        helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo
+        helm repo remove ${{ parameters.acrName }} # workaround expired auth token
+        helm repo add ${{ parameters.acrName }} https://${{ parameters.acrName }}.azurecr.io/helm/v1/repo
 
   - ${{ if eq(parameters.chartPath, './') }}:
     - script: helm dependency update ${{ parameters.chartName }}
@@ -81,7 +81,8 @@ steps:
       scriptLocation: "inlineScript"
       scriptType: "bash"
       inlineScript: |
-        az acr login --name ${{ parameters.acrName }}
+        TOKEN=$(az acr login --name ${{ parameters.acrName }} --expose-token --output tsv --query accessToken)
+        helm registry login ${{ parameters.acrName }}.azurecr.io --username 00000000-0000-0000-0000-000000000000 --password $TOKEN
 
   - task: AzureCLI@2
     displayName: "Helm Package"
@@ -106,5 +107,5 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
         CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*.tgz)
-        helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo || true
+        helm repo add ${{ parameters.acrName }} https://${{ parameters.acrName }}.azurecr.io/helm/v1/repo || true
         helm push $CHART_FILE oci://${{ parameters.acrName }}.azurecr.io/helm/
