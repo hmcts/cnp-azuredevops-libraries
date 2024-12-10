@@ -95,6 +95,8 @@ steps:
       scriptLocation: "inlineScript"
       scriptType: bash
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      env:
+        AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
       inlineScript: |
         CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*.tgz)
         helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo || true
