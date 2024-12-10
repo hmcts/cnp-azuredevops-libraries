@@ -81,8 +81,7 @@ steps:
       scriptLocation: "inlineScript"
       scriptType: "bash"
       inlineScript: |
-        az acr login --name ${{ parameters.acrName }}
-        helm registry login ${{ parameters.acrName }}.azurecr.io --username 00000000-0000-0000-0000-000000000000 --password $TOKEN
+        az acr login --name hmctspublic
 
   - task: AzureCLI@2
     displayName: "Helm Package"
