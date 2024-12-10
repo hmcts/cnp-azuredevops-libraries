@@ -81,7 +81,7 @@ steps:
       scriptLocation: "inlineScript"
       scriptType: "bash"
       inlineScript: |
-        az acr login --name hmctspublic
+        az acr login --name ${{ parameters.acrName }} --expose-token
 
   - task: AzureCLI@2
     displayName: "Helm Package"
