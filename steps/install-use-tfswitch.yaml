@@ -5,7 +5,7 @@ parameters:
   - name: tfswitchArgs
     default: ''
   - name: tfswitchVersion
-    default: 'latest'
+    default: 'v1.3.0'
   - name: tfswitchPath
     default: '~/.local/bin'
 steps:
