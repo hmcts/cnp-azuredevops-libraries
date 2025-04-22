@@ -99,13 +99,16 @@ def run_command(command, working_directory, is_tf_switch=False):
         raise Exception(f"An error occurred: {e}")
 
 
-def load_file(filename):
+def load_file(filename, repo_url=None):
     """
-    This function loads a file from the same directory as the script itself.
+    This function loads a YAML file and processes exceptions based on the repository URL.
+
     Args:
         filename (str): The name of the file to load.
+        repo_url (str): Optional repository URL for handling exceptions.
+
     Returns:
-        str: The contents of the file.
+        str: The contents of the file, processed with any relevant exceptions.
     Raises:
         FileNotFoundError: If the specified file does not exist.
     """
@@ -113,18 +116,38 @@ def load_file(filename):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     # Construct the path to the file
     file_path = os.path.join(script_dir, filename)
-    # Open and read the file
+
+
     try:
+        # Open and parse the file
         with open(file_path, "r") as f:
             contents = yaml.safe_load(f)
+        
+        # If no repo_url is provided, return the raw contents
+        if not repo_url:
             return contents
+
+        # Normalize repo_url to lowercase for comparison
+        normalized_repo_url = repo_url.strip().lower()
+
+        # Process exceptions for the given repo_url
+        processed_contents = yaml.safe_load(yaml.dump(contents))
+        for category, dependencies in processed_contents.items():
+            for dependency, details in dependencies.items():
+                exceptions = details.get("exceptions", [])
+                for exception in exceptions:
+                    normalized_exception_repo = exception.get("repo").strip().lower()
+                    if normalized_repo_url == normalized_exception_repo:
+                        details["date_deadline"] = exception.get("date_deadline")
+
+        return processed_contents
+
     except FileNotFoundError:
         raise FileNotFoundError(f"The file '{filename}' does not exist.")
     except yaml.YAMLError as e:
         raise yaml.YAMLError(f"Error parsing YAML data: {e}")
     except Exception as e:
         logger.error(f"Error loading {filename}: {e}")
-
 
 def send_slack_message(webhook, channel, username, icon_emoji, build_origin, build_url, build_id, message):
     """
@@ -640,7 +663,7 @@ def main():
     # construct working directory (./component/ or $baseDirectory)
     working_directory, components_list = create_working_dir_list(base_directory, system_default_working_directory, build_repo_suffix)
     # load deprecation map
-    deprecation_map = load_file(args.filepath)
+    deprecation_map = load_file(args.filepath, os.getenv("BUILD_REPOSITORY_URI"))
     
     print('Analysing components...')
 
