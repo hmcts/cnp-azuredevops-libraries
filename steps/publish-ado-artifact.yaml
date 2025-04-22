@@ -1,3 +1,7 @@
+parameters:
+  - name: artifactVersion
+    type: string
+
 steps:
   - task: AzureKeyVault@2
     displayName: Azure Key Vault
@@ -11,5 +15,5 @@ steps:
     env:
       AZURE_DEVOPS_ARTIFACT_USERNAME: $(AZURE-DEVOPS-ARTIFACT-USERNAME)
       AZURE_DEVOPS_ARTIFACT_TOKEN: $(AZURE-DEVOPS-ARTIFACT-TOKEN)
-      RELEASE_VERSION: $(artifactVersion)
+      RELEASE_VERSION: ${{ parameters.artifactVersion }}
     displayName: 'Publish to Azure DevOps Artifacts'
