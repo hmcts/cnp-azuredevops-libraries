@@ -34,6 +34,14 @@ steps:
       mkdir -p ${{ parameters.junit_output_dir }}
       yarn
       yarn test ${TEST_PATTERN}
+      URL_TO_TEST="https://plum.platform.hmcts.net"
+      RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $URL_TO_TEST)
+      if [ $RESPONSE -eq 200 ]; then
+        echo "https://plum.platform.hmcts.net is reachable"
+      else
+        echo "https://plum.platform.hmcts.net is not reachable"
+        exit 1
+      fi
     workingDirectory: '${{ parameters.workingDirectory }}'
     failOnStderr: false
   env:
