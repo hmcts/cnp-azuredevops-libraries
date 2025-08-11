@@ -207,6 +207,97 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
+  - task: Bash@3
+    displayName: Generate Terraform Plan JSON for Cost Analysis - ${{ parameters.component }}
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    inputs:
+      targetType: 'inline'
+      script: |
+        terraform show -json tfplan-$(tfPlanName) > terraform-plan.json
+      ${{ if eq( parameters['baseDirectory'], '') }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      ${{ else }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+
+  - task: UsePythonVersion@0
+    displayName: Setup Python for Cost Analysis
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    inputs:
+      versionSpec: '3.12'
+      addToPath: true
+
+  - task: Bash@3
+    displayName: Clone Azure FinOps Estimator Tool
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    env:
+      FINOPS_TOOL_TOKEN: $(finops-tool-token)
+    inputs:
+      targetType: 'inline'
+      script: |
+        git clone --branch updates https://$(finops-tool-token)@github.com/thomast1906/infracost-alternative-poc.git finops-tool
+      workingDirectory: $(System.DefaultWorkingDirectory)
+
+  - task: Bash@3
+    displayName: Install FinOps Tool Dependencies
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    inputs:
+      targetType: 'inline'
+      script: |
+        pip install -r requirements.txt
+        chmod +x main.py
+      workingDirectory: $(System.DefaultWorkingDirectory)/finops-tool
+
+  - task: Bash@3
+    displayName: Run Azure Cost Analysis and Comment on PR - ${{ parameters.component }}
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    env:
+      GITHUB_TOKEN: $(github-api-token)
+      AZURE_OPENAI_ENDPOINT: $(azure-openai-endpoint)
+      AZURE_OPENAI_KEY: $(azure-openai-key)
+      AZURE_OPENAI_DEPLOYMENT: $(azure-openai-deployment)
+    inputs:
+      targetType: 'inline'
+      script: |
+        # Get the plan JSON file path based on working directory structure
+        if [ "${{ parameters.baseDirectory }}" = "" ]; then
+          PLAN_FILE_PATH="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/terraform-plan.json"
+        else
+          PLAN_FILE_PATH="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}/terraform-plan.json"
+        fi
+        
+        # Run the cost analysis with optional FinOps insights
+        if [ -n "$(azure-openai-key)" ]; then
+          python main.py comment \
+            --plan-file "$PLAN_FILE_PATH" \
+            --pr-number $(System.PullRequest.PullRequestNumber) \
+            --github-token $(github-api-token) \
+            --region uksouth \
+            --currency GBP \
+            --finops-insights
+        else
+          python main.py comment \
+            --plan-file "$PLAN_FILE_PATH" \
+            --pr-number $(System.PullRequest.PullRequestNumber) \
+            --github-token $(github-api-token) \
+            --region uksouth \
+            --currency GBP
+        fi
+      workingDirectory: $(System.DefaultWorkingDirectory)/finops-tool
+
+  - task: Bash@3
+    displayName: Clean up Cost Analysis Files
+    condition: and(always(), ne(variables['System.PullRequest.PullRequestNumber'], ''))
+    inputs:
+      targetType: 'inline'
+      script: |
+        rm -rf $(System.DefaultWorkingDirectory)/finops-tool
+        # Clean up plan JSON file based on working directory structure
+        if [ "${{ parameters.baseDirectory }}" = "" ]; then
+          rm -f $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/terraform-plan.json
+        else
+          rm -f $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}/terraform-plan.json
+        fi
+
   - task: TerraformCLI@1
     displayName: Terraform apply ${{ parameters.component }}
     ${{ if parameters.terraformEnvironmentVariables }}:
