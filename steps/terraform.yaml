@@ -267,15 +267,18 @@ steps:
         
         # Run the cost analysis with optional FinOps insights
         if [ -n "$(thomas-azure-openai-key)" ]; then
-          python main.py comment \
+          python main.py breakdown \
             --plan-file "$PLAN_FILE_PATH" \
-            --pr-number $(System.PullRequest.PullRequestNumber) \
-            --github-token $(github-api-token)
+            --finops-insights \
+            --verbose
+            # --pr-number $(System.PullRequest.PullRequestNumber) \
+            # --github-token $(github-api-token)
         else
-          python main.py comment \
+          python main.py breakdown \
             --plan-file "$PLAN_FILE_PATH" \
-            --pr-number $(System.PullRequest.PullRequestNumber) \
-            --github-token $(github-api-token)
+            --verbose
+            # --pr-number $(System.PullRequest.PullRequestNumber) \
+            # --github-token $(github-api-token)
         fi
       workingDirectory: $(System.DefaultWorkingDirectory)/finops-tool
 
