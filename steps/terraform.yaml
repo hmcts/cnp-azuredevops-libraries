@@ -276,8 +276,7 @@ steps:
           python main.py comment \
             --plan-file "$PLAN_FILE_PATH" \
             --pr-number $(System.PullRequest.PullRequestNumber) \
-            --github-token $(github-api-token) \
-            --currency GBP
+            --github-token $(github-api-token)
         fi
       workingDirectory: $(System.DefaultWorkingDirectory)/finops-tool
 
