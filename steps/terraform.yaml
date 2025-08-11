@@ -90,13 +90,13 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureKeyVault@2
-    displayName: 'Get GitHub API token from Keyvault'
+    displayName: 'Get GitHub & FinOps secrets from Keyvault'
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
       runAsPreJob: false
       ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
       keyVaultName: 'infra-vault-nonprod'
-      secretsFilter: 'github-api-token'
+      secretsFilter: 'github-api-token,thomas-finops-tool-token,thomas-azure-openai-endpoint,thomas-azure-openai-key,thomas-azure-openai-deployment'
 
   - template: ./install-use-tfswitch.yaml
     parameters:
@@ -230,11 +230,11 @@ steps:
     displayName: Clone Azure FinOps Estimator Tool
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
     env:
-      FINOPS_TOOL_TOKEN: $(finops-tool-token)
+      FINOPS_TOOL_TOKEN: $(thomas-finops-tool-token)
     inputs:
       targetType: 'inline'
       script: |
-        git clone --branch updates https://$(finops-tool-token)@github.com/thomast1906/infracost-alternative-poc.git finops-tool
+        git clone --branch updates https://$(thomas-finops-tool-token)@github.com/thomast1906/infracost-alternative-poc.git finops-tool
       workingDirectory: $(System.DefaultWorkingDirectory)
 
   - task: Bash@3
@@ -252,9 +252,9 @@ steps:
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
     env:
       GITHUB_TOKEN: $(github-api-token)
-      AZURE_OPENAI_ENDPOINT: $(azure-openai-endpoint)
-      AZURE_OPENAI_KEY: $(azure-openai-key)
-      AZURE_OPENAI_DEPLOYMENT: $(azure-openai-deployment)
+      AZURE_OPENAI_ENDPOINT: $(thomas-azure-openai-endpoint)
+      AZURE_OPENAI_KEY: $(thomas-azure-openai-key)
+      AZURE_OPENAI_DEPLOYMENT: $(thomas-azure-openai-deployment)
     inputs:
       targetType: 'inline'
       script: |
@@ -266,7 +266,7 @@ steps:
         fi
         
         # Run the cost analysis with optional FinOps insights
-        if [ -n "$(azure-openai-key)" ]; then
+        if [ -n "$(thomas-azure-openai-key)" ]; then
           python main.py comment \
             --plan-file "$PLAN_FILE_PATH" \
             --pr-number $(System.PullRequest.PullRequestNumber) \
