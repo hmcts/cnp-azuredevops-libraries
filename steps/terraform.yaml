@@ -271,15 +271,12 @@ steps:
             --plan-file "$PLAN_FILE_PATH" \
             --pr-number $(System.PullRequest.PullRequestNumber) \
             --github-token $(github-api-token) \
-            --region uksouth \
-            --currency GBP \
             --finops-insights
         else
           python main.py comment \
             --plan-file "$PLAN_FILE_PATH" \
             --pr-number $(System.PullRequest.PullRequestNumber) \
             --github-token $(github-api-token) \
-            --region uksouth \
             --currency GBP
         fi
       workingDirectory: $(System.DefaultWorkingDirectory)/finops-tool
