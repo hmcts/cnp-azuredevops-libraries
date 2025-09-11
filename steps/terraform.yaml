@@ -191,7 +191,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        jsonPlan=$(terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[] | select(.change.actions != ["no-op"])')
+        echo jsonPlan=$(terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[] | select(.change.actions != ["no-op"])')
         tfcmt --owner hmcts \
           --repo $(buildRepoSuffix) \
           --pr $(System.PullRequest.PullRequestNumber) \
