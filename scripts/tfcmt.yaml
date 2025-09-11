@@ -20,4 +20,4 @@ terraform:
       {{template "warning" .}}
       {{template "error_messages" .}}
     embedded_var_names:
-      - tfPlanJson
+      - jsonPlan
