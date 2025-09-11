@@ -19,7 +19,6 @@ terraform:
       {{template "change_outside_terraform" .}}
       {{template "warning" .}}
       {{template "error_messages" .}}
-    embedded_var_names:
-      - jsonPlan
-vars:
-  jsonPlan: ""
+      <details><summary>Details (Click me)</summary>
+      {{wrapCode .CombinedOutput}}
+      </details>

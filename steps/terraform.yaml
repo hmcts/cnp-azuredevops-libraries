@@ -200,7 +200,6 @@ steps:
           --var ado_project:"$SYSTEM_TEAMPROJECT" \
           --var build_id:$BUILD_BUILDID \
           --var sensitive:${{ parameters.sensitive }} \
-          --var jsonPlan:"$(jsonPlan)" \
           --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
           plan -patch -- \
           terraform show tfplan-$(tfPlanName)
