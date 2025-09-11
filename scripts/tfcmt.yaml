@@ -1,6 +1,7 @@
 terraform:
   plan:
     disable_label: false
+    use_raw_output: true
     template: |
       {{template "plan_title" .}}
 
