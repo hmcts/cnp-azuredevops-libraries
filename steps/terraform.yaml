@@ -199,9 +199,10 @@ steps:
           --var ado_project:"$SYSTEM_TEAMPROJECT" \
           --var build_id:$BUILD_BUILDID \
           --var sensitive:${{ parameters.sensitive }} \
+          --var jsonPlan:"$(terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[] | select(.change.actions != ["no-op"])')"
           --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
           plan -patch -- \
-          terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[] | select(.change.actions != ["no-op"])'
+          terraform show tfplan-$(tfPlanName)
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
