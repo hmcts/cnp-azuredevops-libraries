@@ -21,3 +21,5 @@ terraform:
       {{template "error_messages" .}}
     embedded_var_names:
       - jsonPlan
+vars:
+  jsonPlan: ""
