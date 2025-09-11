@@ -201,7 +201,7 @@ steps:
           --var sensitive:${{ parameters.sensitive }} \
           --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
           plan -patch -- \
-          terraform show tfplan-$(tfPlanName) -json
+          terraform show -json tfplan-$(tfPlanName)
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
