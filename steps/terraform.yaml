@@ -191,6 +191,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
+        jsonPlan=$(terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[] | select(.change.actions != ["no-op"])')
         tfcmt --owner hmcts \
           --repo $(buildRepoSuffix) \
           --pr $(System.PullRequest.PullRequestNumber) \
@@ -199,7 +200,7 @@ steps:
           --var ado_project:"$SYSTEM_TEAMPROJECT" \
           --var build_id:$BUILD_BUILDID \
           --var sensitive:${{ parameters.sensitive }} \
-          --var jsonPlan:"$(terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[] | select(.change.actions != ["no-op"])')" \
+          --var jsonPlan:"$(jsonPlan)" \
           --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
           plan -patch -- \
           terraform show tfplan-$(tfPlanName)
