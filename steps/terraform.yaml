@@ -207,26 +207,34 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
+  - task: Bash@3
+    displayName: Terraform show - ${{ parameters.component }}
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    inputs:
+      targetType: 'inline'
+      script: |
+        terraform show tfplan-$(tfPlanName) > tfplan-$(tfPlanName).txt
+
   - task: CopyFiles@2
     displayName: Copy plans to artifacts directory - ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
     inputs:
       sourceFolder: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}
-      contents: 'tfplan-$(tfPlanName)'
+      contents: 'tfplan-$(tfPlanName).txt'
       targetFolder: '$(Build.ArtifactStagingDirectory)'
 
   - publish: $(Build.ArtifactStagingDirectory)
     displayName: 'Publish plans for later use'
     artifact: TerraformPlans
 
-  # - task: Bash@3
-  #   displayName: Run AI parser script - ${{ parameters.component }}
-  #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
-  #   inputs:
-  #     targetType: 'inline'
-  #     script: |
-  #       python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
-  #       --plans-dir $(Build.ArtifactStagingDirectory)
+  - task: Bash@3
+    displayName: Run AI parser script - ${{ parameters.component }}
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    inputs:
+      targetType: 'inline'
+      script: |
+        python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
+        --plans-dir $(Build.ArtifactStagingDirectory)
 
   # - task: AzureCLI@2
   #   displayName: 'Upload plans to storage account'
