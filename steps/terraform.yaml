@@ -214,6 +214,10 @@ steps:
       targetType: 'inline'
       script: |
         terraform show tfplan-$(tfPlanName) > tfplan-$(tfPlanName).txt
+      ${{ if eq( parameters['baseDirectory'], '') }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      ${{ else }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
   - task: CopyFiles@2
     displayName: Copy plans to artifacts directory - ${{ parameters.component }}
