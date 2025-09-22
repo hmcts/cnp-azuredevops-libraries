@@ -229,7 +229,7 @@ steps:
 
   - publish: $(Build.ArtifactStagingDirectory)
     displayName: 'Publish plans for later use'
-    artifact: TerraformPlans
+    artifact: TerraformPlan_$(tfPlanName)
 
   - task: TerraformCLI@1
     displayName: Terraform apply ${{ parameters.component }}
