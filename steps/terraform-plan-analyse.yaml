@@ -86,10 +86,9 @@ steps:
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
         --plans-dir $(Build.ArtifactStagingDirectory) \
         --output-dir $(Build.ArtifactStagingDirectory)
-    env:
-      OPEN_AI_ENDPOINT: "##vso[task.setvariable variable=openAiEndpoint;isOutput=true]$(open-ai-endpoint)"
-      OPEN_AI_DEPLOYMENT: "##vso[task.setvariable variable=openAiDeployment;isOutput=true]$(open-ai-deployment)"
-      AZURE_OPENAI_API_KEY: "##vso[task.setvariable variable=openAiApiKey;isOutput=true]$(open-ai-api-key)"
+        --endpoint "##vso[task.setvariable variable=openAiEndpoint;isOutput=true]$(open-ai-endpoint)" \
+        --deployment "##vso[task.setvariable variable=openAiDeployment;isOutput=true]$(open-ai-deployment)" \
+        --api-key "##vso[task.setvariable variable=openAiApiKey;isOutput=true]$(open-ai-api-key)"
 
   # - task: AzureCLI@2
   #   displayName: 'Upload plans to storage account'

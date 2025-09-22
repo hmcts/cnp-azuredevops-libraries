@@ -6,10 +6,15 @@ import argparse
 parser = argparse.ArgumentParser(description="Analyse terraform plans using AI")
 parser.add_argument("--plans-dir", type=str, help="Specify the path to the plans directory")
 parser.add_argument("--output-dir", type=str, help="Specify the path to the output directory")
+parser.add_argument("--endpoint", type=str, help="Specify the url of the open ai endpoint")
+parser.add_argument("--deployment", type=str, help="Specify the open ai deployment name")
+parser.add_argument("--api-key", type=str, help="Specify the open ai api key")
 args = parser.parse_args()
 
+
+
 # Read all Terraform plans in the 'plans' folder and concatenate them
-plans_dir = args.plans_dir
+plans_dir = args.plans-dir
 plan_files = [os.path.join(plans_dir, f) for f in os.listdir(plans_dir) if os.path.isfile(os.path.join(plans_dir, f))]
 all_plans = []
 for plan_file in plan_files:
@@ -27,8 +32,9 @@ Here are the plans:
 Please only return the table in your response.
 """
 
-OPEN_AI_ENDPOINT = os.environ["OPEN_AI_ENDPOINT"]
-OPEN_AI_DEPLOYMENT = os.environ["OPEN_AI_DEPLOYMENT"]
+OPEN_AI_ENDPOINT = args.endpoint
+OPEN_AI_DEPLOYMENT = args.deployment
+AZURE_OPENAI_API_KEY = args.api-key
   
 # Azure OpenAI API details (replace with your endpoint/key/deployment)  
 api_url = f"{OPEN_AI_ENDPOINT}/openai/deployments/{OPEN_AI_DEPLOYMENT}/chat/completions?api-version=2023-03-15-preview"
