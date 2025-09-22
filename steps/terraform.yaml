@@ -211,6 +211,7 @@ steps:
     displayName: Copy plans to artifacts directory - ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
     inputs:
+      sourceFolder: $(Agent.BuildDirectory)
       contents: 'tfplan-$(tfPlanName)'
       targetFolder: '$(Build.ArtifactStagingDirectory)'
 
