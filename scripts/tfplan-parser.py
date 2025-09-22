@@ -6,7 +6,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Analyse terraform plans using AI")
 parser.add_argument("--plans-dir", type=str, help="Specify the path to the plans directory")
 parser.add_argument("--output-dir", type=str, help="Specify the path to the output directory")
-  
+args = parser.parse_args()
 
 # Read all Terraform plans in the 'plans' folder and concatenate them
 plans_dir = args.plans_dir
