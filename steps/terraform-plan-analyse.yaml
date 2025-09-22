@@ -84,7 +84,7 @@ steps:
       targetType: 'inline'
       script: |
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
-        --plans-dir $(Build.ArtifactStagingDirectory)
+        --plans-dir $(Build.ArtifactStagingDirectory) \
         --output-dir $(Build.ArtifactStagingDirectory)
     env:
       OPEN_AI_ENDPOINT: "##vso[task.setvariable variable=openAiEndpoint;isOutput=true]$(open-ai-endpoint)"
