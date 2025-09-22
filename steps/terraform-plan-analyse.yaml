@@ -47,7 +47,7 @@ steps:
   - template: ./set-build-repo-suffix-env-var.yaml
   - template: ./keyvault-read.yaml
     parameters:
-      serviceConnection: ${{ parameters.serviceConnection }}
+      serviceConnection: DCD-CFT-Sandbox
       environment: ${{ parameters.environment }}
 
   - task: AzureKeyVault@2
