@@ -55,7 +55,7 @@ steps:
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
       runAsPreJob: false
-      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      ConnectedServiceName: DCD-CFT-Sandbox
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'github-api-token'
 
