@@ -90,6 +90,10 @@ steps:
         --deployment $(open-ai-deployment) \
         --apiKey $(open-ai-api-key)
 
+  - publish: $(Build.ArtifactStagingDirectory)
+    displayName: 'Publish plans for later use'
+    artifact: TerraformPlan_$(tfPlanName)_HTML
+
   # - task: AzureCLI@2
   #   displayName: 'Upload plans to storage account'
   #   inputs:
