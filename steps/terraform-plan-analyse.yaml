@@ -1,0 +1,100 @@
+parameters:
+  - name: environment
+    default: sandbox
+
+  - name: stage
+    default: ''
+
+  - name: location
+    default: 'UK South'
+    values:
+      - 'UK South'
+      - 'UK West'
+
+  - name: multiRegion
+    default: false
+    type: boolean
+
+  - name: product
+    default: ''
+
+  - name: component
+    default: ''
+
+  - name: serviceConnection
+    default: ''
+
+  - name: terraformInitSubscription
+    default: ''
+
+  - name: kvConnectedServiceName
+    default: 'azurerm-sandbox'
+
+  - name: forcePreventParallelJobRun
+    displayName: Always force prevent parallem run job
+    type: boolean
+    default: false
+
+
+steps:
+  - checkout: self
+    clean: true
+  - checkout: cnp-azuredevops-libraries
+    clean: true
+  - bash: echo ${{ parameters.environment }}
+    displayName: Display environment parameter
+
+  - template: ./set-build-repo-suffix-env-var.yaml
+  - template: ./keyvault-read.yaml
+    parameters:
+      serviceConnection: ${{ parameters.serviceConnection }}
+      environment: ${{ parameters.environment }}
+
+  - task: AzureKeyVault@2
+    displayName: 'Get GitHub API token from Keyvault'
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'github-api-token'
+
+  - task: Bash@3
+    displayName: Build resource values
+    env:
+      STAGE: ${{ parameters.stage }}
+      MULTI_REGION: ${{ parameters.multiRegion }}
+      ENVIRONMENT: ${{ parameters.environment }}
+      COMPONENT: ${{ parameters.component }}
+      LOCATION: ${{ parameters.location }}
+    inputs:
+      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+
+  - task: AzureKeyVault@2
+    inputs:
+      azureSubscription: DCD-CFT-Sandbox
+      KeyVaultName: ek-terraform-parser
+      SecretsFilter: '*'
+
+  - task: Bash@3
+    displayName: Run AI parser script - ${{ parameters.component }}
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    inputs:
+      targetType: 'inline'
+      script: |
+        python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
+        --plans-dir $(Build.ArtifactStagingDirectory)
+    env:
+      OPEN_AI_ENDPOINT: "##vso[task.setvariable variable=openAiEndpoint;isOutput=true]$(open-ai-endpoint)"
+      OPEN_AI_DEPLOYMENT: "##vso[task.setvariable variable=openAiDeployment;isOutput=true]$(open-ai-deployment)"
+      AZURE_OPENAI_API_KEY: "##vso[task.setvariable variable=openAiApiKey;isOutput=true]$(open-ai-api-key)"
+
+  # - task: AzureCLI@2
+  #   displayName: 'Upload plans to storage account'
+  #   inputs:
+  #     scriptType: bash
+  #     scriptLocation: scriptPath
+  #     azureSubscription: ${{ parameters.serviceConnection }}
+  #     scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/upload-plan-to-storage.sh
+  #     arguments: ek-terraform-parser $(Build.Repository.Name) $(System.PullRequest.PullRequestNumber)

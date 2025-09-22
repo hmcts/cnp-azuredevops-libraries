@@ -2,6 +2,8 @@ import os
 import requests
 import argparse
 
+
+parser = argparse.ArgumentParser(description="Analyse terraform plans using AI")
 parser.add_argument("--plans-dir", type=str, help="Specify the path to the plans directory")
   
 

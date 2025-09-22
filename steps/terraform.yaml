@@ -231,24 +231,6 @@ steps:
     displayName: 'Publish plans for later use'
     artifact: TerraformPlans
 
-  - task: Bash@3
-    displayName: Run AI parser script - ${{ parameters.component }}
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
-    inputs:
-      targetType: 'inline'
-      script: |
-        python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
-        --plans-dir $(Build.ArtifactStagingDirectory)
-
-  # - task: AzureCLI@2
-  #   displayName: 'Upload plans to storage account'
-  #   inputs:
-  #     scriptType: bash
-  #     scriptLocation: scriptPath
-  #     azureSubscription: ${{ parameters.serviceConnection }}
-  #     scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/upload-plan-to-storage.sh
-  #     arguments: ek-terraform-parser $(Build.Repository.Name) $(System.PullRequest.PullRequestNumber)
-
   - task: TerraformCLI@1
     displayName: Terraform apply ${{ parameters.component }}
     ${{ if parameters.terraformEnvironmentVariables }}:
