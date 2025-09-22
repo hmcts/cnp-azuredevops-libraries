@@ -79,12 +79,13 @@ steps:
 
   - task: Bash@3
     displayName: Run AI parser script - ${{ parameters.component }}
-    condition: ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
       targetType: 'inline'
       script: |
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
         --plans-dir $(Build.ArtifactStagingDirectory)
+        --output-dir $(Build.ArtifactStagingDirectory)
     env:
       OPEN_AI_ENDPOINT: "##vso[task.setvariable variable=openAiEndpoint;isOutput=true]$(open-ai-endpoint)"
       OPEN_AI_DEPLOYMENT: "##vso[task.setvariable variable=openAiDeployment;isOutput=true]$(open-ai-deployment)"

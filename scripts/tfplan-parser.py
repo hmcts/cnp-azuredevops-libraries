@@ -5,6 +5,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Analyse terraform plans using AI")
 parser.add_argument("--plans-dir", type=str, help="Specify the path to the plans directory")
+parser.add_argument("--output-dir", type=str, help="Specify the path to the output directory")
   
 
 # Read all Terraform plans in the 'plans' folder and concatenate them
@@ -57,5 +58,6 @@ if html_output.lstrip().lower().startswith('```html'):
         html_output = html_output.rstrip()[:-3]
 
 # Save the HTML file  
-with open("plan.html", "w") as f:  
+output_path = os.path.join(args.output_dir, "plan.html")
+with open(output_path, "w") as f:
     f.write(html_output)
