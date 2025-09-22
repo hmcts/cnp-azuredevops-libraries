@@ -40,7 +40,7 @@ AZURE_OPENAI_API_KEY = args.apiKey
 api_url = f"{OPEN_AI_ENDPOINT}/openai/deployments/{OPEN_AI_DEPLOYMENT}/chat/completions?api-version=2023-03-15-preview"
 print(api_url)
 headers = {  
-    "api-key": os.environ["AZURE_OPENAI_API_KEY"],  
+    "api-key": {AZURE_OPENAI_API_KEY},  
     "Content-Type": "application/json"  
 }  
 payload = {  
