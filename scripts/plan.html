@@ -1,0 +1,293 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Terraform Plan Changes</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1em; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+    select { margin-right: 1em; }
+    .tag-change { background: #e7f7e7; }
+  </style>
+</head>
+<body>
+  <h2>Terraform Plan Changes</h2>
+  <div>
+    <label>Resource Type:
+      <select id="filter-type">
+        <option value="">All</option>
+      </select>
+    </label>
+    <label>Environment:
+      <select id="filter-env">
+        <option value="">All</option>
+      </select>
+    </label>
+    <label>Location:
+      <select id="filter-location">
+        <option value="">All</option>
+      </select>
+    </label>
+    <label>Tags Only Change:
+      <select id="filter-tags">
+        <option value="">All</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </label>
+  </div>
+  <table id="plan-table">
+    <thead>
+      <tr>
+        <th>Resource Type</th>
+        <th>Name</th>
+        <th>Environment</th>
+        <th>Location</th>
+        <th>Action</th>
+        <th>Tags Only Change</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Table rows inserted by JS -->
+    </tbody>
+  </table>
+<script>
+const data = [
+  // perftest
+  {
+    type: "azurerm_resource_group",
+    name: "disks2_resource_group",
+    env: "perftest",
+    location: "uksouth",
+    action: "create",
+    tagsOnly: "no",
+    details: "name: disks2-sbox-rg"
+  },
+  {
+    type: "azurerm_role_assignment",
+    name: "disk2",
+    env: "perftest",
+    location: "uksouth",
+    action: "create",
+    tagsOnly: "no",
+    details: "role_definition_name: Virtual Machine Contributor"
+  },
+  {
+    type: "azurerm_kubernetes_cluster_node_pool",
+    name: "additional_node_pools[linux]",
+    env: "perftest",
+    location: "uksouth",
+    action: "update",
+    tagsOnly: "no",
+    details: "max_count: 10 → 20"
+  },
+  // ithc
+  {
+    type: "azurerm_resource_group",
+    name: "disks4_resource_group",
+    env: "ithc",
+    location: "uksouth",
+    action: "create",
+    tagsOnly: "no",
+    details: "name: disks4-sbox-rg"
+  },
+  {
+    type: "azurerm_role_assignment",
+    name: "disk4",
+    env: "ithc",
+    location: "uksouth",
+    action: "create",
+    tagsOnly: "no",
+    details: "role_definition_name: Virtual Machine Contributor"
+  },
+  {
+    type: "azurerm_kubernetes_cluster_node_pool",
+    name: "additional_node_pools[linux]",
+    env: "ithc",
+    location: "uksouth",
+    action: "update",
+    tagsOnly: "no",
+    details: "max_count: 10 → 20"
+  },
+  // aat
+  {
+    type: "azurerm_resource_group",
+    name: "disks1_resource_group",
+    env: "aat",
+    location: "uksouth",
+    action: "create",
+    tagsOnly: "no",
+    details: "name: disks1-sbox-rg"
+  },
+  {
+    type: "azurerm_role_assignment",
+    name: "disk1",
+    env: "aat",
+    location: "uksouth",
+    action: "create",
+    tagsOnly: "no",
+    details: "role_definition_name: Virtual Machine Contributor"
+  },
+  {
+    type: "azurerm_kubernetes_cluster_node_pool",
+    name: "additional_node_pools[linux]",
+    env: "aat",
+    location: "uksouth",
+    action: "update",
+    tagsOnly: "no",
+    details: "max_count: 10 → 20"
+  },
+  // sbox
+  {
+    type: "azurerm_resource_group",
+    name: "disks_resource_group",
+    env: "sandbox",
+    location: "uksouth",
+    action: "create",
+    tagsOnly: "no",
+    details: "name: disks-sbox-rg"
+  },
+  {
+    type: "azurerm_role_assignment",
+    name: "disk",
+    env: "sandbox",
+    location: "uksouth",
+    action: "create",
+    tagsOnly: "no",
+    details: "role_definition_name: Virtual Machine Contributor"
+  },
+  {
+    type: "azurerm_kubernetes_cluster_node_pool",
+    name: "additional_node_pools[linux]",
+    env: "sandbox",
+    location: "uksouth",
+    action: "update",
+    tagsOnly: "no",
+    details: "max_count: 10 → 20"
+  },
+  // prod
+  {
+    type: "azurerm_resource_group",
+    name: "disks5_resource_group",
+    env: "prod",
+    location: "uksouth",
+    action: "create",
+    tagsOnly: "no",
+    details: "name: disks5-sbox-rg"
+  },
+  {
+    type: "azurerm_role_assignment",
+    name: "disk5",
+    env: "prod",
+    location: "uksouth",
+    action: "create",
+    tagsOnly: "no",
+    details: "role_definition_name: Virtual Machine Contributor"
+  },
+  {
+    type: "azurerm_kubernetes_cluster_node_pool",
+    name: "additional_node_pools[linux]",
+    env: "prod",
+    location: "uksouth",
+    action: "update",
+    tagsOnly: "no",
+    details: "max_count: 10 → 20"
+  },
+  // demo
+  {
+    type: "azurerm_resource_group",
+    name: "disks3_resource_group",
+    env: "demo",
+    location: "uksouth",
+    action: "create",
+    tagsOnly: "no",
+    details: "name: disks3-sbox-rg"
+  },
+  {
+    type: "azurerm_role_assignment",
+    name: "disk3",
+    env: "demo",
+    location: "uksouth",
+    action: "create",
+    tagsOnly: "no",
+    details: "role_definition_name: Virtual Machine Contributor"
+  },
+  {
+    type: "azurerm_kubernetes_cluster_node_pool",
+    name: "additional_node_pools[linux]",
+    env: "demo",
+    location: "uksouth",
+    action: "update",
+    tagsOnly: "no",
+    details: "max_count: 10 → 20"
+  }
+];
+
+// Populate filter dropdowns
+function populateFilters() {
+  const typeSet = new Set(), envSet = new Set(), locSet = new Set();
+  data.forEach(r => {
+    typeSet.add(r.type);
+    envSet.add(r.env);
+    locSet.add(r.location);
+  });
+  function fillSelect(id, values) {
+    const sel = document.getElementById(id);
+    values.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      sel.appendChild(opt);
+    });
+  }
+  fillSelect('filter-type', Array.from(typeSet).sort());
+  fillSelect('filter-env', Array.from(envSet).sort());
+  fillSelect('filter-location', Array.from(locSet).sort());
+}
+
+// Render table rows
+function renderTable() {
+  const type = document.getElementById('filter-type').value;
+  const env = document.getElementById('filter-env').value;
+  const loc = document.getElementById('filter-location').value;
+  const tags = document.getElementById('filter-tags').value;
+  const tbody = document.querySelector('#plan-table tbody');
+  tbody.innerHTML = '';
+  data.forEach(r => {
+    if ((type && r.type !== type) ||
+        (env && r.env !== env) ||
+        (loc && r.location !== loc) ||
+        (tags && ((tags === "yes" && r.tagsOnly !== "yes") || (tags === "no" && r.tagsOnly !== "no")))) {
+      return;
+    }
+    const tr = document.createElement('tr');
+    if (r.tagsOnly === "yes") tr.classList.add('tag-change');
+    tr.innerHTML = `
+      <td>${r.type}</td>
+      <td>${r.name}</td>
+      <td>${r.env}</td>
+      <td>${r.location}</td>
+      <td>${r.action}</td>
+      <td>${r.tagsOnly === "yes" ? "Yes" : "No"}</td>
+      <td>${r.details}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Attach filter events
+['filter-type','filter-env','filter-location','filter-tags'].forEach(id => {
+  document.getElementById(id).addEventListener('change', renderTable);
+});
+
+// Initialize
+populateFilters();
+renderTable();
+</script>
+</body>
+</html>
+```

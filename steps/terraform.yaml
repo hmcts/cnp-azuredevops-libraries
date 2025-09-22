@@ -191,7 +191,6 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        echo jsonPlan=$(terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[] | select(.change.actions != ["no-op"])')
         tfcmt --owner hmcts \
           --repo $(buildRepoSuffix) \
           --pr $(System.PullRequest.PullRequestNumber) \
@@ -207,6 +206,37 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+
+  - task: Bash@3
+    displayName: Copy plans to artifacts directory - ${{ parameters.component }}
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    inputs:
+      targetType: 'inline'
+      script: |
+        mkdir $(Build.ArtifactStagingDirectory)/tfPlans/$(System.PullRequest.PullRequestNumber)
+        cp tfplan-$(tfPlanName) $(Build.ArtifactStagingDirectory)/tfPlans/$(System.PullRequest.PullRequestNumber)
+
+  - publish: '$(Build.ArtifactStagingDirectory)/tfPlans/$(System.PullRequest.PullRequestNumber)'
+    displayName: 'Publish plans for later use'
+    artifact: TerraformPlans
+
+  # - task: Bash@3
+  #   displayName: Run AI parser script - ${{ parameters.component }}
+  #   condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+  #   inputs:
+  #     targetType: 'inline'
+  #     script: |
+  #       python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
+  #       --plans-dir $(Build.ArtifactStagingDirectory)
+
+  # - task: AzureCLI@2
+  #   displayName: 'Upload plans to storage account'
+  #   inputs:
+  #     scriptType: bash
+  #     scriptLocation: scriptPath
+  #     azureSubscription: ${{ parameters.serviceConnection }}
+  #     scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/upload-plan-to-storage.sh
+  #     arguments: ek-terraform-parser $(Build.Repository.Name) $(System.PullRequest.PullRequestNumber)
 
   - task: TerraformCLI@1
     displayName: Terraform apply ${{ parameters.component }}
