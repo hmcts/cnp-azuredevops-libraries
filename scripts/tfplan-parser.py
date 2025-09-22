@@ -11,8 +11,6 @@ parser.add_argument("--deployment", type=str, help="Specify the open ai deployme
 parser.add_argument("--apiKey", type=str, help="Specify the open ai api key")
 args = parser.parse_args()
 
-
-
 # Read all Terraform plans in the 'plans' folder and concatenate them
 plans_dir = args.plansDir
 plan_files = [os.path.join(plans_dir, f) for f in os.listdir(plans_dir) if os.path.isfile(os.path.join(plans_dir, f))]
@@ -39,8 +37,8 @@ AZURE_OPENAI_API_KEY = args.apiKey
 # Azure OpenAI API details (replace with your endpoint/key/deployment)  
 api_url = f"{OPEN_AI_ENDPOINT}/openai/deployments/{OPEN_AI_DEPLOYMENT}/chat/completions?api-version=2023-03-15-preview"
 print(api_url)
-headers = {  
-    "api-key": {AZURE_OPENAI_API_KEY},  
+headers = {
+    "api-key": f"{AZURE_OPENAI_API_KEY}",
     "Content-Type": "application/json"  
 }  
 payload = {  
