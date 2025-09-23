@@ -77,6 +77,18 @@ steps:
       KeyVaultName: ek-terraform-parser
       SecretsFilter: '*'
 
+  - task: AzureCLI@2
+    displayName: 'Download plans from blob'
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    inputs:
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        az storage azcopy blob download -c plan-html --account-name ekterraformparser -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*.txt" -d $(Build.ArtifactStagingDirectory)/plans/
+        ls -l $(Build.ArtifactStagingDirectory)
+        ls -l $(Build.ArtifactStagingDirectory)/plans/
+      azureSubscription: "DCD-CFT-Sandbox"
+
   - task: Bash@3
     displayName: Run AI parser script - ${{ parameters.component }}
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
@@ -99,10 +111,6 @@ steps:
       inlineScript: |
         az storage azcopy blob upload -c plan-html --account-name ekterraformparser -s $(Build.ArtifactStagingDirectory)/plan.html -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/plan.html"
       azureSubscription: "DCD-CFT-Sandbox"
-
-  - publish: $(Build.ArtifactStagingDirectory)
-    displayName: 'Publish plans for later use'
-    artifact: TerraformPlan_$(tfPlanName)_HTML
 
   # - task: AzureCLI@2
   #   displayName: 'Upload plans to storage account'
