@@ -236,19 +236,10 @@ steps:
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
     inputs:
       scriptType: bash
+      scriptLocation: inlineScript
       inlineScript: |
         az storage azcopy blob upload -c plan-txt --account-name ekterraformparser -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)"
       azureSubscription: "DCD-CFT-Sandbox"
-
-  - task: AzureFileCopy@4
-    inputs:
-      SourcePath: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt
-      azureSubscription: DCD-CFT-Sandbox
-      Destination: 'AzureBlob'
-      storage: ekterraformparser
-      ContainerName: plan-txt
-      BlobPrefix: '$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)'
-      resourceGroup: ek-terraform-parser
 
   - task: TerraformCLI@1
     displayName: Terraform apply ${{ parameters.component }}
