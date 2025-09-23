@@ -90,15 +90,14 @@ steps:
         --deployment $(open-ai-deployment) \
         --apiKey $(open-ai-api-key)
 
-  - task: AzureFileCopy@4
+  - task: AzureCLI@2
+    displayName: 'Upload html to blob'
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
     inputs:
-      SourcePath: $(Build.ArtifactStagingDirectory)/plan.html
-      azureSubscription: DCD-CFT-Sandbox
-      Destination: 'AzureBlob'
-      storage: ekterraformparser
-      ContainerName: plan-html
-      BlobPrefix: '$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)'
-      resourceGroup: ek-terraform-parser
+      scriptType: bash
+      inlineScript: |
+        az storage azcopy blob upload -c plan-html --account-name ekterraformparser -s $(Build.ArtifactStagingDirectory)/plan.html -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)"
+      azureSubscription: "DCD-CFT-Sandbox"
 
   - publish: $(Build.ArtifactStagingDirectory)
     displayName: 'Publish plans for later use'

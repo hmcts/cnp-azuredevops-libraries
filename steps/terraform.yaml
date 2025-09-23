@@ -231,6 +231,15 @@ steps:
     displayName: 'Publish plans for later use'
     artifact: TerraformPlan_$(tfPlanName)
 
+  - task: AzureCLI@2
+    displayName: 'Upload plans to blob'
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    inputs:
+      scriptType: bash
+      inlineScript: |
+        az storage azcopy blob upload -c plan-txt --account-name ekterraformparser -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)"
+      azureSubscription: "DCD-CFT-Sandbox"
+
   - task: AzureFileCopy@4
     inputs:
       SourcePath: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt
