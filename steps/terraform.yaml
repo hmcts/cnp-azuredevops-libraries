@@ -231,6 +231,16 @@ steps:
     displayName: 'Publish plans for later use'
     artifact: TerraformPlan_$(tfPlanName)
 
+  - task: AzureFileCopy@4
+    inputs:
+      SourcePath: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt
+      azureSubscription: DCD-CFT-Sandbox
+      Destination: 'AzureBlob'
+      storage: ekterraformparser
+      ContainerName: plan-txt
+      BlobPrefix: '$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)'
+      resourceGroup: ek-terraform-parser
+
   - task: TerraformCLI@1
     displayName: Terraform apply ${{ parameters.component }}
     ${{ if parameters.terraformEnvironmentVariables }}:

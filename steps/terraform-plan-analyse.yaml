@@ -90,6 +90,16 @@ steps:
         --deployment $(open-ai-deployment) \
         --apiKey $(open-ai-api-key)
 
+  - task: AzureFileCopy@4
+    inputs:
+      SourcePath: $(Build.ArtifactStagingDirectory)/plan.html
+      azureSubscription: DCD-CFT-Sandbox
+      Destination: 'AzureBlob'
+      storage: ekterraformparser
+      ContainerName: plan-html
+      BlobPrefix: '$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)'
+      resourceGroup: ek-terraform-parser
+
   - publish: $(Build.ArtifactStagingDirectory)
     displayName: 'Publish plans for later use'
     artifact: TerraformPlan_$(tfPlanName)_HTML
