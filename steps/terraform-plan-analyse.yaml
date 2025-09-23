@@ -96,7 +96,7 @@ steps:
       targetType: 'inline'
       script: |
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
-        --plansDir $(Build.ArtifactStagingDirectory) \
+        --plansDir $(Build.ArtifactStagingDirectory)/plans \
         --outputDir $(Build.ArtifactStagingDirectory) \
         --endpoint $(open-ai-endpoint) \
         --deployment $(open-ai-deployment) \
