@@ -92,7 +92,7 @@ steps:
 
   - task: AzureCLI@2
     displayName: 'Upload html to blob'
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
       scriptType: bash
       inlineScript: |
