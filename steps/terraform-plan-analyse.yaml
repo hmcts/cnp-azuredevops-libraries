@@ -84,8 +84,8 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        az storage azcopy blob download -c plan-html --account-name ekterraformparser -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*.txt" -d $(Build.ArtifactStagingDirectory)/plans/
-        ls -l $(Build.ArtifactStagingDirectory)
+        az storage azcopy blob download --auth-mode login -c plan-html --account-name ekterraformparser -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/plans/
+        mkdir $(Build.ArtifactStagingDirectory)/plans/
         ls -l $(Build.ArtifactStagingDirectory)/plans/
       azureSubscription: "DCD-CFT-Sandbox"
 
