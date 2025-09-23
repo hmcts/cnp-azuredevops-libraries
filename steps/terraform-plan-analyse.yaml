@@ -97,7 +97,7 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        az storage azcopy blob upload -c plan-html --account-name ekterraformparser -s $(Build.ArtifactStagingDirectory)/plan.html -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)"
+        az storage azcopy blob upload -c plan-html --account-name ekterraformparser -s $(Build.ArtifactStagingDirectory)/plan.html -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/plan.html"
       azureSubscription: "DCD-CFT-Sandbox"
 
   - publish: $(Build.ArtifactStagingDirectory)

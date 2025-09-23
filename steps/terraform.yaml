@@ -238,7 +238,7 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        az storage azcopy blob upload -c plan-txt --account-name ekterraformparser -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)"
+        az storage azcopy blob upload -c plan-txt --account-name ekterraformparser -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).txt"
       azureSubscription: "DCD-CFT-Sandbox"
 
   - task: TerraformCLI@1
