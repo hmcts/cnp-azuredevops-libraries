@@ -87,7 +87,6 @@ steps:
         mkdir $(Build.ArtifactStagingDirectory)/tfplans/
         mkdir $(Build.ArtifactStagingDirectory)/tfhtml/
         az storage azcopy blob download -c plan-html --account-name ekterraformparser -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/tfplans/ \
-        ls -l $(Build.ArtifactStagingDirectory)/tfplans/
       azureSubscription: "DCD-CFT-Sandbox"
 
   - task: Bash@3
