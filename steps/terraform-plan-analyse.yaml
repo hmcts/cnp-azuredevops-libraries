@@ -85,8 +85,8 @@ steps:
       scriptLocation: inlineScript
       inlineScript: |
         mkdir $(Build.ArtifactStagingDirectory)/tfplans/
+        mkdir $(Build.ArtifactStagingDirectory)/tfhtml/
         az storage azcopy blob download -c plan-html --account-name ekterraformparser -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/tfplans/
-        ls -l $(Build.ArtifactStagingDirectory)/tfplans/
       azureSubscription: "DCD-CFT-Sandbox"
 
   - task: Bash@3
@@ -96,8 +96,8 @@ steps:
       targetType: 'inline'
       script: |
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
-        --plansDir $(Build.ArtifactStagingDirectory)/tfplans \
-        --outputDir $(Build.ArtifactStagingDirectory) \
+        --plansDir $(Build.ArtifactStagingDirectory)/tfplans/$(System.PullRequest.PullRequestNumber) \
+        --outputDir $(Build.ArtifactStagingDirectory)/tfhtml/ \
         --endpoint $(open-ai-endpoint) \
         --deployment $(open-ai-deployment) \
         --apiKey $(open-ai-api-key)
@@ -109,7 +109,7 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        az storage azcopy blob upload -c plan-html --account-name ekterraformparser -s $(Build.ArtifactStagingDirectory)/plan.html -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/plan.html"
+        az storage azcopy blob upload -c plan-html --account-name ekterraformparser -s $(Build.ArtifactStagingDirectory)/tfhtml/plan.html -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/plan.html"
       azureSubscription: "DCD-CFT-Sandbox"
 
   # - task: AzureCLI@2
