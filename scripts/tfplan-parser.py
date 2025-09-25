@@ -19,7 +19,7 @@ for plan_file in plan_files:
     with open(plan_file) as f:
         all_plans.append(f"--- {os.path.basename(plan_file)} ---\n" + f.read())
 tf_plan = "\n\n".join(all_plans)
-print(f"The tfplan looks like this: {tfplan}")
+print(f"The tfplan looks like this: {tf_plan}")
 
 # Compose your prompt
 prompt = f"""
