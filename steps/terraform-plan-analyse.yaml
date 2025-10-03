@@ -86,7 +86,8 @@ steps:
       inlineScript: |
         mkdir $(Build.ArtifactStagingDirectory)/tfplans/
         mkdir $(Build.ArtifactStagingDirectory)/tfhtml/
-        az storage azcopy blob download -c plan-html --account-name ekterraformparser -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/tfplans/ \
+        az storage azcopy blob download -c plan-txt --account-name ekterraformparser -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/tfplans/ \
+        cat $(Build.ArtifactStagingDirectory)/tfplans/tfplan-${{ parameters.environment }}-aks.txt
       azureSubscription: "DCD-CFT-Sandbox"
 
   - task: Bash@3
