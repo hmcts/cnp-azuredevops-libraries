@@ -213,7 +213,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        terraform show tfplan-$(tfPlanName) > tfplan-$(tfPlanName).txt
+        terraform show tfplan-$(tfPlanName) > tfplan-${{ parameters.environment }}-${{ parameters.component }}.txt
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
