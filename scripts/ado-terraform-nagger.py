@@ -679,7 +679,7 @@ def main():
             result = json.loads(run_command(command, full_path))
 
             ### catch terraform init errors
-            command = ["terraform", "init", "-backend=false"  "-reconfigure", "-upgrade" ]
+            command = ["terraform", "init", "-backend=false" , "-reconfigure", "-upgrade" ]
             stdout, stderr = run_tf_init(command, full_path)
             
             if not 'Terraform has been successfully initialized!' in stdout:
