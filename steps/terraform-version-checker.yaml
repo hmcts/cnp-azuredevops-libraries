@@ -26,7 +26,9 @@ steps:
 
   - script: |
       echo " TESTING"
-      cd hub-panorama-terraform/components/infrastructure
+      
+      cd hub-panorama-terraform/components
+      grep -R "3.25"
       terraform init -reconfigure -upgrade -backend=false
       terraform providers
       ls
