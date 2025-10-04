@@ -27,7 +27,7 @@ steps:
   - script: |
       echo " TESTING"
       cd hub-panorama-terraform/components/infrastructure
-      terraform init -upgrade
+      terraform init -upgrade -backend=false
       terraform providers
       ls
     displayName: TESTING
