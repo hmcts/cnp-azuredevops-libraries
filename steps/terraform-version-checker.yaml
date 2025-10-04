@@ -29,6 +29,7 @@ steps:
       
       cd hub-panorama-terraform/components/configuration
       grep -R "3.25"
+      ls -l
       # terraform init -reconfigure -upgrade 
       # terraform providers
       ls
