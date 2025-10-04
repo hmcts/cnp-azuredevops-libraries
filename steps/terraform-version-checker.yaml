@@ -24,6 +24,10 @@ steps:
       secretsFilter: 'registry-slack-webhook'
 
 
+  - script: |
+      echo " TESTING"
+    displayName: TESTING
+
   - task: Bash@3
     displayName: Terraform Nagger
     inputs:
