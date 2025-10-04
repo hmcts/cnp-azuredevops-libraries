@@ -26,6 +26,7 @@ steps:
 
   - script: |
       echo " TESTING"
+      ls
     displayName: TESTING
 
   - task: Bash@3
