@@ -27,7 +27,7 @@ steps:
   - script: |
       echo " TESTING"
       cd hub-panorama-terraform/components
-      find . -name ".terraform.lock.hcl      
+      find . -name ".terraform.lock.hcl"      
       grep -R "3.25"
       ls -l
       # terraform init -reconfigure -upgrade 
