@@ -28,6 +28,7 @@ steps:
       echo " TESTING"
       find . -name ".terraform.lock.hcl"
       wget --spider -q --tries=2 --timeout=10 https://registry.terraform.io || exit 1
+      echo "nothing"
       ping -c 4 8.8.8.8 || exit 1
       cd hub-panorama-terraform/components/configuration
       grep -R "3.25"
