@@ -84,11 +84,6 @@
     <div class="panel">
       <div class="filters">
         <div class="filters-group">
-          <label>Resource Type
-            <select id="filter-type">
-              <option value="">All</option>
-            </select>
-          </label>
           <label>Environment
             <select id="filter-env">
               <option value="">All</option>
@@ -125,10 +120,10 @@
   <table id="tf-table" class="fade">
     <thead>
       <tr>
-        <th>Resource Type</th>
-        <th>Resource Name</th>
+        <th>Stage Name</th>
         <th>Environment</th>
         <th>Location</th>
+        <th>Resource Name</th>
         <th>Change Type</th>
         <th>Tags Only</th>
         <th>Details</th>
@@ -159,9 +154,8 @@
       });
     }
 
-  fillSelect('filter-type', getUnique(0));
-  fillSelect('filter-env', getUnique(2));
-  fillSelect('filter-location', getUnique(3));
+  fillSelect('filter-env', getUnique(1));
+  fillSelect('filter-location', getUnique(2));
   fillSelect('filter-change', getUnique(4));
 
     // Decorate existing rows (badges + tag-only styling)
@@ -193,7 +187,6 @@
     }
 
     function filterTable() {
-    const type = document.getElementById('filter-type').value.trim();
     const env = document.getElementById('filter-env').value.trim();
     const loc = document.getElementById('filter-location').value.trim();
     const change = document.getElementById('filter-change').value.trim();
@@ -202,13 +195,11 @@
       let visible = 0;
       rows.forEach(row => {
         let show = true;
-  const resourceType = row.cells[0].textContent;
-  const envVal = row.cells[2].textContent;
-  const locVal = row.cells[3].textContent;
+  const envVal = row.cells[1].textContent;
+  const locVal = row.cells[2].textContent;
   const changeVal = row.cells[4].textContent.trim();
   const tagsVal = row.cells[5].textContent.toLowerCase();
         const strings = row.textContent.toLowerCase();
-        if (type && resourceType !== type) show = false;
         if (env && envVal !== env) show = false;
         if (loc && locVal !== loc) show = false;
         if (change && changeVal !== change) show = false;
@@ -226,7 +217,7 @@
     }
 
     function resetFilters() {
-      ['filter-type','filter-env','filter-location','filter-change','filter-tags','search-text'].forEach(id => {
+  ['filter-env','filter-location','filter-change','filter-tags','search-text'].forEach(id => {
         const el = document.getElementById(id);
         if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value='';
       });

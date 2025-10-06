@@ -27,7 +27,7 @@ tf_plan = "\n\n".join(all_plans)
 print(f"The tfplan looks like this: {tf_plan}")
 
 # Compose your prompt for ONLY table rows matching the new template's column order (Plan File column removed).
-# Columns (in order now): Resource Type | Resource Name | Environment | Location | Change Type | Tags Only | Details
+# Columns (in order now): Stage Name | Environment | Location | Resource Name | Change Type | Tags Only | Details
 # Requirements:
 #  - Change Type: create | update in-place | delete (or destroy) derived from plan symbols (+, ~, -) or wording.
 #  - Tags Only: 'Yes' ONLY if the ONLY change for that resource is tags/labels metadata; else 'No'.
@@ -45,10 +45,10 @@ print(f"The tfplan looks like this: {tf_plan}")
 
 prompt = f"""
 You are given concatenated terraform plan outputs. Produce one HTML <tr> row per actual Terraform managed change (excluding drift-only changes) with exactly 7 <td> cells in this order:
-1) Resource Type
-2) Resource Name
-3) Environment (infer from plan file marker name if present: e.g. tfplan-aat-network.txt -> aat, tfplan-preview- -> preview, tfplan-sbox- or ptlsbox -> sandbox, perftest -> testing; keep lowercase; if not inferable leave as-is or derive from resource naming.)
-4) Location (default 'uksouth' if unspecified)
+1) Stage Name (derived from the plan file name by stripping leading pattern tfplan-<env>- and the file extension; examples: tfplan-aat-network.txt -> network; tfplan-preview-platform.txt -> platform; tfplan-sbox-storage.txt -> storage. If pattern not found, use filename without extension.)
+2) Environment (infer from plan file marker name if present: e.g. tfplan-aat-network.txt -> aat, tfplan-preview- -> preview, tfplan-sbox- or ptlsbox -> sandbox, perftest -> testing; keep lowercase; if not inferable derive from resource naming.)
+3) Location (default 'uksouth' if unspecified)
+4) Resource Name
 5) Change Type (create | update in-place | delete). Treat replacements ("-/+") as update in-place unless it's a pure destroy.
 6) Tags Only ('Yes' only if ONLY tag metadata differs; else 'No').
 7) Details (succinct attribute/tag change notes, e.g. 'tags added', 'Kubernetes version change', 'max_count: 3 → 5').
@@ -56,7 +56,7 @@ You are given concatenated terraform plan outputs. Produce one HTML <tr> row per
 Ignore and DO NOT output rows for drift sections (changes outside of Terraform) or manual deletions where the plan simply recreates the resource; in those cases output only the resulting create action.
 Exclude any lines that are commentary, import suggestions, or purely informational (# (known after apply), # (import ...)).
 
-Input plans are delimited by lines: --- <planfile> --- (planfile names are for context only; DO NOT output them as a column).
+Input plans are delimited by lines: --- <planfile> --- (planfile names are for deriving Stage Name & Environment only; DO NOT output the raw filename directly unless processed into Stage Name as specified).
 
 Terraform Plans:
 {tf_plan}
@@ -141,7 +141,7 @@ def _fix_tag_only(ai_html: str) -> str:
         out.append(ai_html[pos:m.start()])
         row_html = m.group(0)
         tds = td_re.findall(row_html)
-        # Expect 7 columns: Resource Type, Name, Env, Location, Change Type, Tags Only, Details
+        # Expect 7 columns now: Stage Name, Environment, Location, Resource Name, Change Type, Tags Only, Details
         if len(tds) == 7:
             tags_only_val = tds[5].strip().lower()
             details_val = re.sub(r'<[^>]+>', '', tds[6])  # strip inner HTML if any
