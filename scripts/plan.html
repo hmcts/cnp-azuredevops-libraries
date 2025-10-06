@@ -99,6 +99,11 @@
               <option value="">All</option>
             </select>
           </label>
+          <label>Change Type
+            <select id="filter-change">
+              <option value="">All</option>
+            </select>
+          </label>
           <label>Tags Only
             <select id="filter-tags">
               <option value="">All</option>
@@ -120,7 +125,6 @@
   <table id="tf-table" class="fade">
     <thead>
       <tr>
-        <th>Plan File</th>
         <th>Resource Type</th>
         <th>Resource Name</th>
         <th>Environment</th>
@@ -155,26 +159,27 @@
       });
     }
 
-    fillSelect('filter-type', getUnique(1));
-    fillSelect('filter-env', getUnique(3));
-    fillSelect('filter-location', getUnique(4));
+  fillSelect('filter-type', getUnique(0));
+  fillSelect('filter-env', getUnique(2));
+  fillSelect('filter-location', getUnique(3));
+  fillSelect('filter-change', getUnique(4));
 
     // Decorate existing rows (badges + tag-only styling)
     rows.forEach(r => {
       // Change type badge
-      const changeCell = r.cells[5];
+  const changeCell = r.cells[4];
       const txt = changeCell.textContent.trim().toLowerCase();
       let cls = 'change-update';
       if (txt.startsWith('create')) cls = 'change-create';
       else if (txt.startsWith('delete') || txt.startsWith('destroy')) cls = 'change-delete';
       changeCell.innerHTML = `<span class="badge ${cls}">${changeCell.textContent}</span>`;
       // Tags badge
-      const tagsCell = r.cells[6];
+  const tagsCell = r.cells[5];
       const tYes = tagsCell.textContent.trim().toLowerCase() === 'yes';
   tagsCell.innerHTML = `<span class="badge ${tYes ? 'tag-yes' : 'tag-no'}">${tYes ? 'Yes' : 'No'}</span>`;
       if (tYes) r.classList.add('tag-only-row');
       // Details formatting (monospace for resource names inside quotes )
-      const detailsCell = r.cells[7];
+  const detailsCell = r.cells[6];
       detailsCell.innerHTML = detailsCell.textContent
         .replace(/(\bversion\b)/ig,'<strong>$1</strong>')
         .replace(/(tags?)/ig,'<strong>$1</strong>');
@@ -188,22 +193,25 @@
     }
 
     function filterTable() {
-      const type = document.getElementById('filter-type').value.trim();
-      const env = document.getElementById('filter-env').value.trim();
-      const loc = document.getElementById('filter-location').value.trim();
-      const tags = document.getElementById('filter-tags').value.trim();
+    const type = document.getElementById('filter-type').value.trim();
+    const env = document.getElementById('filter-env').value.trim();
+    const loc = document.getElementById('filter-location').value.trim();
+    const change = document.getElementById('filter-change').value.trim();
+    const tags = document.getElementById('filter-tags').value.trim();
       const search = document.getElementById('search-text').value.toLowerCase().trim();
       let visible = 0;
       rows.forEach(row => {
         let show = true;
-        const resourceType = row.cells[1].textContent;
-        const envVal = row.cells[3].textContent;
-        const locVal = row.cells[4].textContent;
-        const tagsVal = row.cells[6].textContent.toLowerCase();
+  const resourceType = row.cells[0].textContent;
+  const envVal = row.cells[2].textContent;
+  const locVal = row.cells[3].textContent;
+  const changeVal = row.cells[4].textContent.trim();
+  const tagsVal = row.cells[5].textContent.toLowerCase();
         const strings = row.textContent.toLowerCase();
         if (type && resourceType !== type) show = false;
         if (env && envVal !== env) show = false;
         if (loc && locVal !== loc) show = false;
+        if (change && changeVal !== change) show = false;
         if (tags) {
           if (tags === 'yes' && tagsVal !== 'yes') show = false;
           if (tags === 'no' && tagsVal !== 'no') show = false;
@@ -218,7 +226,7 @@
     }
 
     function resetFilters() {
-      ['filter-type','filter-env','filter-location','filter-tags','search-text'].forEach(id => {
+      ['filter-type','filter-env','filter-location','filter-change','filter-tags','search-text'].forEach(id => {
         const el = document.getElementById(id);
         if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value='';
       });
@@ -227,7 +235,8 @@
 
     document.getElementById('filter-type').addEventListener('change', filterTable);
     document.getElementById('filter-env').addEventListener('change', filterTable);
-    document.getElementById('filter-location').addEventListener('change', filterTable);
+  document.getElementById('filter-location').addEventListener('change', filterTable);
+  document.getElementById('filter-change').addEventListener('change', filterTable);
     document.getElementById('filter-tags').addEventListener('change', filterTable);
     document.getElementById('search-text').addEventListener('input', filterTable);
     document.getElementById('reset-btn').addEventListener('click', resetFilters);

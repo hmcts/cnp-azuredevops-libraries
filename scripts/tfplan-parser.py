@@ -26,35 +26,42 @@ for plan_file in plan_files:
 tf_plan = "\n\n".join(all_plans)
 print(f"The tfplan looks like this: {tf_plan}")
 
-# Compose your prompt for ONLY table rows matching the new template's column order.
-# Columns (in order): Plan File | Resource Type | Resource Name | Environment | Location | Change Type | Tags Only | Details
+# Compose your prompt for ONLY table rows matching the new template's column order (Plan File column removed).
+# Columns (in order now): Resource Type | Resource Name | Environment | Location | Change Type | Tags Only | Details
 # Requirements:
-#  - Change Type: use concise verbs: create | update in-place | delete (or destroy) as per plan semantics
-#  - Tags Only: 'Yes' ONLY if the ONLY detected changes for that resource are tag additions/removals/modifications; otherwise 'No'.
-#  - Location: if absent in plan, use 'uksouth'.
-#  - Plan File: must be the originating plan file name (e.g. tfplan-aat-network.txt) exactly as provided between --- markers.
-#  - Escape HTML entities in names or details (&, <, >).
-#  - DO NOT wrap the output in <table>, <tbody>, <html>, or markdown fences. Return ONLY one or more <tr>...</tr> rows.
-#  - Each <td> must be in the exact column order; do not add extra columns.
-#  - Avoid summarising across environments; list each resource occurrence separately.
+#  - Change Type: create | update in-place | delete (or destroy) derived from plan symbols (+, ~, -) or wording.
+#  - Tags Only: 'Yes' ONLY if the ONLY change for that resource is tags/labels metadata; else 'No'.
+#  - Location: if absent in plan, default to 'uksouth'.
+#  - Ignore/exclude any drift sections or changes reported as "changed outside of Terraform" OR sections under notes like:
+#       "Terraform detected the following changes made outside of Terraform" / "objects have changed outside of Terraform".
+#    Do NOT emit rows for resources that are only mentioned in those drift sections. If a resource was deleted manually and will
+#    be recreated, output only the creation (do not output a separate delete). If plan shows a replace ("-/+"), treat as update in-place
+#    unless it is a full destroy without recreation.
+#  - Ignore any import suggestions or lines starting with "# (import" or "# (known after apply)" that don't constitute actual change actions.
+#  - Escape HTML entities (&, <, >) in names or details.
+#  - DO NOT wrap the output in <table>, <tbody>, <html>, or markdown fences. Return ONLY <tr> rows.
+#  - Each <td> must be in the exact 7-column order above; no extra columns.
+#  - List each resource occurrence separately; do not aggregate.
 
 prompt = f"""
-You are given concatenated terraform plan outputs. For EACH resource change produce one HTML table row (<tr>...</tr>) with exactly 8 <td> cells in this order:
-1) Plan File
-2) Resource Type
-3) Resource Name
-4) Environment (infer from filename if embedded e.g. tfplan-aat-network.txt -> aat, tfplan-preview-aks.txt -> preview, tfplan-sbox- -> sandbox, ptlsbox -> sandbox, perftest -> testing, if ambiguous leave as given or derive from resource naming). Keep original environment token (lowercase).
-5) Location (default 'uksouth' if not present)
-6) Change Type (create | update in-place | delete) matching plan semantics (+ create, ~ update, - delete)
-7) Tags Only (Yes if ONLY tag changes else No)
-8) Details (concise: list key attribute changes or 'tags added', 'tags removed', 'tags changed', 'Kubernetes version change', etc.)
+You are given concatenated terraform plan outputs. Produce one HTML <tr> row per actual Terraform managed change (excluding drift-only changes) with exactly 7 <td> cells in this order:
+1) Resource Type
+2) Resource Name
+3) Environment (infer from plan file marker name if present: e.g. tfplan-aat-network.txt -> aat, tfplan-preview- -> preview, tfplan-sbox- or ptlsbox -> sandbox, perftest -> testing; keep lowercase; if not inferable leave as-is or derive from resource naming.)
+4) Location (default 'uksouth' if unspecified)
+5) Change Type (create | update in-place | delete). Treat replacements ("-/+") as update in-place unless it's a pure destroy.
+6) Tags Only ('Yes' only if ONLY tag metadata differs; else 'No').
+7) Details (succinct attribute/tag change notes, e.g. 'tags added', 'Kubernetes version change', 'max_count: 3 → 5').
 
-Input plans below delimited by lines beginning with '--- <planfile> ---'. Use the planfile for column 1.
+Ignore and DO NOT output rows for drift sections (changes outside of Terraform) or manual deletions where the plan simply recreates the resource; in those cases output only the resulting create action.
+Exclude any lines that are commentary, import suggestions, or purely informational (# (known after apply), # (import ...)).
+
+Input plans are delimited by lines: --- <planfile> --- (planfile names are for context only; DO NOT output them as a column).
 
 Terraform Plans:
 {tf_plan}
 
-Return ONLY <tr> rows, no surrounding code fences or commentary.
+Return ONLY <tr> rows, no code fences or additional commentary.
 """
 
 OPEN_AI_ENDPOINT = args.endpoint
