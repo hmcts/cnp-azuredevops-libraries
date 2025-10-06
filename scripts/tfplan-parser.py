@@ -50,7 +50,7 @@ You are given concatenated terraform plan outputs. Produce one HTML <tr> row per
 3) Location (default 'uksouth' if unspecified)
 4) Resource Name
 5) Change Type (create | update in-place | delete). Treat replacements ("-/+") as update in-place unless it's a pure destroy.
-6) Tags Only ('Yes' only if ONLY tag metadata differs; else 'No').
+6) Tags Only ('Yes' only if the Change Type is 'update in-place' and the update being made is to change the values of Azure resource tags; else 'No').
 7) If a resource is being created and that resource has tags then the Change Type should be 'create' and the Tags Only value should be 'No'
 8) Details (succinct attribute/tag change notes, e.g. 'tags added', 'Kubernetes version change', 'max_count: 3 → 5').
 
