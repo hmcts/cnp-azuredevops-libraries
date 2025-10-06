@@ -51,7 +51,8 @@ You are given concatenated terraform plan outputs. Produce one HTML <tr> row per
 4) Resource Name
 5) Change Type (create | update in-place | delete). Treat replacements ("-/+") as update in-place unless it's a pure destroy.
 6) Tags Only ('Yes' only if ONLY tag metadata differs; else 'No').
-7) Details (succinct attribute/tag change notes, e.g. 'tags added', 'Kubernetes version change', 'max_count: 3 → 5').
+7) If a resource is being created and that resource has tags then the Change Type should be 'create' and the Tags Only value should be 'No'
+8) Details (succinct attribute/tag change notes, e.g. 'tags added', 'Kubernetes version change', 'max_count: 3 → 5').
 
 Ignore and DO NOT output rows for drift sections (changes outside of Terraform) or manual deletions where the plan simply recreates the resource; in those cases output only the resulting create action.
 Exclude any lines that are commentary, import suggestions, or purely informational (# (known after apply), # (import ...)).
