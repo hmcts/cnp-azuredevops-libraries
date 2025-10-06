@@ -57,6 +57,14 @@
     .badge.tag-no { background: var(--muted); color: #fff; }
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
     thead th { background: linear-gradient(var(--bg-alt), var(--bg)); position: sticky; top: 0; z-index: 5; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-soft); padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); }
+  thead th.sortable { cursor: pointer; user-select: none; }
+  thead th.sortable:hover { color: var(--accent); }
+  thead th.sortable .sort-indicator { margin-left: 4px; font-size: 0.65rem; opacity: 0.7; }
+  thead th.sortable.sorted-asc .sort-indicator { content: '▲'; }
+  thead th.sortable.sorted-desc .sort-indicator { content: '▼'; }
+  /* Fallback for browsers without ::before content updates */
+  thead th.sortable.sorted-asc .sort-indicator::before { content: '▲'; }
+  thead th.sortable.sorted-desc .sort-indicator::before { content: '▼'; }
     tbody td { padding: 0.55rem 0.65rem; font-size: 0.8rem; border-top: 1px solid var(--border); vertical-align: top; }
     tbody tr:nth-child(even) { background: rgba(0,0,0,0.02); }
     @media (prefers-color-scheme: dark) { tbody tr:nth-child(even) { background: rgba(255,255,255,0.04); } }
@@ -125,8 +133,8 @@
   <table id="tf-table" class="fade">
     <thead>
       <tr>
-        <th>Stage Name</th>
-        <th>Environment</th>
+  <th class="sortable" data-col="0">Stage Name <span class="sort-indicator"></span></th>
+  <th class="sortable" data-col="1">Environment <span class="sort-indicator"></span></th>
         <th>Location</th>
         <th>Resource Name</th>
         <th>Change Type</th>
@@ -243,6 +251,36 @@
 
     // Initial meta
     updateMeta();
+
+    // --- Sorting Logic for Stage Name (col 0) and Environment (col 1) ---
+    let currentSort = { col: null, dir: 1 }; // dir: 1 asc, -1 desc
+    function sortBy(col, thEl) {
+      // Toggle direction
+      if (currentSort.col === col) {
+        currentSort.dir *= -1;
+      } else {
+        currentSort.col = col;
+        currentSort.dir = 1;
+      }
+      const dir = currentSort.dir;
+      // Clear previous indicators
+      document.querySelectorAll('thead th.sortable').forEach(th => th.classList.remove('sorted-asc','sorted-desc'));
+      thEl.classList.add(dir === 1 ? 'sorted-asc' : 'sorted-desc');
+      const tbody = table.tBodies[0];
+      // Slice to avoid mutating original array order reference if needed later
+      const sorted = rows.slice().sort((a,b) => {
+        const av = a.cells[col].textContent.trim().toLowerCase();
+        const bv = b.cells[col].textContent.trim().toLowerCase();
+        if (av === bv) return 0;
+        if (av === '') return 1; // empty last
+        if (bv === '') return -1;
+        return av > bv ? dir : -dir;
+      });
+      sorted.forEach(r => tbody.appendChild(r));
+    }
+    document.querySelectorAll('thead th.sortable').forEach(th => {
+      th.addEventListener('click', () => sortBy(parseInt(th.dataset.col,10), th));
+    });
   </script>
 </body>
 </html>
