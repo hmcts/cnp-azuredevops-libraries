@@ -29,13 +29,13 @@ print(f"The tfplan looks like this: {tf_plan}")
 # Compose your prompt for ONLY table rows matching the new template's column order (Plan File column removed).
 # Columns (in order now): Stage Name | Environment | Location | Resource Name | Change Type | Tags Only | Details
 # Requirements:
-#  - Change Type: create | update in-place | delete (or destroy) derived from plan symbols (+, ~, -) or wording.
+#  - Change Type: create | update | delete (or destroy) derived from plan symbols (+, ~, -) or wording.
 #  - Tags Only: 'Yes' ONLY if the ONLY change for that resource is tags/labels metadata; else 'No'.
 #  - Location: if absent in plan, default to 'uksouth'.
 #  - Ignore/exclude any drift sections or changes reported as "changed outside of Terraform" OR sections under notes like:
 #       "Terraform detected the following changes made outside of Terraform" / "objects have changed outside of Terraform".
 #    Do NOT emit rows for resources that are only mentioned in those drift sections. If a resource was deleted manually and will
-#    be recreated, output only the creation (do not output a separate delete). If plan shows a replace ("-/+"), treat as update in-place
+#    be recreated, output only the creation (do not output a separate delete). If plan shows a replace ("-/+"), treat as update
 #    unless it is a full destroy without recreation.
 #  - Ignore any import suggestions or lines starting with "# (import" or "# (known after apply)" that don't constitute actual change actions.
 #  - Escape HTML entities (&, <, >) in names or details.
@@ -49,8 +49,8 @@ You are given concatenated terraform plan outputs. Produce one HTML <tr> row per
 2) Environment (infer from plan file marker name if present: e.g. tfplan-aat-network.txt -> aat, tfplan-preview- -> preview, tfplan-sbox- or ptlsbox -> sandbox, perftest -> testing; keep lowercase; if not inferable derive from resource naming.)
 3) Location (default 'uksouth' if unspecified)
 4) Resource Name
-5) Change Type (create | update in-place | delete). Treat replacements ("-/+") as update in-place unless it's a pure destroy.
-6) Tags Only ('Yes' only if the Change Type is 'update in-place' and the update being made is to change the values of Azure resource tags; else 'No').
+5) Change Type (create | update | delete). Treat replacements ("-/+") as update unless it's a pure destroy.
+6) Tags Only ('Yes' only if the Change Type is 'update' and the update being made is to change the values of Azure resource tags; else 'No').
 7) If a resource is being created and that resource has tags then the Change Type should be 'create' and the Tags Only value should be 'No'
 8) Details (succinct attribute/tag change notes, e.g. 'tags added', 'Kubernetes version change', 'max_count: 3 → 5').
 
