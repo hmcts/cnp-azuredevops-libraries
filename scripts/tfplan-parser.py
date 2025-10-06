@@ -105,6 +105,69 @@ ai_rows = re.sub(r"</?(?:table|tbody)[^>]*>", "", ai_rows, flags=re.IGNORECASE)
 if '<tr' not in ai_rows.lower():
     print("[WARN] AI output did not contain <tr>; writing raw output for inspection.")
 
+# --- Post-process to correct 'Tags Only' column heuristically if AI misclassified ---
+def _is_tag_only_details(text: str) -> bool:
+    tl = text.lower().strip()
+    if 'tag' not in tl:
+        return False
+    # Positive indicative patterns
+    positive_patterns = [
+        'tags added', 'tags removed', 'tags changed', 'tag added', 'tag removed', 'tag changed',
+        'builtfrom tag changed', 'environment tag changed', 'criticality tag changed'
+    ]
+    if any(p in tl for p in positive_patterns):
+        # Exclude if other non-tag keywords suggesting broader changes
+        forbidden = ['version', 'count', 'size', 'sku', 'role', 'orchestrator', 'max_', 'capacity', 'image', 'policy', 'network', 'subnet']
+        if not any(f in tl for f in forbidden):
+            # Also exclude if arrow changes present for non-tag attributes (colon or arrow patterns without 'tag')
+            structural_change = ('→' in tl or '->' in tl or ':' in tl)
+            # If structural change exists but every segment with arrow/colon also contains 'tag', still ok
+            if structural_change:
+                # Split on commas or semicolons; if any segment with arrow/colon lacks 'tag', treat as not tag-only
+                segments = re.split(r'[;,]', tl)
+                for seg in segments:
+                    if ('→' in seg or '->' in seg or ':' in seg) and 'tag' not in seg:
+                        return False
+            return True
+    return False
+
+def _fix_tag_only(ai_html: str) -> str:
+    row_re = re.compile(r'(<tr[^>]*>)([\s\S]*?)(</tr>)', re.IGNORECASE)
+    td_re = re.compile(r'<td[^>]*>([\s\S]*?)</td>', re.IGNORECASE)
+    out = []
+    modified = 0
+    pos = 0
+    for m in row_re.finditer(ai_html):
+        out.append(ai_html[pos:m.start()])
+        row_html = m.group(0)
+        tds = td_re.findall(row_html)
+        # Expect 7 columns: Resource Type, Name, Env, Location, Change Type, Tags Only, Details
+        if len(tds) == 7:
+            tags_only_val = tds[5].strip().lower()
+            details_val = re.sub(r'<[^>]+>', '', tds[6])  # strip inner HTML if any
+            if tags_only_val in ('no', 'n', 'false') and _is_tag_only_details(details_val):
+                # Replace the 6th td content with 'Yes'
+                # Reconstruct row by substituting only that td
+                def replace_td(match):
+                    nonlocal modified
+                    inner = match.group(1)
+                    idx = replace_td.idx
+                    replace_td.idx += 1
+                    if idx == 5:
+                        modified += 1
+                        return match.group(0).replace(inner, 'Yes')
+                    return match.group(0)
+                replace_td.idx = 0
+                row_html = td_re.sub(replace_td, row_html)
+        out.append(row_html)
+        pos = m.end()
+    out.append(ai_html[pos:])
+    if modified:
+        print(f"[INFO] Corrected Tags Only classification for {modified} row(s)")
+    return ''.join(out)
+
+ai_rows = _fix_tag_only(ai_rows)
+
 # Load template
 template_path = args.templateFile
 if not os.path.isfile(template_path):
