@@ -84,6 +84,11 @@
     <div class="panel">
       <div class="filters">
         <div class="filters-group">
+          <label>Stage Name
+            <select id="filter-stage">
+              <option value="">All</option>
+            </select>
+          </label>
           <label>Environment
             <select id="filter-env">
               <option value="">All</option>
@@ -154,6 +159,7 @@
       });
     }
 
+  fillSelect('filter-stage', getUnique(0));
   fillSelect('filter-env', getUnique(1));
   fillSelect('filter-location', getUnique(2));
   fillSelect('filter-change', getUnique(4));
@@ -187,7 +193,8 @@
     }
 
     function filterTable() {
-    const env = document.getElementById('filter-env').value.trim();
+  const stage = document.getElementById('filter-stage').value.trim();
+  const env = document.getElementById('filter-env').value.trim();
     const loc = document.getElementById('filter-location').value.trim();
     const change = document.getElementById('filter-change').value.trim();
     const tags = document.getElementById('filter-tags').value.trim();
@@ -195,12 +202,14 @@
       let visible = 0;
       rows.forEach(row => {
         let show = true;
+  const stageVal = row.cells[0].textContent;
   const envVal = row.cells[1].textContent;
   const locVal = row.cells[2].textContent;
   const changeVal = row.cells[4].textContent.trim();
   const tagsVal = row.cells[5].textContent.toLowerCase();
         const strings = row.textContent.toLowerCase();
-        if (env && envVal !== env) show = false;
+  if (stage && stageVal !== stage) show = false;
+  if (env && envVal !== env) show = false;
         if (loc && locVal !== loc) show = false;
         if (change && changeVal !== change) show = false;
         if (tags) {
@@ -217,15 +226,15 @@
     }
 
     function resetFilters() {
-  ['filter-env','filter-location','filter-change','filter-tags','search-text'].forEach(id => {
+  ['filter-stage','filter-env','filter-location','filter-change','filter-tags','search-text'].forEach(id => {
         const el = document.getElementById(id);
         if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value='';
       });
       filterTable();
     }
 
-    document.getElementById('filter-type').addEventListener('change', filterTable);
-    document.getElementById('filter-env').addEventListener('change', filterTable);
+  document.getElementById('filter-stage').addEventListener('change', filterTable);
+  document.getElementById('filter-env').addEventListener('change', filterTable);
   document.getElementById('filter-location').addEventListener('change', filterTable);
   document.getElementById('filter-change').addEventListener('change', filterTable);
     document.getElementById('filter-tags').addEventListener('change', filterTable);
