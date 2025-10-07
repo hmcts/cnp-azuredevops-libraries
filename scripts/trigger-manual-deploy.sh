@@ -70,19 +70,28 @@ function get_access_token() {
 }
 
 function trigger_workflow() {
+  access_token=$1
+  selected_mode=$2
+  selected_area=$3
+  # SELECTED_ENV in workflow action now expects "Sandbox" value not "sbox" so translate that
+  selected_env=$4
+  if [[ "$selected_env" == "sbox" ]]; then
+    selected_env="Sandbox"
+  fi
+  
   # Trigger the workflow dispatch event using dedicated GitHub App with action: write permission on auto-shutdown repo
   # See: AKS Manual Start Workflow GitHub App in Platform Operations/HMCTS GitHub Apps
   curl -L \
          -X POST \
          -H "Accept: application/vnd.github+json" \
-         -H "Authorization: Bearer $1" \
+         -H "Authorization: Bearer ${access_token}" \
          -H "X-GitHub-Api-Version: 2022-11-28" \
          https://api.github.com/repos/hmcts/auto-shutdown/actions/workflows/manual-start-stop.yaml/dispatches \
          -d "{ \"ref\": \"master\",
                 \"inputs\": {
-                  \"SELECTED_MODE\": \"$2\",
-                  \"SELECTED_AREA\": \"$3\",
-                  \"SELECTED_ENV\": \"$4\"
+                  \"SELECTED_MODE\": \"${selected_mode}\",
+                  \"SELECTED_AREA\": \"${selected_area}\",
+                  \"SELECTED_ENV\": \"${selected_env}\"
                 }
               }"
 }
@@ -127,6 +136,7 @@ function start_unhealthy_environments() {
     echo "$project in $environment is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
   else
     echo "[info] $project in $environment not healthy, triggering auto manual start workflow for $project in $environment"
+
     trigger_workflow "${GITHUB_APP_INSTALLATION_ACCESS_TOKEN}" "$MODE" "$project" "$environment"
     echo "[info] Manual start workflow for $project in $environment triggered.. waiting 5 minutes for environment to start"
 

@@ -71,6 +71,7 @@ steps:
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
       inlineScript: |
+        set -euo pipefail
         # Create temporary file for private key
         TEMP_KEY_FILE=$(mktemp)
         echo "$(aks-manual-start-github-app-priv-key)" > "$TEMP_KEY_FILE"
