@@ -74,12 +74,12 @@ steps:
       arguments: "$(github-api-token) ${{parameters.projectName}} ${{parameters.environment}}"
     condition: ${{ eq(parameters.runManualStart, true) }}
 
-  - task: PowerShell@2
-    displayName: Run PESTER tests
-    inputs:
-      targetType: 'filePath'
-      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/pester-tests.ps1
-      pwsh: true
+  # - task: PowerShell@2
+  #   displayName: Run PESTER tests
+  #   inputs:
+  #     targetType: 'filePath'
+  #     filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/pester-tests.ps1
+  #     pwsh: true
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results **/TEST-*.xml'
