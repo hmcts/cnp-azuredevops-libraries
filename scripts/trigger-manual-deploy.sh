@@ -118,7 +118,7 @@ function check_environment_health() {
 function start_unhealthy_environments() {
   # Only generate the app installation access token if it doesn't already exist
   if [[ -z "$GITHUB_APP_INSTALLATION_ACCESS_TOKEN" ]]; then
-    GITHUB_APP_INSTALLATION_ACCESS_TOKEN=$(generate_access_token)
+    GITHUB_APP_INSTALLATION_ACCESS_TOKEN=$(get_access_token)
   fi
 
   project="$2"
