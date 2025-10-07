@@ -44,12 +44,6 @@ steps:
   - bash: echo ${{ parameters.environment }}
     displayName: Display environment parameter
 
-  - template: ./set-build-repo-suffix-env-var.yaml
-  - template: ./keyvault-read.yaml
-    parameters:
-      serviceConnection: ${{ parameters.serviceConnection }}
-      environment: ${{ parameters.environment }}
-
   - task: AzureKeyVault@2
     displayName: 'Get GitHub API token from Keyvault'
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
@@ -58,18 +52,6 @@ steps:
       ConnectedServiceName: ${{ parameters.serviceConnection }}
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'github-api-token'
-
-  - task: Bash@3
-    displayName: Build resource values
-    env:
-      STAGE: ${{ parameters.stage }}
-      MULTI_REGION: ${{ parameters.multiRegion }}
-      ENVIRONMENT: ${{ parameters.environment }}
-      COMPONENT: ${{ parameters.component }}
-      LOCATION: ${{ parameters.location }}
-    inputs:
-      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureKeyVault@2
     inputs:
@@ -86,8 +68,8 @@ steps:
       inlineScript: |
         mkdir $(Build.ArtifactStagingDirectory)/tfplans/
         mkdir $(Build.ArtifactStagingDirectory)/tfhtml/
-        az storage azcopy blob download -c plan-txt --account-name ekterraformparser -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/tfplans/ \
-      azureSubscription: "${{ parameters.serviceConnection }}"
+        az storage azcopy blob download -c plan-txt --account-name ekterraformparser -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/tfplans/
+      azureSubscription: ${{ parameters.serviceConnection }}
 
   - task: Bash@3
     displayName: Analyse terraform plan with AI
@@ -110,7 +92,7 @@ steps:
       scriptLocation: inlineScript
       inlineScript: |
         az storage azcopy blob upload -c plan-html --account-name ekterraformparser -s $(Build.ArtifactStagingDirectory)/tfhtml/plan.html -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/plan.html"
-      azureSubscription: "${{ parameters.serviceConnection }}"
+      azureSubscription: ${{ parameters.serviceConnection }}
 
   - task: Bash@3
     displayName: Post link on PR description
