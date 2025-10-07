@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# Improve error handling to consider errors in piped commands
+set -o pipefail
+
 echo "Starting Auto Manual Start workflows ..."
 # GitHub App authentication details needed to get an app installation token
 # https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation#using-an-installation-access-token-to-authenticate-as-an-app-installation
@@ -113,7 +117,7 @@ function check_environment_health() {
 function start_unhealthy_environments() {
   # Only generate the app installation access token if it doesn't already exist
   if [[ -z "$GITHUB_APP_INSTALLATION_ACCESS_TOKEN" ]]; then
-    GITHUB_APP_INSTALLATION_ACCESS_TOKEN=$(get_access_toke)
+    GITHUB_APP_INSTALLATION_ACCESS_TOKEN=$(generate_access_token)
   fi
 
   project="$2"
