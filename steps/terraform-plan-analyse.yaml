@@ -112,7 +112,7 @@ steps:
         az storage azcopy blob upload -c plan-html --account-name ekterraformparser -s $(Build.ArtifactStagingDirectory)/tfhtml/plan.html -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/plan.html"
       azureSubscription: "DCD-CFT-Sandbox"
 
-  - task: Bash@v3
+  - task: Bash@3
     displayName: Post link on PR description
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     env:
