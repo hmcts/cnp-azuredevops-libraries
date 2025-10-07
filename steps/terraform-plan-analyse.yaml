@@ -77,12 +77,17 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
-        --plansDir $(Build.ArtifactStagingDirectory)/tfplans/ \
-        --outputDir $(Build.ArtifactStagingDirectory)/tfhtml/ \
-        --endpoint $(open-ai-endpoint) \
-        --deployment $(open-ai-deployment) \
-        --apiKey $(open-ai-api-key)
+        if [ -z "$(ls -A $(Build.ArtifactStagingDirectory)/tfplans/)" ]; then
+          echo "No plans found in $(Build.ArtifactStagingDirectory)/tfplans/. Skipping analysis."
+          exit 1
+        else
+          python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
+          --plansDir $(Build.ArtifactStagingDirectory)/tfplans/ \
+          --outputDir $(Build.ArtifactStagingDirectory)/tfhtml/ \
+          --endpoint $(open-ai-endpoint) \
+          --deployment $(open-ai-deployment) \
+          --apiKey $(open-ai-api-key)
+        fi
 
   - task: AzureCLI@2
     displayName: 'Upload result to blob'
