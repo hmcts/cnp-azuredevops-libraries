@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Improve error handling to consider errors in piped commands
-set -o pipefail
+set -euo pipefail
 
 echo "Starting Auto Manual Start workflows ..."
 # GitHub App authentication details needed to get an app installation token
