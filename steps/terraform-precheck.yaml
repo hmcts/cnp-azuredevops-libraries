@@ -74,6 +74,13 @@ steps:
       arguments: "$(github-api-token) ${{parameters.projectName}} ${{parameters.environment}}"
     condition: ${{ eq(parameters.runManualStart, true) }}
 
+  - script: |
+      cd $(System.DefaultWorkingDirectory)
+      ls -ltr
+    displayName: 'Path Checking'
+    continueOnError: true
+
+
   - task: PowerShell@2
     displayName: Run PESTER tests
     inputs:
