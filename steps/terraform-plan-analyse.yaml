@@ -111,12 +111,3 @@ steps:
       inlineScript: |
         az storage azcopy blob upload -c plan-html --account-name ekterraformparser -s $(Build.ArtifactStagingDirectory)/tfhtml/plan.html -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/plan.html"
       azureSubscription: "DCD-CFT-Sandbox"
-
-  # - task: AzureCLI@2
-  #   displayName: 'Upload plans to storage account'
-  #   inputs:
-  #     scriptType: bash
-  #     scriptLocation: scriptPath
-  #     azureSubscription: ${{ parameters.serviceConnection }}
-  #     scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/upload-plan-to-storage.sh
-  #     arguments: ek-terraform-parser $(Build.Repository.Name) $(System.PullRequest.PullRequestNumber)
