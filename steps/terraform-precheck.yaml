@@ -1,4 +1,7 @@
 parameters:
+  - name: repo_name
+    default: ''
+
   - name: keyvaultName
     default: ''
 
