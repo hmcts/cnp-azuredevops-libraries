@@ -47,7 +47,7 @@ steps:
   - template: ./set-build-repo-suffix-env-var.yaml
   - template: ./keyvault-read.yaml
     parameters:
-      serviceConnection: DCD-CFT-Sandbox
+      serviceConnection: ${{ parameters.serviceConnection }}
       environment: ${{ parameters.environment }}
 
   - task: AzureKeyVault@2
@@ -55,7 +55,7 @@ steps:
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
       runAsPreJob: false
-      ConnectedServiceName: DCD-CFT-Sandbox
+      ConnectedServiceName: ${{ parameters.serviceConnection }}
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'github-api-token'
 
@@ -73,7 +73,7 @@ steps:
 
   - task: AzureKeyVault@2
     inputs:
-      azureSubscription: DCD-CFT-Sandbox
+      azureSubscription: ${{ parameters.serviceConnection }}
       KeyVaultName: ek-terraform-parser
       SecretsFilter: '*'
 
@@ -87,7 +87,7 @@ steps:
         mkdir $(Build.ArtifactStagingDirectory)/tfplans/
         mkdir $(Build.ArtifactStagingDirectory)/tfhtml/
         az storage azcopy blob download -c plan-txt --account-name ekterraformparser -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/tfplans/ \
-      azureSubscription: "DCD-CFT-Sandbox"
+      azureSubscription: "${{ parameters.serviceConnection }}"
 
   - task: Bash@3
     displayName: Analyse terraform plan with AI
@@ -110,7 +110,7 @@ steps:
       scriptLocation: inlineScript
       inlineScript: |
         az storage azcopy blob upload -c plan-html --account-name ekterraformparser -s $(Build.ArtifactStagingDirectory)/tfhtml/plan.html -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/plan.html"
-      azureSubscription: "DCD-CFT-Sandbox"
+      azureSubscription: "${{ parameters.serviceConnection }}"
 
   - task: Bash@3
     displayName: Post link on PR description
