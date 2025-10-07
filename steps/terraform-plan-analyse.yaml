@@ -90,7 +90,7 @@ steps:
       azureSubscription: "DCD-CFT-Sandbox"
 
   - task: Bash@3
-    displayName: Run AI parser script - ${{ parameters.component }}
+    displayName: Analyse terraform plan with AI
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
       targetType: 'inline'
@@ -103,7 +103,7 @@ steps:
         --apiKey $(open-ai-api-key)
 
   - task: AzureCLI@2
-    displayName: 'Upload html to blob'
+    displayName: 'Upload result to blob'
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
       scriptType: bash
