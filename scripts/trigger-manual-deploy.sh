@@ -120,9 +120,8 @@ function start_unhealthy_environments() {
   if [[ -z "$GITHUB_APP_INSTALLATION_ACCESS_TOKEN" ]]; then
     GITHUB_APP_INSTALLATION_ACCESS_TOKEN=$(get_access_token)
   fi
-
-  project="$2"
-  environment="$3"
+  project="$1"
+  environment="$2"
 
   if check_environment_health $project $environment; then
     echo "$project in $environment is healthy, returned HTTP $response. No need to trigger auto manual start workflow."
