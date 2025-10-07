@@ -6,7 +6,7 @@ set -o pipefail
 echo "Starting Auto Manual Start workflows ..."
 # GitHub App authentication details needed to get an app installation token
 # https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation#using-an-installation-access-token-to-authenticate-as-an-app-installation
-github_app_priv_key=$1
+github_app_priv_key_file=$1
 github_app_id=$2
 github_app_installation_id=$3
 project="$4"
@@ -51,6 +51,7 @@ function get_access_token() {
   payload=$( echo -n "${payload_json}" | b64enc )
   # Signature
   header_payload="${header}"."${payload}"
+  github_app_priv_key=$(cat $github_app_priv_key_file)
   signature=$(
       openssl dgst -sha256 -sign <(echo -n "${github_app_priv_key}") \
       <(echo -n "${header_payload}") | b64enc
