@@ -227,10 +227,6 @@ steps:
       contents: 'tfplan-$(tfPlanName).txt'
       targetFolder: '$(Build.ArtifactStagingDirectory)'
 
-  - publish: $(Build.ArtifactStagingDirectory)
-    displayName: 'Publish plans for later use'
-    artifact: TerraformPlan_$(tfPlanName)
-
   - task: AzureCLI@2
     displayName: 'Upload plans to blob'
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
