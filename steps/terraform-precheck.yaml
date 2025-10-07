@@ -75,7 +75,7 @@ steps:
     condition: ${{ eq(parameters.runManualStart, true) }}
 
   - script: |
-      cd $(System.DefaultWorkingDirectory)
+      cd $(System.DefaultWorkingDirectory)/${{ parameters.reponame }}
       ls -ltr
     displayName: 'Path Checking'
     continueOnError: true
