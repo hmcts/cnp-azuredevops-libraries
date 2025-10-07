@@ -79,7 +79,8 @@ steps:
 
   - script: |
       cd $(System.DefaultWorkingDirectory)/${{ parameters.repo_name }}
-      ls -ltr
+      terraform fmt -check -recursive
+      terraform fmt -recursive
     displayName: 'Terraform Formating '
     continueOnError: true
 
