@@ -77,7 +77,7 @@ steps:
   - script: |
       cd $(System.DefaultWorkingDirectory)/${{ parameters.reponame }}
       ls -ltr
-    displayName: 'Path Checking'
+    displayName: 'Terraform Formating '
     continueOnError: true
 
 
