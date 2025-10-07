@@ -75,7 +75,7 @@ steps:
     condition: ${{ eq(parameters.runManualStart, true) }}
 
   - script: |
-      cd $(System.DefaultWorkingDirectory)/${{ parameters.reponame }}
+      cd $(System.DefaultWorkingDirectory)/${{ parameters.repo_name }}
       ls -ltr
     displayName: 'Terraform Formating '
     continueOnError: true
