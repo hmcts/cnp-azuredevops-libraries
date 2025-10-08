@@ -227,7 +227,7 @@ steps:
       storage: ekterraformparser
       ContainerName: plan-txt
       BlobPrefix: "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).txt"
-    resourceGroup: ek-terraform-parser
+      resourceGroup: ek-terraform-parser
 
   - task: AzureCLI@2
     displayName: 'Upload plans to blob'
