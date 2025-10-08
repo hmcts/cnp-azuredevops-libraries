@@ -62,13 +62,16 @@ def build_file_prompt(file_name: str, chunk_text: str, stage_name: str, environm
 You are given a fragment ({chunk_idx}/{total_chunks}) of a terraform plan for file {file_name}.
 Only output rows for resources present in THIS fragment. Do NOT repeat resources already emitted in previous fragments (Previously emitted resource names: {seen_list}).
 Produce one <tr> per actual managed change with exactly 7 <td> cells in this order:
-1) Stage Name
-2) Environment
+1) Stage Name (derived from the plan file name by stripping leading pattern tfplan-<env>- and the file extension; examples: tfplan-aat-network.txt -> network; tfplan-preview-platform.txt -> platform; tfplan-sbox-storage.txt -> storage. If pattern not found, use filename without extension.)
+2) Environment (infer from plan file marker name if present: e.g. tfplan-aat-network.txt -> aat, tfplan-preview- -> preview, tfplan-sbox- or ptlsbox -> sandbox, perftest -> testing; keep lowercase; if not inferable derive from resource naming.)
 3) Location (default 'uksouth' if unspecified)
 4) Resource Name
-5) Change Type (create | update | delete). Treat replacements ("-/+") as update unless pure destroy.
-6) Tags Only ('Yes' only if Change Type is 'update' AND only tag values change; else 'No').
-7) Details (succinct notes; highlight tag-only vs attribute changes).
+5) Change Type (create | update | delete). Treat replacements ("-/+") as update unless it's a pure destroy.
+6) Tags Only ('Yes' only if the Change Type is 'update' and the update being made is to change the values of Azure resource tags; else 'No').
+7) If a resource is being created and that resource has tags then the Change Type should be 'create' and the Tags Only value should be 'No'
+8) Details (succinct attribute/tag change notes, e.g. 'tags added', 'Kubernetes version change', 'max_count: 3 → 5').
+
+Input plans are delimited by lines: --- <planfile> --- (planfile names are for deriving Stage Name & Environment only; DO NOT output the raw filename directly unless processed into Stage Name as specified).
 
 Stage Name (already determined): {stage_name}
 Environment (already determined): {environment}
@@ -76,7 +79,8 @@ Environment (already determined): {environment}
 If something is being updated, use 'update'.
 If something is being destroyed or deleted, use 'delete'
 If nothing is being changed, use 'no changes'
-Ignore drift-only sections, import suggestions, commentary, and manually deleted outside-of-terraform notes.
+Ignore and DO NOT output rows for drift sections (changes outside of Terraform) or manual deletions where the plan simply recreates the resource; in those cases output only the resulting create action.
+Exclude any lines that are commentary, import suggestions, or purely informational (# (known after apply), # (import ...)).
 Return ONLY <tr> rows, no surrounding commentary.
 Fragment Plan Content:\n\n{chunk_text}\n\n"""
     return base_instructions
