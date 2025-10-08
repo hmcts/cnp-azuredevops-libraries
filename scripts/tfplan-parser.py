@@ -73,8 +73,9 @@ Produce one <tr> per actual managed change with exactly 7 <td> cells in this ord
 Stage Name (already determined): {stage_name}
 Environment (already determined): {environment}
 
-Don't use different terms for the same concept such as 'delete' and 'destroy' or 'update in-palce' and 'update'.
-When two terms are similar just use one consistently such as 'delete' or 'update'
+If something is being updated, use 'update'.
+If something is being destroyed or deleted, use 'delete'
+If nothing is being changed, use 'no changes'
 Ignore drift-only sections, import suggestions, commentary, and manually deleted outside-of-terraform notes.
 Return ONLY <tr> rows, no surrounding commentary.
 Fragment Plan Content:\n\n{chunk_text}\n\n"""
