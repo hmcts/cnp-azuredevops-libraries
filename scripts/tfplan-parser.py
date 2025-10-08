@@ -103,7 +103,7 @@ def call_openai(prompt_text: str):
     payload = {"messages": [
         {"role": "system", "content": "You are an expert in Terraform plan interpretation and concise HTML row generation."},
         {"role": "user", "content": prompt_text}
-    ], "temperature": 0.2, "max_completion_tokens": 16384}
+    ], "temperature": 1, "max_completion_tokens": 16384}
     resp = requests.post(api_url, headers=headers, json=payload, timeout=120)
     rj = resp.json()
     try:
