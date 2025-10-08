@@ -226,7 +226,7 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        az account set -s DTS-CFTPTL-INTSVC \
+        az account set -s DTS-CFTPTL-INTSVC
         az storage azcopy blob upload -c plan-txt --account-name ekterraformparser -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).txt"
       azureSubscription: ${{ parameters.serviceConnection }}
       addSpnToEnvironment: true
