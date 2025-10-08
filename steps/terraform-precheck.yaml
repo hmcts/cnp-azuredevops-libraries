@@ -62,16 +62,30 @@ steps:
       runAsPreJob: false
       ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
       keyVaultName: 'infra-vault-nonprod'
-      secretsFilter: 'github-api-token'
+      secretsFilter: 'aks-manual-start-github-app-priv-key,aks-manual-start-github-app-id,aks-manual-start-github-app-installation-id'
 
   - task: AzureCLI@2
     displayName: Trigger Github Action AKS Manual Start
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptType: 'bash'
-      scriptLocation: 'scriptPath'
-      scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh
-      arguments: "$(github-api-token) ${{parameters.projectName}} ${{parameters.environment}}"
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        set -euo pipefail
+        # Create temporary file for private key
+        TEMP_KEY_FILE=$(mktemp)
+        echo "$(aks-manual-start-github-app-priv-key)" > "$TEMP_KEY_FILE"
+        
+        # Call script with temp priv key file path
+        $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/trigger-manual-deploy.sh \
+          "$TEMP_KEY_FILE" \
+          "$(aks-manual-start-github-app-id)" \
+          "$(aks-manual-start-github-app-installation-id)" \
+          "${{parameters.projectName}}" \
+          "${{parameters.environment}}"
+        
+        # Cleanup the priv key file
+        rm -f "$TEMP_KEY_FILE"
     condition: ${{ eq(parameters.runManualStart, true) }}
 
   - task: PowerShell@2
