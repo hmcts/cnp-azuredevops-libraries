@@ -103,7 +103,7 @@ def call_openai(prompt_text: str):
     payload = {"messages": [
         {"role": "system", "content": "You are an expert in Terraform plan interpretation and concise HTML row generation."},
         {"role": "user", "content": prompt_text}
-    ], "temperature": 0.1, "max_tokens": 4096}
+    ], "temperature": 0.2, "max_completion_tokens": 16384}
     resp = requests.post(api_url, headers=headers, json=payload, timeout=120)
     rj = resp.json()
     try:
@@ -162,25 +162,6 @@ for pf in plan_files:
                 all_ai_rows.append('\n'.join(added_rows))
 
 tf_plan = ''  # No longer using concatenated big prompt; variable kept for backward compatibility logging
-
-# Compose your prompt for ONLY table rows matching the new template's column order (Plan File column removed).
-# Columns (in order now): Stage Name | Environment | Location | Resource Name | Change Type | Tags Only | Details
-# Requirements:
-#  - Change Type: create | update | delete (or destroy) derived from plan symbols (+, ~, -) or wording.
-#  - Tags Only: 'Yes' ONLY if the ONLY change for that resource is tags/labels metadata; else 'No'.
-#  - Location: if absent in plan, default to 'uksouth'.
-#  - Ignore/exclude any drift sections or changes reported as "changed outside of Terraform" OR sections under notes like:
-#       "Terraform detected the following changes made outside of Terraform" / "objects have changed outside of Terraform".
-#    Do NOT emit rows for resources that are only mentioned in those drift sections. If a resource was deleted manually and will
-#    be recreated, output only the creation (do not output a separate delete). If plan shows a replace ("-/+"), treat as update
-#    unless it is a full destroy without recreation.
-#  - Ignore any import suggestions or lines starting with "# (import" or "# (known after apply)" that don't constitute actual change actions.
-#  - Escape HTML entities (&, <, >) in names or details.
-#  - DO NOT wrap the output in <table>, <tbody>, <html>, or markdown fences. Return ONLY <tr> rows.
-#  - Each <td> must be in the exact 7-column order above; no extra columns.
-#  - List each resource occurrence separately; do not aggregate.
-
-## Original single large prompt removed in favor of per-chunk prompts when needed.
 
 ai_rows = '\n'.join(all_ai_rows)
 if not ai_rows.strip():
