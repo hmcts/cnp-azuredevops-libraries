@@ -111,7 +111,7 @@ steps:
         repo_name=$(echo $(Build.Repository.Name) | sed 's/^hmcts\///')
         plan_url="https://tfplan-viewer.hmcts.net/$repo_name/$(System.PullRequest.PullRequestNumber)"
         new_body=$(printf '%s\n\nLink to Terraform Plan: %s' "$body" "$plan_url")
-        if grep -s $body https://tfplan-viewer.hmcts.net/aks-cft-deploy/755; then
+        if grep -s $body $plan_url; then
           echo "URL already added to description"
         else
           echo "Adding URL to description"
