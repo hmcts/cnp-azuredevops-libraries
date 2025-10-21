@@ -228,7 +228,7 @@ steps:
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
     inputs:
       azureSubscription: DTS-CFTPTL-INTSVC
-      KeyVaultName: tf-plan-viewer-ptl-kv
+      KeyVaultName: tfplan-viewer-ptl-kv
       SecretsFilter: 'storage-account-primary-key'
 
   - task: AzureCLI@2
