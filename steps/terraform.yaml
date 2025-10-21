@@ -222,7 +222,7 @@ steps:
   - task: AzureKeyVault@2
     inputs:
       azureSubscription: DTS-CFTPTL-INTSVC
-      KeyVaultName: ek-terraform-parser
+      KeyVaultName: tf-plan-viewer-ptl-kv
       SecretsFilter: 'storage-account-primary-key'
 
   - task: AzureCLI@2
@@ -232,7 +232,7 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        az storage azcopy blob upload -c plan-txt --account-name ekterraformparser -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).txt" --subscription DTS-CFTPTL-INTSVC --account-key $(storage-account-primary-key)
+        az storage azcopy blob upload -c plan-txt --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).txt" --subscription DTS-CFTPTL-INTSVC --account-key $(storage-account-primary-key)
       azureSubscription: ${{ parameters.serviceConnection }}
 
   - task: TerraformCLI@1
