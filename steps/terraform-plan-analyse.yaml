@@ -111,11 +111,11 @@ steps:
         repo_name=$(echo $(Build.Repository.Name) | sed 's/^hmcts\///')
         plan_url="https://tfplan-viewer.hmcts.net/$repo_name/$(System.PullRequest.PullRequestNumber)"
         new_body=$(printf '%s\n\nLink to Terraform Plan: %s' "$body" "$plan_url")
-        if grep -s $plan_url $body; then
+        if grep -q $plan_url $body; then
           echo "URL already added to description"
         else
           echo "Adding URL to description"
-          curl -L -X PATCH \
+          curl -sL -X PATCH \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
