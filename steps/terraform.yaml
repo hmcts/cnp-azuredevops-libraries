@@ -67,6 +67,11 @@ parameters:
     type: boolean
     default: false
 
+  - name: publishPlanResults
+    displayName: Whether terraform plans should be published to GitHub as comments
+    type: boolean
+    default: true
+
 
 steps:
   - checkout: self
@@ -185,7 +190,7 @@ steps:
           -lock=false
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'true'))
     env:
       GITHUB_TOKEN: $(github-api-token)
     inputs:
@@ -209,7 +214,7 @@ steps:
 
   - task: Bash@3
     displayName: Terraform show - ${{ parameters.component }}
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
     inputs:
       targetType: 'inline'
       script: |
@@ -220,6 +225,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
   - task: AzureKeyVault@2
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
     inputs:
       azureSubscription: DTS-CFTPTL-INTSVC
       KeyVaultName: tf-plan-viewer-ptl-kv
@@ -227,7 +233,7 @@ steps:
 
   - task: AzureCLI@2
     displayName: 'Upload plans to blob'
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
     inputs:
       scriptType: bash
       scriptLocation: inlineScript
