@@ -56,7 +56,7 @@ steps:
   - task: AzureKeyVault@2
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
-      KeyVaultName: tf-plan-viewer-ptl-kv
+      KeyVaultName: tfplan-viewer-ptl-kv
       SecretsFilter: '*'
 
   - task: AzureCLI@2
