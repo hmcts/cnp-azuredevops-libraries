@@ -72,7 +72,7 @@ steps:
       azureSubscription: ${{ parameters.serviceConnection }}
 
   - task: Bash@3
-    displayName: Analyse terraform plan with AI
+    displayName: Analyse terraform plan
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
       targetType: 'inline'
@@ -81,14 +81,10 @@ steps:
           echo "No plans found in $(Build.ArtifactStagingDirectory)/tfplans/. Skipping analysis."
           exit 1
         else
-          echo "Analysing plans. This may take up to 15 minutes."
+          echo "Analysing plans..."
           python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
           --plansDir $(Build.ArtifactStagingDirectory)/tfplans/ \
           --outputDir $(Build.ArtifactStagingDirectory)/tfhtml/ \
-          --endpoint dummy \
-          --deployment dummy \
-          --apiKey dummy \
-          --noAI
         fi
 
   - task: AzureCLI@2
