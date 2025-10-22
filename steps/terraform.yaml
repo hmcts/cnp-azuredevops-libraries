@@ -67,6 +67,11 @@ parameters:
     type: boolean
     default: false
 
+  - name: publishPlanResults
+    displayName: Whether terraform plans should be published to GitHub as comments
+    type: boolean
+    default: true
+
 
 steps:
   - checkout: self
@@ -185,7 +190,7 @@ steps:
           -lock=false
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], '') )
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'true'))
     env:
       GITHUB_TOKEN: $(github-api-token)
     inputs:
@@ -206,6 +211,35 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+
+  - task: Bash@3
+    displayName: Terraform show - ${{ parameters.component }}
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
+    inputs:
+      targetType: 'inline'
+      script: |
+        terraform show tfplan-$(tfPlanName) > tfplan-${{ parameters.environment }}-${{ parameters.component }}.txt
+      ${{ if eq( parameters['baseDirectory'], '') }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      ${{ else }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+
+  - task: AzureKeyVault@2
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
+    inputs:
+      azureSubscription: DTS-CFTPTL-INTSVC
+      KeyVaultName: tfplan-viewer-ptl-kv
+      SecretsFilter: 'storage-account-primary-key'
+
+  - task: AzureCLI@2
+    displayName: 'Upload plans to blob'
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
+    inputs:
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        az storage azcopy blob upload -c plan-txt --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).txt" --subscription DTS-CFTPTL-INTSVC --account-key $(storage-account-primary-key)
+      azureSubscription: ${{ parameters.serviceConnection }}
 
   - task: TerraformCLI@2
     displayName: Terraform apply ${{ parameters.component }}

@@ -1,0 +1,286 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Terraform Plan Changes</title>
+  <style>
+    :root {
+      --bg: #f8f9fb;
+      --bg-alt: #ffffff;
+      --border: #dcdfe4;
+      --text: #1f2933;
+      --text-soft: #5d6b7a;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --radius: 6px;
+      --danger: #dc2626;
+      --warn: #d97706;
+      --ok: #059669;
+      --muted: #9ca3af;
+      --tag-only: #e0f7f1;
+      --tag-only-border: #0d9488;
+      --shadow: 0 1px 2px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.08);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1720;
+        --bg-alt: #1b2733;
+        --border: #273341;
+        --text: #e5e7eb;
+        --text-soft: #94a3b8;
+        --accent: #3b82f6;
+        --accent-hover: #1d4ed8;
+        --tag-only: #0f3d39;
+        --tag-only-border: #14b8a6;
+        --shadow: 0 1px 2px rgba(0,0,0,0.6), 0 4px 12px -2px rgba(0,0,0,0.5);
+      }
+    }
+    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.4; }
+    h1 { font-size: 1.4rem; margin: 0 0 0.5rem; font-weight: 600; }
+    .page { max-width: 1400px; margin: 0 auto; padding: 1.2rem 1.4rem 3rem; }
+    .panel { background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.9rem 1rem 0.2rem; box-shadow: var(--shadow); }
+    .filters { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: flex-end; }
+    .filters label { font-size: 0.72rem; letter-spacing: 0.04em; font-weight: 600; text-transform: uppercase; color: var(--text-soft); display: flex; flex-direction: column; gap: 0.35rem; }
+    select { appearance: none; -webkit-appearance: none; background: var(--bg-alt); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.45rem 2rem 0.45rem 0.6rem; font-size: 0.85rem; min-width: 10ch; position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03); }
+    select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .filters-group { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    .meta { margin-top: 0.8rem; font-size: 0.75rem; color: var(--text-soft); display: flex; gap: 1rem; flex-wrap: wrap; }
+    .badge { display: inline-block; padding: 0.25rem 0.55rem; border-radius: 999px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; background: var(--border); color: var(--text-soft); }
+    .badge.change-create { background: var(--ok); color: #fff; }
+    .badge.change-update { background: var(--warn); color: #fff; }
+    .badge.change-delete { background: var(--danger); color: #fff; }
+  /* Make 'Yes' (tag-only) badge grey like 'No' */
+  .badge.tag-yes { background: var(--muted); color: #fff; }
+    .badge.tag-no { background: var(--muted); color: #fff; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    thead th { background: linear-gradient(var(--bg-alt), var(--bg)); position: sticky; top: 0; z-index: 5; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-soft); padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); }
+  thead th.sortable { cursor: pointer; user-select: none; }
+  thead th.sortable:hover { color: var(--accent); }
+  thead th.sortable .sort-indicator { margin-left: 4px; font-size: 0.65rem; opacity: 0.7; }
+  thead th.sortable.sorted-asc .sort-indicator { content: '▲'; }
+  thead th.sortable.sorted-desc .sort-indicator { content: '▼'; }
+  /* Fallback for browsers without ::before content updates */
+  thead th.sortable.sorted-asc .sort-indicator::before { content: '▲'; }
+  thead th.sortable.sorted-desc .sort-indicator::before { content: '▼'; }
+    tbody td { padding: 0.55rem 0.65rem; font-size: 0.8rem; border-top: 1px solid var(--border); vertical-align: top; }
+    tbody tr:nth-child(even) { background: rgba(0,0,0,0.02); }
+    @media (prefers-color-scheme: dark) { tbody tr:nth-child(even) { background: rgba(255,255,255,0.04); } }
+    tbody tr:hover { background: rgba(37,99,235,0.08); }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 0.75rem; background: rgba(0,0,0,0.05); padding: 0.15rem 0.35rem; border-radius: 4px; }
+    .tag-only-row { box-shadow: inset 3px 0 0 var(--tag-only-border); }
+    .tag-only-row td { background: var(--tag-only); }
+    .fade { animation: fade 0.25s ease-in; }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    .nowrap { white-space: nowrap; }
+    .truncate { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .toolbar-spacer { flex: 1 1 auto; }
+    .search-box { position: relative; }
+    .search-box input { padding: 0.45rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-alt); color: var(--text); font-size: 0.8rem; min-width: 18ch; }
+    .search-box input:focus { outline: 2px solid var(--accent); }
+    .reset-btn { background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-size: 0.7rem; padding: 0.55rem 0.9rem; cursor: pointer; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; box-shadow: var(--shadow); }
+    .reset-btn:hover { background: var(--accent-hover); }
+    .reset-btn:focus { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
+    .no-results { text-align: center; padding: 1.5rem 0.5rem; font-size: 0.85rem; color: var(--text-soft); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Terraform Plan Changes</h1>
+    <div class="panel">
+      <div class="filters">
+        <div class="filters-group">
+          <label>Stage Name
+            <select id="filter-stage">
+              <option value="">All</option>
+            </select>
+          </label>
+          <label>Environment
+            <select id="filter-env">
+              <option value="">All</option>
+            </select>
+          </label>
+          <label>Location
+            <select id="filter-location">
+              <option value="">All</option>
+            </select>
+          </label>
+          <label>Change Type
+            <select id="filter-change">
+              <option value="">All</option>
+            </select>
+          </label>
+          <label>Tags Only
+            <select id="filter-tags">
+              <option value="">All</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </label>
+          <label>Search
+            <div class="search-box">
+              <input type="text" id="search-text" placeholder="Name / details..." />
+            </div>
+          </label>
+        </div>
+        <div class="toolbar-spacer"></div>
+        <button class="reset-btn" id="reset-btn" title="Clear filters">Reset</button>
+      </div>
+      <div class="meta" id="meta-bar">Loading...</div>
+    </div>
+  <table id="tf-table" class="fade">
+    <thead>
+      <tr>
+  <th class="sortable" data-col="0">Stage Name <span class="sort-indicator"></span></th>
+  <th class="sortable" data-col="1">Environment <span class="sort-indicator"></span></th>
+        <th>Location</th>
+        <th>Resource Name</th>
+        <th>Change Type</th>
+        <th>Tags Only</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Table rows inserted by Python script -->
+    </tbody>
+  </table>
+  <div id="no-results" class="no-results" style="display:none">No results match current filters.</div>
+  </div>
+  <script>
+    // Collect unique values for filters
+    const table = document.getElementById('tf-table');
+    const rows = Array.from(table.tBodies[0].rows);
+
+    function getUnique(colIdx) {
+      return [...new Set(rows.map(r => r.cells[colIdx].textContent))].sort();
+    }
+
+    function fillSelect(selectId, values) {
+      const sel = document.getElementById(selectId);
+      values.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        sel.appendChild(opt);
+      });
+    }
+
+  fillSelect('filter-stage', getUnique(0));
+  fillSelect('filter-env', getUnique(1));
+  fillSelect('filter-location', getUnique(2));
+  fillSelect('filter-change', getUnique(4));
+
+    // Decorate existing rows (badges + tag-only styling)
+    rows.forEach(r => {
+      // Change type badge
+  const changeCell = r.cells[4];
+      const txt = changeCell.textContent.trim().toLowerCase();
+      let cls = 'change-update';
+      if (txt.startsWith('create')) cls = 'change-create';
+      else if (txt.startsWith('delete') || txt.startsWith('destroy')) cls = 'change-delete';
+      changeCell.innerHTML = `<span class="badge ${cls}">${changeCell.textContent}</span>`;
+      // Tags badge
+  const tagsCell = r.cells[5];
+      const tYes = tagsCell.textContent.trim().toLowerCase() === 'yes';
+  tagsCell.innerHTML = `<span class="badge ${tYes ? 'tag-yes' : 'tag-no'}">${tYes ? 'Yes' : 'No'}</span>`;
+      if (tYes) r.classList.add('tag-only-row');
+      // Details formatting (monospace for resource names inside quotes )
+  const detailsCell = r.cells[6];
+      detailsCell.innerHTML = detailsCell.textContent
+        .replace(/(\bversion\b)/ig,'<strong>$1</strong>')
+        .replace(/(tags?)/ig,'<strong>$1</strong>');
+    });
+
+    function updateMeta(filteredCount) {
+      const total = rows.length;
+      const visible = filteredCount ?? rows.filter(r => r.style.display !== 'none').length;
+      const tagOnlyVisible = rows.filter(r => r.style.display !== 'none' && r.classList.contains('tag-only-row')).length;
+      document.getElementById('meta-bar').textContent = `${visible} visible of ${total} total | ${tagOnlyVisible} tag-only changes`;
+    }
+
+    function filterTable() {
+  const stage = document.getElementById('filter-stage').value.trim();
+  const env = document.getElementById('filter-env').value.trim();
+    const loc = document.getElementById('filter-location').value.trim();
+    const change = document.getElementById('filter-change').value.trim();
+    const tags = document.getElementById('filter-tags').value.trim();
+      const search = document.getElementById('search-text').value.toLowerCase().trim();
+      let visible = 0;
+      rows.forEach(row => {
+        let show = true;
+  const stageVal = row.cells[0].textContent;
+  const envVal = row.cells[1].textContent;
+  const locVal = row.cells[2].textContent;
+  const changeVal = row.cells[4].textContent.trim();
+  const tagsVal = row.cells[5].textContent.toLowerCase();
+        const strings = row.textContent.toLowerCase();
+  if (stage && stageVal !== stage) show = false;
+  if (env && envVal !== env) show = false;
+        if (loc && locVal !== loc) show = false;
+        if (change && changeVal !== change) show = false;
+        if (tags) {
+          if (tags === 'yes' && tagsVal !== 'yes') show = false;
+          if (tags === 'no' && tagsVal !== 'no') show = false;
+        }
+        if (search && !strings.includes(search)) show = false;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      const noRes = document.getElementById('no-results');
+      noRes.style.display = visible === 0 ? 'block' : 'none';
+      updateMeta(visible);
+    }
+
+    function resetFilters() {
+  ['filter-stage','filter-env','filter-location','filter-change','filter-tags','search-text'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value='';
+      });
+      filterTable();
+    }
+
+  document.getElementById('filter-stage').addEventListener('change', filterTable);
+  document.getElementById('filter-env').addEventListener('change', filterTable);
+  document.getElementById('filter-location').addEventListener('change', filterTable);
+  document.getElementById('filter-change').addEventListener('change', filterTable);
+    document.getElementById('filter-tags').addEventListener('change', filterTable);
+    document.getElementById('search-text').addEventListener('input', filterTable);
+    document.getElementById('reset-btn').addEventListener('click', resetFilters);
+
+    // Initial meta
+    updateMeta();
+
+    // --- Sorting Logic for Stage Name (col 0) and Environment (col 1) ---
+    let currentSort = { col: null, dir: 1 }; // dir: 1 asc, -1 desc
+    function sortBy(col, thEl) {
+      // Toggle direction
+      if (currentSort.col === col) {
+        currentSort.dir *= -1;
+      } else {
+        currentSort.col = col;
+        currentSort.dir = 1;
+      }
+      const dir = currentSort.dir;
+      // Clear previous indicators
+      document.querySelectorAll('thead th.sortable').forEach(th => th.classList.remove('sorted-asc','sorted-desc'));
+      thEl.classList.add(dir === 1 ? 'sorted-asc' : 'sorted-desc');
+      const tbody = table.tBodies[0];
+      // Slice to avoid mutating original array order reference if needed later
+      const sorted = rows.slice().sort((a,b) => {
+        const av = a.cells[col].textContent.trim().toLowerCase();
+        const bv = b.cells[col].textContent.trim().toLowerCase();
+        if (av === bv) return 0;
+        if (av === '') return 1; // empty last
+        if (bv === '') return -1;
+        return av > bv ? dir : -dir;
+      });
+      sorted.forEach(r => tbody.appendChild(r));
+    }
+    document.querySelectorAll('thead th.sortable').forEach(th => {
+      th.addEventListener('click', () => sortBy(parseInt(th.dataset.col,10), th));
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+parameters:
+  - name: environment
+    default: sandbox
+
+  - name: stage
+    default: ''
+
+  - name: location
+    default: 'UK South'
+    values:
+      - 'UK South'
+      - 'UK West'
+
+  - name: multiRegion
+    default: false
+    type: boolean
+
+  - name: product
+    default: ''
+
+  - name: component
+    default: ''
+
+  - name: serviceConnection
+    default: ''
+
+  - name: terraformInitSubscription
+    default: ''
+
+  - name: kvConnectedServiceName
+    default: 'azurerm-sandbox'
+
+  - name: forcePreventParallelJobRun
+    displayName: Always force prevent parallem run job
+    type: boolean
+    default: false
+
+
+steps:
+  - checkout: self
+    clean: true
+  - checkout: cnp-azuredevops-libraries
+    clean: true
+  - bash: echo ${{ parameters.environment }}
+    displayName: Display environment parameter
+
+  - task: AzureKeyVault@2
+    displayName: 'Get GitHub API token from Keyvault'
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: ${{ parameters.serviceConnection }}
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'github-api-token'
+
+  - task: AzureKeyVault@2
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      KeyVaultName: tfplan-viewer-ptl-kv
+      SecretsFilter: '*'
+
+  - task: AzureCLI@2
+    displayName: 'Download plans from blob'
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    inputs:
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        mkdir $(Build.ArtifactStagingDirectory)/tfplans/
+        mkdir $(Build.ArtifactStagingDirectory)/tfhtml/
+        az storage azcopy blob download -c plan-txt --account-name tfplanviewersa -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/tfplans/ --subscription DTS-CFTPTL-INTSVC
+      azureSubscription: ${{ parameters.serviceConnection }}
+
+  - task: Bash@3
+    displayName: Analyse terraform plan with AI
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    inputs:
+      targetType: 'inline'
+      script: |
+        if [ -z "$(ls -A $(Build.ArtifactStagingDirectory)/tfplans/)" ]; then
+          echo "No plans found in $(Build.ArtifactStagingDirectory)/tfplans/. Skipping analysis."
+          exit 1
+        else
+          echo "Analysing plans. This may take up to 15 minutes."
+          python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
+          --plansDir $(Build.ArtifactStagingDirectory)/tfplans/ \
+          --outputDir $(Build.ArtifactStagingDirectory)/tfhtml/ \
+          --endpoint $(cognitive-account-endpoint) \
+          --deployment $(openai-deployment) \
+          --apiKey $(cognitive-account-primary-access-key)
+        fi
+
+  - task: AzureCLI@2
+    displayName: 'Upload result to blob'
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    inputs:
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        az storage azcopy blob upload -c plan-html --account-name tfplanviewersa -s $(Build.ArtifactStagingDirectory)/tfhtml/plan.html -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/plan.html" --subscription DTS-CFTPTL-INTSVC
+      azureSubscription: ${{ parameters.serviceConnection }}
+
+  - task: Bash@3
+    displayName: Post link on PR description
+    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+    env:
+      GITHUB_TOKEN: $(github-api-token)
+    inputs:
+      targetType: 'inline'
+      script: |
+        body=$(curl -L -X GET -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/$(Build.Repository.Name)/pulls/$(System.PullRequest.PullRequestNumber) | jq -r '.body')        
+        repo_name=$(echo $(Build.Repository.Name) | sed 's/^hmcts\///')
+        plan_url="https://tfplan-viewer.hmcts.net/$repo_name/$(System.PullRequest.PullRequestNumber)"
+        new_body=$(printf '%s\n\nLink to Terraform Plan: %s' "$body" "$plan_url")
+        if (echo $body | grep -q $plan_url); then
+          echo "URL already added to description"
+        else
+          echo "Adding URL to description"
+          curl -sL -X PATCH \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/$(Build.Repository.Name)/pulls/$(System.PullRequest.PullRequestNumber) \
+            -d "$(jq -Rn --arg b "$new_body" '{body:$b}')"
+        fi
