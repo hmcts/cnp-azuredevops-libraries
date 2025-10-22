@@ -164,7 +164,7 @@ def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
         change_type = 'update'
     elif actions == ['delete', 'create'] or actions == ['create', 'delete']:
         change_type = 'update'
-    elif actions = ['no-op']:
+    elif actions == ['no-op']:
         change_type = 'no changes'
     summary_lines = diffs[:25]  # cap to avoid huge prompts
     return {
