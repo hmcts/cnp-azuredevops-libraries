@@ -85,9 +85,9 @@ steps:
           python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
           --plansDir $(Build.ArtifactStagingDirectory)/tfplans/ \
           --outputDir $(Build.ArtifactStagingDirectory)/tfhtml/ \
-          --endpoint $(cognitive-account-endpoint) \
-          --deployment $(openai-deployment) \
-          --apiKey $(cognitive-account-primary-access-key)
+          --endpoint dummy \
+          --deployment dummy \
+          --apiKey dummy
           --noAI
         fi
 
