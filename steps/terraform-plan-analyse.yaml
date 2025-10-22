@@ -68,7 +68,7 @@ steps:
       inlineScript: |
         mkdir $(Build.ArtifactStagingDirectory)/tfplans/
         mkdir $(Build.ArtifactStagingDirectory)/tfhtml/
-        az storage azcopy blob download -c plan-txt --account-name tfplanviewersa -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/tfplans/ --subscription DTS-CFTPTL-INTSVC
+        az storage azcopy blob download -c plan-json --account-name tfplanviewersa -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/tfplans/ --subscription DTS-CFTPTL-INTSVC
       azureSubscription: ${{ parameters.serviceConnection }}
 
   - task: Bash@3
@@ -88,6 +88,7 @@ steps:
           --endpoint $(cognitive-account-endpoint) \
           --deployment $(openai-deployment) \
           --apiKey $(cognitive-account-primary-access-key)
+          --noAI
         fi
 
   - task: AzureCLI@2

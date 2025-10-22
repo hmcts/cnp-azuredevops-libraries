@@ -218,7 +218,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        terraform show tfplan-$(tfPlanName) > tfplan-${{ parameters.environment }}-${{ parameters.component }}.txt
+        terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[] | select(.change.actions != ["no-op"])' > tfplan-${{ parameters.environment }}-${{ parameters.component }}.json
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
@@ -238,7 +238,7 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        az storage azcopy blob upload -c plan-txt --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).txt" --subscription DTS-CFTPTL-INTSVC --account-key $(storage-account-primary-key)
+        az storage azcopy blob upload -c plan-json --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).json -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).json" --subscription DTS-CFTPTL-INTSVC --account-key $(storage-account-primary-key)
       azureSubscription: ${{ parameters.serviceConnection }}
 
   - task: TerraformCLI@2
