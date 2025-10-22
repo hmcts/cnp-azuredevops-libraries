@@ -21,16 +21,10 @@ def read_file_text(p):
     with open(p, 'r', encoding='utf-8', errors='replace') as fh:
         return fh.read()
 
-# ---- Chunking helpers ----
-## (AI chunking removed) ##
 
-# We'll process each plan file separately, chunking as necessary
-
-# Collect rows from all AI calls
+# Collect rows
 html_rows: List[str] = []
 seen_resources = set()  # (stage, env, resource_name)
-
-## (AI prompt builder removed) ##
 
 def derive_stage_and_env(file_name: str):
     base = re.sub(r'\.json$', '', file_name)
@@ -44,7 +38,6 @@ def derive_stage_and_env(file_name: str):
     stage = stage.replace('tfplan-', '')
     return stage, environment
 
-## (AI call removed) ##
 
 def extract_resource_names(tr_html: str):
     names = []
@@ -60,8 +53,6 @@ def extract_resource_names(tr_html: str):
             if res_name:
                 names.append((stage, env, res_name))
     return names
-
-# ---------------- JSON PLAN PARSING -----------------
 
 def load_json_plan_variants(raw: str) -> Dict[str, Any]:
     """Attempt to parse raw JSON which can be:
