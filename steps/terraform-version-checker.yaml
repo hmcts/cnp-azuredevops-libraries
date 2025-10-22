@@ -23,7 +23,6 @@ steps:
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'registry-slack-webhook'
 
-
   - task: Bash@3
     displayName: Terraform Nagger
     inputs:

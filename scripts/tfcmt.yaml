@@ -18,5 +18,4 @@ terraform:
       {{ end }}
       {{template "change_outside_terraform" .}}
       {{template "warning" .}}
-
       {{template "error_messages" .}}

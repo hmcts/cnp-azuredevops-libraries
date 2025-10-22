@@ -123,7 +123,7 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  - task: TerraformCLI@1
+  - task: TerraformCLI@2
     displayName: Terraform init ${{ parameters.component }}
     inputs:
       command: init
@@ -142,7 +142,7 @@ steps:
       backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
       commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }} ${{ parameters.initCommandOptions }}'
 
-  - task: TerraformCLI@1
+  - task: TerraformCLI@2
     displayName: Terraform validate
     inputs:
       command: validate
@@ -151,7 +151,7 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  - task: TerraformCLI@1
+  - task: TerraformCLI@2
     displayName: Terraform plan ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     ${{ if parameters.terraformEnvironmentVariables }}:
@@ -241,7 +241,7 @@ steps:
         az storage azcopy blob upload -c plan-txt --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).txt -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).txt" --subscription DTS-CFTPTL-INTSVC --account-key $(storage-account-primary-key)
       azureSubscription: ${{ parameters.serviceConnection }}
 
-  - task: TerraformCLI@1
+  - task: TerraformCLI@2
     displayName: Terraform apply ${{ parameters.component }}
     ${{ if parameters.terraformEnvironmentVariables }}:
       env: ${{ parameters.terraformEnvironmentVariables  }}
@@ -261,7 +261,7 @@ steps:
       commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName)"
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
-      - task: TerraformCLI@1
+      - task: TerraformCLI@2
         displayName: Terraform destroy ${{ parameters.component }}
         ${{ if parameters.terraformEnvironmentVariables }}:
           env: ${{ parameters.terraformEnvironmentVariables  }}

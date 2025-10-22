@@ -1,4 +1,7 @@
 parameters:
+  - name: repo_name
+    default: ''
+
   - name: keyvaultName
     default: ''
 
@@ -87,6 +90,14 @@ steps:
         # Cleanup the priv key file
         rm -f "$TEMP_KEY_FILE"
     condition: ${{ eq(parameters.runManualStart, true) }}
+
+  - script: |
+      cd $(System.DefaultWorkingDirectory)/${{ parameters.repo_name }}
+      terraform fmt -check -recursive
+      terraform fmt -recursive
+    displayName: 'Terraform Formating '
+    continueOnError: true
+
 
   - task: PowerShell@2
     displayName: Run PESTER tests
