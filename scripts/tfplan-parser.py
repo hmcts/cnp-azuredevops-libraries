@@ -1,20 +1,17 @@
 import os
 import re
-import requests
+import json
 import argparse
+from typing import List, Dict, Any
 
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 default_template = os.path.join(script_dir, 'plan.html')
 
-parser = argparse.ArgumentParser(description="Analyse terraform plans using AI and inject results into HTML template")
-parser.add_argument("--plansDir", type=str, required=True, help="Path to the directory containing terraform plan text files")
+parser = argparse.ArgumentParser(description="Convert Terraform JSON plan(s) to HTML table rows (local only, no AI)")
+parser.add_argument("--plansDir", type=str, required=True, help="Directory containing terraform plan JSON files (terraform show -json or concatenated resource change objects)")
 parser.add_argument("--outputDir", type=str, required=True, help="Directory to write generated plan.html")
-parser.add_argument("--endpoint", type=str, required=True, help="Azure OpenAI endpoint base URL (e.g. https://my-resource.openai.azure.com)")
-parser.add_argument("--deployment", type=str, required=True, help="Azure OpenAI model deployment name")
-parser.add_argument("--apiKey", type=str, required=True, help="Azure OpenAI API key")
 parser.add_argument("--templateFile", type=str, default=default_template, help=f"Path to HTML template (default: {default_template})")
-parser.add_argument("--chunkChars", type=int, default=12000, help="Approximate maximum characters of plan text per AI request (large plans are split)")
 args = parser.parse_args()
 
 plans_dir = args.plansDir
@@ -24,69 +21,13 @@ def read_file_text(p):
     with open(p, 'r', encoding='utf-8', errors='replace') as fh:
         return fh.read()
 
-# ---- Chunking helpers ----
-def estimate_tokens(text: str) -> int:
-    # Rough heuristic: 1 token ~ 4 chars
-    return max(1, len(text)//4)
 
-def chunk_plan(plan_text: str, max_chars: int):
-    if len(plan_text) <= max_chars:
-        return [plan_text]
-    lines = plan_text.splitlines()
-    chunks = []
-    cur = []
-    cur_len = 0
-    safe_boundary_patterns = re.compile(r'^(# |Terraform will perform the following actions|Plan: |\s*$)')
-    for line in lines:
-        # Always append first; we'll decide split after potential boundary
-        cur.append(line)
-        cur_len += len(line) + 1
-        if cur_len >= max_chars and safe_boundary_patterns.match(line):
-            chunks.append('\n'.join(cur))
-            cur = []
-            cur_len = 0
-    if cur:
-        chunks.append('\n'.join(cur))
-    # Fallback: ensure no empty
-    return [c for c in chunks if c.strip()]
-
-# We'll process each plan file separately, chunking as necessary
-
-# Collect rows from all AI calls
-all_ai_rows = []
-seen_resources = set()  # key: (stage_name, environment, resource_name)
-
-def build_file_prompt(file_name: str, chunk_text: str, stage_name: str, environment: str, chunk_idx: int, total_chunks: int, seen_resource_names: set):
-    seen_list = ', '.join(sorted(seen_resource_names)) if seen_resource_names else 'None'
-    base_instructions = f"""
-You are given a fragment ({chunk_idx}/{total_chunks}) of a terraform plan for file {file_name}.
-Only output rows for resources present in THIS fragment. Do NOT repeat resources already emitted in previous fragments (Previously emitted resource names: {seen_list}).
-Produce one <tr> per actual managed change with exactly 7 <td> cells in this order:
-1) Stage Name (derived from the plan file name by stripping leading pattern tfplan-<env>- and the file extension; examples: tfplan-aat-network.txt -> network; tfplan-preview-platform.txt -> platform; tfplan-sbox-storage.txt -> storage. If pattern not found, use filename without extension.)
-2) Environment (infer from plan file marker name if present: e.g. tfplan-aat-network.txt -> aat, tfplan-preview- -> preview, tfplan-sbox- or ptlsbox -> sandbox, perftest -> testing; keep lowercase; if not inferable derive from resource naming.)
-3) Location (default 'uksouth' if unspecified)
-4) Resource Name
-5) Change Type (create | update | delete). Treat replacements ("-/+") as update unless it's a pure destroy.
-6) Tags Only ('Yes' only if the Change Type is 'update' and the update being made is to change the values of Azure resource tags; else 'No').
-7) If a resource is being created and that resource has tags then the Change Type should be 'create' and the Tags Only value should be 'No'
-8) Details (succinct attribute/tag change notes, e.g. 'tags added', 'Kubernetes version change', 'max_count: 3 → 5').
-
-Input plans are delimited by lines: --- <planfile> --- (planfile names are for deriving Stage Name & Environment only; DO NOT output the raw filename directly unless processed into Stage Name as specified).
-
-Stage Name (already determined): {stage_name}
-Environment (already determined): {environment}
-
-If something is being updated, use 'update'.
-If something is being destroyed or deleted, use 'delete'
-If nothing is being changed, use 'no changes'
-Ignore and DO NOT output rows for drift sections (changes outside of Terraform) or manual deletions where the plan simply recreates the resource; in those cases output only the resulting create action.
-Exclude any lines that are commentary, import suggestions, or purely informational (# (known after apply), # (import ...)).
-Return ONLY <tr> rows, no surrounding commentary.
-Fragment Plan Content:\n\n{chunk_text}\n\n"""
-    return base_instructions
+# Collect rows
+html_rows: List[str] = []
+seen_resources = set()  # (stage, env, resource_name)
 
 def derive_stage_and_env(file_name: str):
-    base = re.sub(r'\.txt$', '', file_name)
+    base = re.sub(r'\.json$', '', file_name)
     # Expect patterns like tfplan-<env>-<stage>
     m = re.match(r'^tfplan-([a-z0-9]+?)-(.+)$', base)
     environment = 'unknown'
@@ -97,25 +38,6 @@ def derive_stage_and_env(file_name: str):
     stage = stage.replace('tfplan-', '')
     return stage, environment
 
-def call_openai(prompt_text: str):
-    api_url = f"{args.endpoint}/openai/deployments/{args.deployment}/chat/completions?api-version=2023-03-15-preview"
-    headers = {"api-key": args.apiKey, "Content-Type": "application/json"}
-    payload = {"messages": [
-        {"role": "system", "content": "You are an expert in Terraform plan interpretation and concise HTML row generation."},
-        {"role": "user", "content": prompt_text}
-    ], "temperature": 1, "max_completion_tokens": 16384}
-    resp = requests.post(api_url, headers=headers, json=payload, timeout=120)
-    rj = resp.json()
-    try:
-        content = rj['choices'][0]['message']['content']
-    except Exception:
-        raise RuntimeError(f"Unexpected Azure OpenAI response: {rj}")
-    # Strip code fences and extraneous wrappers
-    fm = re.match(r"```(?:html|HTML)?\n([\s\S]*?)```", content.strip())
-    if fm:
-        content = fm.group(1).strip()
-    content = re.sub(r"</?(?:table|tbody)[^>]*>", "", content, flags=re.IGNORECASE)
-    return content
 
 def extract_resource_names(tr_html: str):
     names = []
@@ -132,40 +54,168 @@ def extract_resource_names(tr_html: str):
                 names.append((stage, env, res_name))
     return names
 
+def load_json_plan_variants(raw: str) -> Dict[str, Any]:
+    """Attempt to parse raw JSON which can be:
+    1. A full terraform show -json output (has resource_changes array)
+    2. Concatenated pretty-printed resource change JSON objects (we'll split by top-level object)
+    Returns dict with key 'resource_changes' (list).
+    """
+    raw_strip = raw.strip()
+    if not raw_strip:
+        return {"resource_changes": []}
+    # Fast path full plan
+    try:
+        doc = json.loads(raw_strip)
+        if isinstance(doc, dict) and 'resource_changes' in doc:
+            return {"resource_changes": doc.get('resource_changes') or []}
+        # Single resource change object
+        if isinstance(doc, dict) and 'address' in doc and 'change' in doc:
+            return {"resource_changes": [doc]}
+    except Exception:
+        pass
+    # Fallback: extract multiple JSON objects by brace balance
+    objs = []
+    buf = []
+    depth = 0
+    in_obj = False
+    for ch in raw:
+        if ch == '{':
+            depth += 1
+            in_obj = True
+        if in_obj:
+            buf.append(ch)
+        if ch == '}':
+            depth -= 1
+            if depth == 0 and in_obj:
+                # end object
+                candidate = ''.join(buf)
+                try:
+                    obj = json.loads(candidate)
+                    if isinstance(obj, dict):
+                        objs.append(obj)
+                except Exception:
+                    pass
+                buf = []
+                in_obj = False
+    return {"resource_changes": objs}
+
+def flatten_dict(d: Any, prefix: str = '') -> Dict[str, Any]:
+    out = {}
+    if isinstance(d, dict):
+        for k, v in d.items():
+            new_p = f"{prefix}.{k}" if prefix else k
+            if isinstance(v, (dict, list)):
+                out.update(flatten_dict(v, new_p))
+            else:
+                out[new_p] = v
+    elif isinstance(d, list):
+        for i, v in enumerate(d):
+            new_p = f"{prefix}[{i}]" if prefix else f"[{i}]"
+            if isinstance(v, (dict, list)):
+                out.update(flatten_dict(v, new_p))
+            else:
+                out[new_p] = v
+    return out
+
+def diff_before_after(before: Any, after: Any) -> List[str]:
+    if before is None and after is None:
+        return []
+    fb = flatten_dict(before) if isinstance(before, (dict, list)) else {"value": before}
+    fa = flatten_dict(after) if isinstance(after, (dict, list)) else {"value": after}
+    changes = []
+    keys = set(fb.keys()) | set(fa.keys())
+    for k in sorted(keys):
+        vb = fb.get(k, '<absent>')
+        va = fa.get(k, '<absent>')
+        if vb == va:
+            continue
+        # Shorten long values
+        def shorten(v):
+            s = str(v)
+            return (s[:60] + '…') if len(s) > 60 else s
+        changes.append(f"{k}: {shorten(vb)} -> {shorten(va)}")
+    return changes
+
+def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
+    addr = rc.get('address') or rc.get('name')
+    change = rc.get('change') or {}
+    actions = change.get('actions') or []
+    before = change.get('before')
+    after = change.get('after')
+    diffs = diff_before_after(before, after)
+    # Determine tags-only: all diffs start with 'tags' key path
+    tags_only = bool(diffs) and all(d.startswith('tags') or '.tags.' in d for d in diffs)
+    # Determine change type
+    change_type = 'update'
+    if actions == ['create']:
+        change_type = 'create'
+    elif actions == ['delete']:
+        change_type = 'delete'
+    elif actions == ['update']:
+        change_type = 'update'
+    elif actions == ['delete', 'create'] or actions == ['create', 'delete']:
+        change_type = 'update'
+    elif actions == ['no-op']:
+        change_type = 'no changes'
+    summary_lines = diffs[:25]  # cap to avoid huge prompts
+    return {
+        'address': addr,
+        'actions': actions,
+        'change_type': change_type,
+        'diffs': summary_lines,
+        'tags_only': tags_only
+    }
+
+def build_json_summary_text(summaries: List[Dict[str, Any]]) -> str:
+    parts = []
+    for s in summaries:
+        parts.append(f"ADDRESS: {s['address']}\nCHANGE: {s['change_type']} TAGS_ONLY: {str(s['tags_only']).lower()}\nDIFFS:\n" + ("\n".join(s['diffs']) if s['diffs'] else "<no scalar diff details>"))
+        parts.append("---")
+    return '\n'.join(parts)
+
+def resource_name_from_address(address: str) -> str:
+    if not address:
+        return ''
+    # remove module prefixes
+    parts = address.split('.')
+    last = parts[-1]
+    # handle index or key
+    last = re.sub(r'\["?([^\]]+)"?\]$', r'\1', last)
+    last = last.replace('"', '')
+    return last
+
+def make_row_from_summary(stage: str, env: str, location: str, summary: Dict[str, Any]) -> str:
+    res_name = resource_name_from_address(summary['address'])
+    tags_only = 'Yes' if (summary['tags_only'] and summary['change_type'] == 'update') else 'No'
+    # Combine up to first 3 diff lines for richer context
+    if summary['tags_only'] and summary['change_type'] == 'update':
+        details = 'tags updated'
+    elif summary['diffs']:
+        details = '; '.join(summary['diffs'][:3])
+    else:
+        details = summary['change_type']
+    details = details.replace('<', '&lt;').replace('>', '&gt;')
+    return f"<tr><td>{stage}</td><td>{env}</td><td>{location}</td><td>{res_name}</td><td>{summary['change_type']}</td><td>{tags_only}</td><td>{details}</td></tr>"
+
 for pf in plan_files:
     file_name = os.path.basename(pf)
     raw = read_file_text(pf)
     stage_name, environment = derive_stage_and_env(file_name)
-    chunks = chunk_plan(raw, args.chunkChars)
-    print(f"Processing {file_name}: {len(raw)} chars -> {len(chunks)} chunk(s)")
-    file_seen_names = set([n for (s,e,n) in seen_resources if s == stage_name and e == environment])
-    for idx, chunk_text in enumerate(chunks, start=1):
-        prompt_text = build_file_prompt(file_name, chunk_text, stage_name, environment, idx, len(chunks), {n for n in file_seen_names})
-        ai_out = call_openai(prompt_text)
-        if '<tr' not in ai_out.lower():
-            print(f"[WARN] No <tr> rows returned for {file_name} chunk {idx}")
-        else:
-            # Deduplicate rows that contain already seen resource names
-            added_rows = []
-            row_blocks = re.findall(r'<tr[\s\S]*?</tr>', ai_out, flags=re.IGNORECASE)
-            for rb in row_blocks:
-                cells = re.findall(r'<td[^>]*>([\s\S]*?)</td>', rb, flags=re.IGNORECASE)
-                if len(cells) >= 4:
-                    rn = re.sub(r'<[^>]+>', '', cells[3]).strip()
-                    key = (stage_name, environment, rn)
-                    if key in seen_resources:
-                        continue
-                    seen_resources.add(key)
-                    file_seen_names.add(rn)
-                    added_rows.append(rb)
-            if added_rows:
-                all_ai_rows.append('\n'.join(added_rows))
+    plan_obj = load_json_plan_variants(raw)
+    rc_list = plan_obj.get('resource_changes', []) or []
+    summaries = [summarize_resource_change(rc) for rc in rc_list]
+    print(f"Processing {file_name}: {len(rc_list)} resource change(s)")
+    for s in summaries:
+        rn = resource_name_from_address(s['address'])
+        key = (stage_name, environment, rn)
+        if key in seen_resources:
+            continue
+        seen_resources.add(key)
+        html_rows.append(make_row_from_summary(stage_name, environment, 'uksouth', s))
 
-tf_plan = ''  # No longer using concatenated big prompt; variable kept for backward compatibility logging
-
-ai_rows = '\n'.join(all_ai_rows)
+ai_rows = '\n'.join(html_rows)
 if not ai_rows.strip():
-    print("[WARN] No AI rows produced.")
+    print("[WARN] No rows produced from JSON plans.")
 
 # Load template
 template_path = args.templateFile

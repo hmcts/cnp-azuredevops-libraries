@@ -68,11 +68,11 @@ steps:
       inlineScript: |
         mkdir $(Build.ArtifactStagingDirectory)/tfplans/
         mkdir $(Build.ArtifactStagingDirectory)/tfhtml/
-        az storage azcopy blob download -c plan-txt --account-name tfplanviewersa -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/tfplans/ --subscription DTS-CFTPTL-INTSVC
+        az storage azcopy blob download -c plan-json --account-name tfplanviewersa -s "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/*" -d $(Build.ArtifactStagingDirectory)/tfplans/ --subscription DTS-CFTPTL-INTSVC
       azureSubscription: ${{ parameters.serviceConnection }}
 
   - task: Bash@3
-    displayName: Analyse terraform plan with AI
+    displayName: Analyse terraform plan
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
     inputs:
       targetType: 'inline'
@@ -81,13 +81,10 @@ steps:
           echo "No plans found in $(Build.ArtifactStagingDirectory)/tfplans/. Skipping analysis."
           exit 1
         else
-          echo "Analysing plans. This may take up to 15 minutes."
+          echo "Analysing plans..."
           python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
           --plansDir $(Build.ArtifactStagingDirectory)/tfplans/ \
-          --outputDir $(Build.ArtifactStagingDirectory)/tfhtml/ \
-          --endpoint $(cognitive-account-endpoint) \
-          --deployment $(openai-deployment) \
-          --apiKey $(cognitive-account-primary-access-key)
+          --outputDir $(Build.ArtifactStagingDirectory)/tfhtml/
         fi
 
   - task: AzureCLI@2
