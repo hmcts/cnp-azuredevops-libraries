@@ -81,6 +81,7 @@ steps:
           echo "No plans found in $(Build.ArtifactStagingDirectory)/tfplans/. Skipping analysis."
           exit 1
         else
+          echo "Analysing plans. This may take up to 10 minutes."
           python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
           --plansDir $(Build.ArtifactStagingDirectory)/tfplans/ \
           --outputDir $(Build.ArtifactStagingDirectory)/tfhtml/ \
