@@ -44,8 +44,22 @@
     .panel { background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.9rem 1rem 0.2rem; box-shadow: var(--shadow); }
     .filters { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: flex-end; }
     .filters label { font-size: 0.72rem; letter-spacing: 0.04em; font-weight: 600; text-transform: uppercase; color: var(--text-soft); display: flex; flex-direction: column; gap: 0.35rem; }
-    select { appearance: none; -webkit-appearance: none; background: var(--bg-alt); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.45rem 2rem 0.45rem 0.6rem; font-size: 0.85rem; min-width: 10ch; position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03); }
-    select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  /* Multi-select dropdown styles */
+  .ms-container { position: relative; display: flex; flex-direction: column; gap: 0.35rem; }
+  .ms-label { font-size: 0.72rem; letter-spacing: 0.04em; font-weight: 600; text-transform: uppercase; color: var(--text-soft); }
+  .ms-trigger { background: var(--bg-alt); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.45rem 2rem 0.45rem 0.6rem; font-size: 0.75rem; min-width: 140px; text-align: left; cursor: pointer; position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03); }
+  .ms-trigger:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .ms-trigger::after { content: '\25BC'; position: absolute; right: 0.6rem; top: 50%; transform: translateY(-50%); font-size: 0.55rem; opacity: 0.7; }
+  .ms-panel { display: none; position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.4rem 0.4rem 0.55rem; box-shadow: var(--shadow); z-index: 20; min-width: 220px; max-height: 260px; overflow-y: auto; }
+  .ms-panel.open { display: block; }
+  .ms-panel .ms-actions { display: flex; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.4rem; }
+  .ms-panel .ms-actions button { background: var(--accent); color: #fff; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; font-size: 0.6rem; cursor: pointer; font-weight: 600; letter-spacing: 0.05em; }
+  .ms-panel .ms-actions button.secondary { background: var(--border); color: var(--text-soft); }
+  .ms-option { display: flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; padding: 0.25rem 0.3rem; border-radius: 4px; cursor: pointer; }
+  .ms-option input { cursor: pointer; }
+  .ms-option:hover { background: rgba(37,99,235,0.08); }
+  .ms-search { font-size: 0.72rem; letter-spacing: 0.04em; font-weight: 600; text-transform: uppercase; color: var(--text-soft); display: flex; flex-direction: column; gap: 0.35rem; }
+  .ms-summary-empty { color: var(--text-soft); font-style: italic; }
     .filters-group { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
     .meta { margin-top: 0.8rem; font-size: 0.75rem; color: var(--text-soft); display: flex; gap: 1rem; flex-wrap: wrap; }
     .badge { display: inline-block; padding: 0.25rem 0.55rem; border-radius: 999px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; background: var(--border); color: var(--text-soft); }
@@ -92,34 +106,32 @@
     <div class="panel">
       <div class="filters">
         <div class="filters-group">
-          <label>Stage Name
-            <select id="filter-stage">
-              <option value="">All</option>
-            </select>
-          </label>
-          <label>Environment
-            <select id="filter-env">
-              <option value="">All</option>
-            </select>
-          </label>
-          <label>Location
-            <select id="filter-location">
-              <option value="">All</option>
-            </select>
-          </label>
-          <label>Change Type
-            <select id="filter-change">
-              <option value="">All</option>
-            </select>
-          </label>
-          <label>Tags Only
-            <select id="filter-tags">
-              <option value="">All</option>
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-            </select>
-          </label>
-          <label>Search
+          <div class="ms-container" data-filter="stage">
+            <span class="ms-label">Stage Name</span>
+            <button type="button" class="ms-trigger" id="ms-trigger-stage">All</button>
+            <div class="ms-panel" id="ms-panel-stage"></div>
+          </div>
+          <div class="ms-container" data-filter="env">
+            <span class="ms-label">Environment</span>
+            <button type="button" class="ms-trigger" id="ms-trigger-env">All</button>
+            <div class="ms-panel" id="ms-panel-env"></div>
+          </div>
+          <div class="ms-container" data-filter="location">
+            <span class="ms-label">Location</span>
+            <button type="button" class="ms-trigger" id="ms-trigger-location">All</button>
+            <div class="ms-panel" id="ms-panel-location"></div>
+          </div>
+          <div class="ms-container" data-filter="change">
+            <span class="ms-label">Change Type</span>
+            <button type="button" class="ms-trigger" id="ms-trigger-change">All</button>
+            <div class="ms-panel" id="ms-panel-change"></div>
+          </div>
+          <div class="ms-container" data-filter="tags">
+            <span class="ms-label">Tags Only</span>
+            <button type="button" class="ms-trigger" id="ms-trigger-tags">All</button>
+            <div class="ms-panel" id="ms-panel-tags"></div>
+          </div>
+          <label class="ms-search">Search
             <div class="search-box">
               <input type="text" id="search-text" placeholder="Name / details..." />
             </div>
@@ -154,23 +166,84 @@
     const rows = Array.from(table.tBodies[0].rows);
 
     function getUnique(colIdx) {
-      return [...new Set(rows.map(r => r.cells[colIdx].textContent))].sort();
+      return [...new Set(rows.map(r => r.cells[colIdx].textContent.trim()))].sort();
     }
 
-    function fillSelect(selectId, values) {
-      const sel = document.getElementById(selectId);
-      values.forEach(v => {
-        const opt = document.createElement('option');
-        opt.value = v;
-        opt.textContent = v;
-        sel.appendChild(opt);
+    // Data for each filter
+    const filterData = {
+      stage: getUnique(0),
+      env: getUnique(1),
+      location: getUnique(2),
+      change: getUnique(4).map(v => v.toLowerCase()),
+      tags: ['yes','no']
+    };
+
+    // Build panel with checkboxes
+    function buildPanel(key) {
+      const panel = document.getElementById(`ms-panel-${key}`);
+      const values = filterData[key];
+      panel.innerHTML = '';
+      const actions = document.createElement('div');
+      actions.className = 'ms-actions';
+      actions.innerHTML = '<button type="button" data-act="all">All</button><button type="button" data-act="none" class="secondary">None</button>';
+      panel.appendChild(actions);
+      values.forEach(val => {
+        const opt = document.createElement('label');
+        opt.className = 'ms-option';
+        opt.innerHTML = `<input type="checkbox" value="${val}"><span>${val}</span>`;
+        panel.appendChild(opt);
+      });
+      panel.addEventListener('click', e => {
+        if (e.target.dataset.act === 'all') {
+          panel.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
+          updateTriggerLabel(key);
+          filterTable();
+        } else if (e.target.dataset.act === 'none') {
+          panel.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+          updateTriggerLabel(key);
+          filterTable();
+        } else if (e.target.type === 'checkbox') {
+          updateTriggerLabel(key);
+          filterTable();
+        }
       });
     }
 
-  fillSelect('filter-stage', getUnique(0));
-  fillSelect('filter-env', getUnique(1));
-  fillSelect('filter-location', getUnique(2));
-  fillSelect('filter-change', getUnique(4));
+    function getSelectedValues(key) {
+      const panel = document.getElementById(`ms-panel-${key}`);
+      return Array.from(panel.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value.trim());
+    }
+
+    function updateTriggerLabel(key) {
+      const trigger = document.getElementById(`ms-trigger-${key}`);
+      const sel = getSelectedValues(key);
+      if (!sel.length) {
+        trigger.textContent = 'All';
+        trigger.classList.add('ms-summary-empty');
+      } else {
+        trigger.classList.remove('ms-summary-empty');
+        trigger.textContent = sel.slice(0,3).join(', ') + (sel.length > 3 ? ` +${sel.length-3}` : '');
+      }
+    }
+
+    ['stage','env','location','change','tags'].forEach(buildPanel);
+    ['stage','env','location','change','tags'].forEach(updateTriggerLabel);
+
+    // Toggle panel visibility
+    document.querySelectorAll('.ms-trigger').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const key = e.target.id.replace('ms-trigger-','');
+        const panel = document.getElementById(`ms-panel-${key}`);
+        const isOpen = panel.classList.contains('open');
+        document.querySelectorAll('.ms-panel.open').forEach(p => p.classList.remove('open'));
+        if (!isOpen) panel.classList.add('open');
+      });
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.ms-container')) {
+        document.querySelectorAll('.ms-panel.open').forEach(p => p.classList.remove('open'));
+      }
+    });
 
     // Decorate existing rows (badges + tag-only styling)
     rows.forEach(r => {
@@ -201,29 +274,26 @@
     }
 
     function filterTable() {
-  const stage = document.getElementById('filter-stage').value.trim();
-  const env = document.getElementById('filter-env').value.trim();
-    const loc = document.getElementById('filter-location').value.trim();
-    const change = document.getElementById('filter-change').value.trim();
-    const tags = document.getElementById('filter-tags').value.trim();
+      const stages = getSelectedValues('stage');
+      const envs = getSelectedValues('env');
+      const locs = getSelectedValues('location');
+      const changes = getSelectedValues('change');
+      const tagsSel = getSelectedValues('tags');
       const search = document.getElementById('search-text').value.toLowerCase().trim();
       let visible = 0;
       rows.forEach(row => {
         let show = true;
-  const stageVal = row.cells[0].textContent;
-  const envVal = row.cells[1].textContent;
-  const locVal = row.cells[2].textContent;
-  const changeVal = row.cells[4].textContent.trim();
-  const tagsVal = row.cells[5].textContent.toLowerCase();
+        const stageVal = row.cells[0].textContent.trim();
+        const envVal = row.cells[1].textContent.trim();
+        const locVal = row.cells[2].textContent.trim();
+        const changeVal = row.cells[4].textContent.trim().toLowerCase();
+        const tagsVal = row.cells[5].textContent.trim().toLowerCase();
         const strings = row.textContent.toLowerCase();
-  if (stage && stageVal !== stage) show = false;
-  if (env && envVal !== env) show = false;
-        if (loc && locVal !== loc) show = false;
-        if (change && changeVal !== change) show = false;
-        if (tags) {
-          if (tags === 'yes' && tagsVal !== 'yes') show = false;
-          if (tags === 'no' && tagsVal !== 'no') show = false;
-        }
+        if (stages.length && !stages.includes(stageVal)) show = false;
+        if (envs.length && !envs.includes(envVal)) show = false;
+        if (locs.length && !locs.includes(locVal)) show = false;
+        if (changes.length && !changes.includes(changeVal)) show = false;
+        if (tagsSel.length && !tagsSel.includes(tagsVal)) show = false;
         if (search && !strings.includes(search)) show = false;
         row.style.display = show ? '' : 'none';
         if (show) visible++;
@@ -234,18 +304,14 @@
     }
 
     function resetFilters() {
-  ['filter-stage','filter-env','filter-location','filter-change','filter-tags','search-text'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value='';
+      ['stage','env','location','change','tags'].forEach(key => {
+        const panel = document.getElementById(`ms-panel-${key}`);
+        panel.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+        updateTriggerLabel(key);
       });
+      document.getElementById('search-text').value='';
       filterTable();
     }
-
-  document.getElementById('filter-stage').addEventListener('change', filterTable);
-  document.getElementById('filter-env').addEventListener('change', filterTable);
-  document.getElementById('filter-location').addEventListener('change', filterTable);
-  document.getElementById('filter-change').addEventListener('change', filterTable);
-    document.getElementById('filter-tags').addEventListener('change', filterTable);
     document.getElementById('search-text').addEventListener('input', filterTable);
     document.getElementById('reset-btn').addEventListener('click', resetFilters);
 

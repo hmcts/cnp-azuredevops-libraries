@@ -173,19 +173,10 @@ def build_json_summary_text(summaries: List[Dict[str, Any]]) -> str:
         parts.append("---")
     return '\n'.join(parts)
 
-def resource_name_from_address(address: str) -> str:
-    if not address:
-        return ''
-    # remove module prefixes
-    parts = address.split('.')
-    last = parts[-1]
-    # handle index or key
-    last = re.sub(r'\["?([^\]]+)"?\]$', r'\1', last)
-    last = last.replace('"', '')
-    return last
+## Resource name now uses full address unchanged.
 
 def make_row_from_summary(stage: str, env: str, location: str, summary: Dict[str, Any]) -> str:
-    res_name = resource_name_from_address(summary['address'])
+    res_name = summary.get('address', '') or ''
     tags_only = 'Yes' if (summary['tags_only'] and summary['change_type'] == 'update') else 'No'
     # Combine up to first 3 diff lines for richer context
     if summary['tags_only'] and summary['change_type'] == 'update':
@@ -206,7 +197,7 @@ for pf in plan_files:
     summaries = [summarize_resource_change(rc) for rc in rc_list]
     print(f"Processing {file_name}: {len(rc_list)} resource change(s)")
     for s in summaries:
-        rn = resource_name_from_address(s['address'])
+        rn = s.get('address', '') or ''
         key = (stage_name, environment, rn)
         if key in seen_resources:
             continue
