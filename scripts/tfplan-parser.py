@@ -33,7 +33,7 @@ seen_resources = set()  # (stage, env, resource_name)
 ## (AI prompt builder removed) ##
 
 def derive_stage_and_env(file_name: str):
-    base = re.sub(r'\.txt$', '', file_name)
+    base = re.sub(r'\.json$', '', file_name)
     # Expect patterns like tfplan-<env>-<stage>
     m = re.match(r'^tfplan-([a-z0-9]+?)-(.+)$', base)
     environment = 'unknown'
