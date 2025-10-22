@@ -92,28 +92,28 @@
     <div class="panel">
       <div class="filters">
         <div class="filters-group">
-          <label>Stage Name
-            <select id="filter-stage">
+          <label title="Select one or more stage names (Cmd/Ctrl+Click)">Stage Name
+            <select id="filter-stage" multiple>
               <option value="">All</option>
             </select>
           </label>
-          <label>Environment
-            <select id="filter-env">
+          <label title="Select one or more environments">Environment
+            <select id="filter-env" multiple>
               <option value="">All</option>
             </select>
           </label>
-          <label>Location
-            <select id="filter-location">
+          <label title="Select one or more locations">Location
+            <select id="filter-location" multiple>
               <option value="">All</option>
             </select>
           </label>
-          <label>Change Type
-            <select id="filter-change">
+          <label title="Select one or more change types">Change Type
+            <select id="filter-change" multiple>
               <option value="">All</option>
             </select>
           </label>
-          <label>Tags Only
-            <select id="filter-tags">
+          <label title="Select one or both tags states">Tags Only
+            <select id="filter-tags" multiple>
               <option value="">All</option>
               <option value="yes">Yes</option>
               <option value="no">No</option>
@@ -200,30 +200,32 @@
       document.getElementById('meta-bar').textContent = `${visible} visible of ${total} total | ${tagOnlyVisible} tag-only changes`;
     }
 
+    function getSelected(id) {
+      const sel = document.getElementById(id);
+      return Array.from(sel.selectedOptions).map(o => o.value.trim()).filter(v => v !== '');
+    }
+
     function filterTable() {
-  const stage = document.getElementById('filter-stage').value.trim();
-  const env = document.getElementById('filter-env').value.trim();
-    const loc = document.getElementById('filter-location').value.trim();
-    const change = document.getElementById('filter-change').value.trim();
-    const tags = document.getElementById('filter-tags').value.trim();
+      const stages = getSelected('filter-stage');
+      const envs = getSelected('filter-env');
+      const locs = getSelected('filter-location');
+      const changes = getSelected('filter-change');
+      const tagsSel = getSelected('filter-tags');
       const search = document.getElementById('search-text').value.toLowerCase().trim();
       let visible = 0;
       rows.forEach(row => {
         let show = true;
-  const stageVal = row.cells[0].textContent;
-  const envVal = row.cells[1].textContent;
-  const locVal = row.cells[2].textContent;
-  const changeVal = row.cells[4].textContent.trim();
-  const tagsVal = row.cells[5].textContent.toLowerCase();
+        const stageVal = row.cells[0].textContent.trim();
+        const envVal = row.cells[1].textContent.trim();
+        const locVal = row.cells[2].textContent.trim();
+        const changeVal = row.cells[4].textContent.trim().toLowerCase();
+        const tagsVal = row.cells[5].textContent.trim().toLowerCase();
         const strings = row.textContent.toLowerCase();
-  if (stage && stageVal !== stage) show = false;
-  if (env && envVal !== env) show = false;
-        if (loc && locVal !== loc) show = false;
-        if (change && changeVal !== change) show = false;
-        if (tags) {
-          if (tags === 'yes' && tagsVal !== 'yes') show = false;
-          if (tags === 'no' && tagsVal !== 'no') show = false;
-        }
+        if (stages.length && !stages.includes(stageVal)) show = false;
+        if (envs.length && !envs.includes(envVal)) show = false;
+        if (locs.length && !locs.includes(locVal)) show = false;
+        if (changes.length && !changes.includes(changeVal)) show = false;
+        if (tagsSel.length && !tagsSel.includes(tagsVal)) show = false;
         if (search && !strings.includes(search)) show = false;
         row.style.display = show ? '' : 'none';
         if (show) visible++;
@@ -234,18 +236,17 @@
     }
 
     function resetFilters() {
-  ['filter-stage','filter-env','filter-location','filter-change','filter-tags','search-text'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value='';
+      ['filter-stage','filter-env','filter-location','filter-change','filter-tags'].forEach(id => {
+        const sel = document.getElementById(id);
+        Array.from(sel.options).forEach((o,i) => o.selected = (i === 0)); // select 'All'
       });
+      document.getElementById('search-text').value='';
       filterTable();
     }
 
-  document.getElementById('filter-stage').addEventListener('change', filterTable);
-  document.getElementById('filter-env').addEventListener('change', filterTable);
-  document.getElementById('filter-location').addEventListener('change', filterTable);
-  document.getElementById('filter-change').addEventListener('change', filterTable);
-    document.getElementById('filter-tags').addEventListener('change', filterTable);
+    ['filter-stage','filter-env','filter-location','filter-change','filter-tags'].forEach(id => {
+      document.getElementById(id).addEventListener('change', filterTable);
+    });
     document.getElementById('search-text').addEventListener('input', filterTable);
     document.getElementById('reset-btn').addEventListener('click', resetFilters);
 
