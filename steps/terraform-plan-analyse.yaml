@@ -87,7 +87,7 @@ steps:
           --outputDir $(Build.ArtifactStagingDirectory)/tfhtml/ \
           --endpoint dummy \
           --deployment dummy \
-          --apiKey dummy
+          --apiKey dummy \
           --noAI
         fi
 
