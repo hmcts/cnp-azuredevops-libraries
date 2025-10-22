@@ -218,7 +218,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[] | select(.change.actions != ["no-op"])' > tfplan-${{ parameters.environment }}-${{ parameters.component }}.json
+        terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[]' > tfplan-${{ parameters.environment }}-${{ parameters.component }}.json
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
