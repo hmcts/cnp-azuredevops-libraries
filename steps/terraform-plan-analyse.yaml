@@ -84,7 +84,7 @@ steps:
           echo "Analysing plans..."
           python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py \
           --plansDir $(Build.ArtifactStagingDirectory)/tfplans/ \
-          --outputDir $(Build.ArtifactStagingDirectory)/tfhtml/ \
+          --outputDir $(Build.ArtifactStagingDirectory)/tfhtml/
         fi
 
   - task: AzureCLI@2
