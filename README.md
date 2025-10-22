@@ -156,3 +156,33 @@ Which then can be used as variable within terraform code as shown in below examp
 ```
 In terraform you can then reference this variable as `var.foo`
 
+### Using tfcmt and tfplan-viewer functions with Terraform
+
+By default, the pipeline will use a tool called tfcmt to post comments on pull requests with the output of the terraform plan command at each stage.
+
+If your pipeline has many stages and your pull requests are clogged with comments, you can optionally enable functionality to use the tfplan-viewer app to view the entire terraform plan in a single pane of glass.
+
+To enable this, add the following values to your pipeline:
+
+```
+  - stage: Analyse_plans
+    displayName: "Analyse terraform plan"
+    condition: and(eq('${{ variables.finalAction }}', 'Plan'), succeededOrFailed())
+    dependsOn:
+      - ${{ each component in parameters.environment_components }}:
+        - ${{ if eq(component.environment, 'stg') }}:
+          - aat_global
+        - ${{ if eq(component.environment, 'test') }}:
+          - perftest_global
+        - ${{ if and(ne(component.environment, 'stg'), ne(component.environment, 'test')) }}:
+          - ${{ component.environment }}_global
+    jobs:
+      - job: AnalysePlans
+        steps:
+          - template: steps/terraform-plan-analyse.yaml@cnp-azuredevops-libraries
+            parameters:
+              serviceConnection: DTS-CFTPTL-INTSVC
+```
+
+To also disable the tfcmt functionality, pass the `publishPlanResults` parameter to the terraform.yaml with a value of `false`
+
