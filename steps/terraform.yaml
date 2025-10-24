@@ -72,6 +72,10 @@ parameters:
     type: boolean
     default: true
 
+  - name: savePlanResultsServiceConnection
+    type: string
+    default: DTS-CFTPTL-INTSVC
+
 
 steps:
   - checkout: self
@@ -227,7 +231,7 @@ steps:
   - task: AzureKeyVault@2
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
     inputs:
-      azureSubscription: DTS-CFTPTL-INTSVC
+      azureSubscription: ${{ parameters.savePlanResultsServiceConnection }}
       KeyVaultName: tfplan-viewer-ptl-kv
       SecretsFilter: 'storage-account-primary-key'
 
@@ -238,7 +242,7 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        az storage azcopy blob upload -c plan-json --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).json -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).json" --subscription DTS-CFTPTL-INTSVC --account-key $(storage-account-primary-key)
+        az storage azcopy blob upload -c plan-json --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).json -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).json" --subscription ${{ parameters.savePlanResultsServiceConnection }} --account-key $(storage-account-primary-key)
       azureSubscription: ${{ parameters.serviceConnection }}
 
   - task: TerraformCLI@2
