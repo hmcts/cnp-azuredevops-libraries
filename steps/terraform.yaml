@@ -156,7 +156,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
   - task: TerraformCLI@2
-    retryCountOnFailure: 2
+    # retryCountOnFailure: 2
     displayName: Terraform plan ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     ${{ if parameters.terraformEnvironmentVariables }}:
