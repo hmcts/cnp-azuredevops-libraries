@@ -172,7 +172,7 @@ steps:
       ${{ if eq(parameters['tfVarsFile'], '') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
-          -parallelism=20
+          -parallelism=30
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
@@ -181,7 +181,7 @@ steps:
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
-          -parallelism=20
+          -parallelism=30
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
@@ -189,7 +189,7 @@ steps:
       ${{ else }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
-          -parallelism=20
+          -parallelism=30
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
@@ -265,7 +265,7 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
-      commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName) -parallelism=20"
+      commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName) -parallelism=30"
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: TerraformCLI@2
