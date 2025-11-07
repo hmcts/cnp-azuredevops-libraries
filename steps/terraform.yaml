@@ -268,7 +268,7 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
-      commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName) -parallelism=5"
+      commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve -parallelism=5 tfplan-$(tfPlanName)"
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: TerraformCLI@2
