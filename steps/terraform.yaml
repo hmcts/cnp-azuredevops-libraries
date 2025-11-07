@@ -156,6 +156,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
   - task: TerraformCLI@2
+    # retryCountOnFailure: 2
     displayName: Terraform plan ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     ${{ if parameters.terraformEnvironmentVariables }}:
@@ -172,6 +173,7 @@ steps:
       ${{ if eq(parameters['tfVarsFile'], '') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
+          -parallelism=5
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
@@ -180,6 +182,7 @@ steps:
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
+          -parallelism=5
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
@@ -187,11 +190,14 @@ steps:
       ${{ else }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
+          -parallelism=5
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -var-file "${{ parameters.tfVarsFile }}"
           -lock=false
+    retryCountOnTaskFailure: 3 # This is at the correct level, aligned with 'displayName' and 'inputs'
+
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'true'))
@@ -262,7 +268,7 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       environmentServiceName: ${{ parameters.serviceConnection }}
-      commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName)"
+      commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName) -parallelism=5"
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: TerraformCLI@2
