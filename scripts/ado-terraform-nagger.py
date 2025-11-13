@@ -485,7 +485,7 @@ def terraform_version_checker(terraform_version, config, current_date, component
             "warning",
             f"{component} - Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["terraform"]["version"]}. '
-            f"Please upgrade before deprecation deadline {end_support_date_str}...",
+            f"Please upgrade before deprecation deadline {end_support_date_str}.",
         )
 
         message = (
@@ -503,7 +503,6 @@ def terraform_version_checker(terraform_version, config, current_date, component
             "error",
             f"{component} - Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
             f"Please upgrade to version {config["terraform"]["terraform"]["version"]}."
-            "Refer to the depcrecation map: https://github.com/hmcts/cnp-deprecation-map/blob/master/nagger-versions.yaml"
         )
 
         message = (
@@ -533,7 +532,6 @@ def terraform_provider_checker(provider, provider_version, config, current_date,
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"Please upgrade before deprecation deadline {end_support_date_str}."
-                f"Refer to the deprecation map: https://github.com/hmcts/cnp-deprecation-map/blob/master/nagger-versions.yaml" 
             )
 
             message = (
@@ -554,7 +552,6 @@ def terraform_provider_checker(provider, provider_version, config, current_date,
                 f'{config["terraform"][provider]["version"]}. '
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
                 "Please upgrade." 
-                "Refer to the depcrecation map: https://github.com/hmcts/cnp-deprecation-map/blob/master/nagger-versions.yaml"
             ) 
 
             message = (
