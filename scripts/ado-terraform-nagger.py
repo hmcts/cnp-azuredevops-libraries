@@ -485,7 +485,7 @@ def terraform_version_checker(terraform_version, config, current_date, component
             "warning",
             f"{component} - Detected terraform version {terraform_version} "
             f'is lower than {config["terraform"]["terraform"]["version"]}. '
-            f"Please upgrade before deprecation deadline {end_support_date_str}...",
+            f"Please upgrade before deprecation deadline {end_support_date_str}.",
         )
 
         message = (
@@ -502,12 +502,12 @@ def terraform_version_checker(terraform_version, config, current_date, component
         log_message(
             "error",
             f"{component} - Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
-            "Please upgrade...",
+            f"Please upgrade to version {config["terraform"]["terraform"]["version"]}."
         )
 
         message = (
             f"Affected Terraform version(s) is no longer supported after deprecation deadline {end_support_date_str}. "
-            f"Please upgrade."
+            f"Please upgrade to version {config["terraform"]["terraform"]["version"]}."
         )
         return 'error', message
     
@@ -531,7 +531,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date,
                 f"{provider_version} "
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
-                f"Please upgrade before deprecation deadline {end_support_date_str}...",
+                f"Please upgrade before deprecation deadline {end_support_date_str}."
             )
 
             message = (
@@ -551,7 +551,7 @@ def terraform_provider_checker(provider, provider_version, config, current_date,
                 "is lower than "
                 f'{config["terraform"][provider]["version"]}. '
                 f"This is no longer supported after deprecation deadline {end_support_date_str}. " 
-                "Please upgrade...",
+                "Please upgrade." 
             ) 
 
             message = (
