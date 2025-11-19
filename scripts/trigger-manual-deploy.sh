@@ -102,7 +102,7 @@ function check_environment_health() {
   environment="$2"
   project_url="plum" && [[ "${project}" == "SDS" ]] && project_url="toffee"
   env="sandbox" && [[ "${environment}" != "sbox" ]] && env=$environment
-  TEST_URL="https://${project_url}.${env}.platform.hmcts.net/health/liveness"
+  TEST_URL="https://${project_url}.${env}.platform.hmcts.net/health"
 
   MAX_ATTEMPTS=5
   SLEEP_TIME=3
