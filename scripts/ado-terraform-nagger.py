@@ -502,7 +502,7 @@ def terraform_version_checker(terraform_version, config, current_date, component
         log_message(
             "error",
             f"{component} - Terraform version {terraform_version} is no longer supported after deprecation deadline {end_support_date_str}. "
-            f"Please upgrade to version {config["terraform"]["terraform"]["version"]}."
+            f"Please upgrade to version {config['terraform']['terraform']['version']}."
         )
 
         message = (
