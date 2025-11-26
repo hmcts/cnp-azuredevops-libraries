@@ -31,6 +31,13 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
+      echo $JEST_JUNIT_OUTPUT_DIR
+      echo $JEST_JUNIT_OUTPUT_NAME
+      echo $APP_NAME
+      echo $TEST_URL
+      echo $APIM_TEST_URL 
+      echo $TEST_PATTERN
+      echo "#############"
       mkdir -p ${{ parameters.junit_output_dir }}
       yarn
       yarn test ${TEST_PATTERN}
