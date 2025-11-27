@@ -255,7 +255,7 @@ steps:
     condition: |
       or(
       and(succeeded(), eq('${{ parameters.overrideAction }}', 'apply')),
-      and(succeeded(), eq(variables['isMain'], true), eq(variables['isAutoTriggered'], true))
+      and(succeeded(), eq(variables['isMain'], true), eq(variables['isAutoTriggered'], true), eq('${{ parameters.overrideAction }}', 'apply'))
       )
     inputs:
       runAzLogin: true
