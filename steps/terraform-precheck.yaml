@@ -146,8 +146,6 @@ steps:
       targetType: inline
       script: |
         set -x
-#        check SPTOKEN validity
-
         # Validate SPTOKEN
         if [ -z "$SPTOKEN" ] || [ "$SPTOKEN" == "null" ]; then
           echo "##vso[task.logissue type=error]Failed to retrieve SP bearer token. The token is empty or null."
