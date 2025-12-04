@@ -146,6 +146,15 @@ steps:
       targetType: inline
       script: |
         set -x
+        # Validate SPTOKEN
+        if [ -z "$SPTOKEN" ] || [ "$SPTOKEN" == "null" ]; then
+          echo "##vso[task.logissue type=error]Failed to retrieve SP bearer token. The token is empty or null."
+          echo "##vso[task.logissue type=error]Check that the azure-devops-sp-token secret exists in the key vault and the service principal credentials are valid. e.g. client id (i.e. application id) for the SP 'azure-devops-sp'"
+          exit 1
+        fi
+        
+        echo "SP bearer token retrieved successfully"
+                
         python3 $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-build-check.py \
         --pat "$(SPTOKEN)" \
         --buildid "$(Build.BuildId)" \
@@ -157,4 +166,3 @@ steps:
     parameters:
       kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
       baseDirectory: ${{ parameters.baseDirectory }}
-      
