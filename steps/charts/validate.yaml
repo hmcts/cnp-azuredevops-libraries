@@ -113,7 +113,7 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Diagnostic Information"
       condition: failed()
-      
+
     - script: sleep ${{ parameters.helmInstallWait }}
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Wait for chart resources to be provisioned"
@@ -154,12 +154,32 @@ steps:
     - script: |
         echo "Getting release status..."
         helm status ${{ parameters.chartReleaseName }} --namespace ${{ parameters.chartNamespace }} || true
-        echo "Getting pod logs..."
-        kubectl get pods -n ${{ parameters.chartNamespace }} -l app.kubernetes.io/instance=${{ parameters.chartReleaseName }}
-        kubectl describe pods -n ${{ parameters.chartNamespace }} -l app.kubernetes.io/instance=${{ parameters.chartReleaseName }}
-        echo "Getting job details..."
-        kubectl get jobs -n ${{ parameters.chartNamespace }} -l app.kubernetes.io/instance=${{ parameters.chartReleaseName }}
-        kubectl describe jobs -n ${{ parameters.chartNamespace }} -l app.kubernetes.io/instance=${{ parameters.chartReleaseName }}
+        
+        echo "=== Getting all pods in namespace ==="
+        kubectl get pods -n ${{ parameters.chartNamespace }} -o wide
+        
+        echo "=== Getting all jobs in namespace ==="
+        kubectl get jobs -n ${{ parameters.chartNamespace }} -o wide
+        
+        echo "=== Describing all pods ==="
+        kubectl describe pods -n ${{ parameters.chartNamespace }}
+        
+        echo "=== Describing all jobs ==="
+        kubectl describe jobs -n ${{ parameters.chartNamespace }}
+        
+        echo "=== Getting logs from all pods ==="
+        for pod in $(kubectl get pods -n ${{ parameters.chartNamespace }} -o name); do
+          echo "--- Logs for $pod ---"
+          kubectl logs $pod -n ${{ parameters.chartNamespace }} --all-containers=true --previous=false || true
+          echo "--- Previous logs for $pod (if any) ---"
+          kubectl logs $pod -n ${{ parameters.chartNamespace }} --all-containers=true --previous=true || true
+        done
+        
+        echo "=== Getting events in namespace ==="
+        kubectl get events -n ${{ parameters.chartNamespace }} --sort-by='.lastTimestamp'
+        
+        echo "=== Getting all resources in namespace ==="
+        kubectl get all -n ${{ parameters.chartNamespace }}
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Diagnostic Information"
       condition: failed()
