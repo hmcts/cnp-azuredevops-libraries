@@ -68,8 +68,8 @@ steps:
       scriptType: bash
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
-        helm repo remove ${{parameters.helmVersion}} # workaround expired auth token
-        helm repo add ${{parameters.helmVersion}} https://${{parameters.helmVersion}}.azurecr.io/helm/v1/repo 
+        helm repo remove ${{parameters.acrName}} # workaround expired auth token
+        helm repo add ${{parameters.acrName}} https://${{parameters.acrName}}.azurecr.io/helm/v1/repo 
 
   - ${{ if eq(parameters.chartPath, './') }}:
     - script: |
