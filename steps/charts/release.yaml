@@ -63,7 +63,8 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
         helm repo add bitnami https://charts.bitnami.com/bitnami
-        az acr helm repo add --name ${{parameters.acrName}}
+        export HELM_EXPERIMENTAL_OCI=1
+        az acr login --name ${{parameters.acrName}}
 
   - ${{ if eq(parameters.chartPath, './') }}:
     - script: helm dependency update ${{ parameters.chartName }}

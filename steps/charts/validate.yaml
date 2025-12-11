@@ -61,13 +61,15 @@ steps:
         inlineScript: az aks get-credentials --admin --resource-group $(aksResourceGroup) --name $(aksCluster)
 
   - task: AzureCLI@2
-    displayName: "Add custom charts repo"
+    displayName: "ACR Login for Helm"
     inputs:
       azureSubscription: ${{ parameters.registryServiceConnection }}
       scriptLocation: "inlineScript"
       scriptType: bash
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      inlineScript: az acr helm repo add --name ${{parameters.acrName}} 
+      inlineScript: |
+        export HELM_EXPERIMENTAL_OCI=1
+        az acr login --name ${{parameters.acrName}} 
 
   - ${{ if eq(parameters.chartPath, './') }}:
     - script: |
