@@ -54,7 +54,7 @@ steps:
       ${{ else }}:
         inlineScript: az aks get-credentials --admin --resource-group $(aksResourceGroup) --name $(aksCluster)
 
-  - task: AzureCLI@1
+  - task: AzureCLI@2
     displayName: "Add custom charts repo"
     inputs:
       azureSubscription: ${{ parameters.registryServiceConnection }}
@@ -63,8 +63,7 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
         helm repo add bitnami https://charts.bitnami.com/bitnami
-        helm repo remove ${{parameters.acrName}} # workaround expired auth token
-        helm repo add ${{parameters.acrName}} https://${{parameters.acrName}}.azurecr.io/helm/v1/repo
+        az acr helm repo add --name ${{parameters.acrName}}
 
   - ${{ if eq(parameters.chartPath, './') }}:
     - script: helm dependency update ${{ parameters.chartName }}
