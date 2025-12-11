@@ -1,7 +1,7 @@
 parameters:
   serviceConnection: "DCD-CFTAPPS-DEV"
   registryServiceConnection: "azurerm-prod"
-  acrName: "hmctspublic"
+  acrName: "hmctsprod"
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
@@ -63,8 +63,8 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
         helm repo add bitnami https://charts.bitnami.com/bitnami
-        helm repo remove hmctspublic # workaround expired auth token
-        helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo
+        helm repo remove ${{parameters.helmVersion}} # workaround expired auth token
+        helm repo add ${{parameters.helmVersion}} https://${{parameters.helmVersion}}.azurecr.io/helm/v1/repo
 
   - ${{ if eq(parameters.chartPath, './') }}:
     - script: helm dependency update ${{ parameters.chartName }}
@@ -106,5 +106,5 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
         CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*.tgz)
-        helm repo add hmctspublic https://hmctspublic.azurecr.io/helm/v1/repo || true
+        helm repo add ${{parameters.helmVersion}} https://${{parameters.helmVersion}}.azurecr.io/helm/v1/repo || true
         helm push $CHART_FILE oci://${{ parameters.acrName }}.azurecr.io/helm/
