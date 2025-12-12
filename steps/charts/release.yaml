@@ -106,5 +106,4 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
         CHART_FILE=$(ls ${{ parameters.chartName }}-[0-9]*.tgz)
-        helm repo add ${{parameters.acrName}} https://${{parameters.acrName}}.azurecr.io/helm/v1/repo || true
         helm push $CHART_FILE oci://${{ parameters.acrName }}.azurecr.io/helm/
