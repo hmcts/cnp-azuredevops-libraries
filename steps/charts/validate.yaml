@@ -105,7 +105,48 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Wait for chart resources to be provisioned"
 
-    - script: helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --logs --timeout ${{ parameters.helmTestTimeout }}s
+    - script: |
+        # Run helm test without --logs (doesn't work with Job-based tests)
+        helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --timeout ${{ parameters.helmTestTimeout }}s
+        
+        # Get logs from test resources
+        echo ""
+        echo "==================== Test Logs ===================="
+        
+        # Find test jobs created by this release (first try by label)
+        TEST_JOBS=$(kubectl get jobs -n ${{ parameters.chartNamespace }} \
+          -l "app.kubernetes.io/instance=${{ parameters.chartReleaseName }}" \
+          -o json | jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | .metadata.name')
+        
+        if [ -z "$TEST_JOBS" ]; then
+          # Fallback: search by name prefix if labels aren't present
+          TEST_JOBS=$(kubectl get jobs -n ${{ parameters.chartNamespace }} -o json | \
+            jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | select(.metadata.name | startswith("${{ parameters.chartReleaseName }}")) | .metadata.name')
+        fi
+        
+        if [ -n "$TEST_JOBS" ]; then
+          # Job-based tests
+          for job in $TEST_JOBS; do
+            echo "--- Logs from job: $job ---"
+            kubectl logs -n ${{ parameters.chartNamespace }} -l "job-name=$job" --tail=-1 --ignore-errors=true
+          done
+        else
+          # Pod-based tests (legacy or no jobs found)
+          TEST_PODS=$(kubectl get pods -n ${{ parameters.chartNamespace }} \
+            -l "app.kubernetes.io/instance=${{ parameters.chartReleaseName }}" \
+            -o json | jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | .metadata.name')
+          
+          if [ -n "$TEST_PODS" ]; then
+            for pod in $TEST_PODS; do
+              echo "--- Logs from pod: $pod ---"
+              kubectl logs -n ${{ parameters.chartNamespace }} $pod --ignore-errors=true
+            done
+          else
+            echo "No test jobs or pods found for release ${{ parameters.chartReleaseName }}"
+          fi
+        fi
+        
+        echo "==================================================="
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Helm Test"
 
@@ -141,7 +182,49 @@ steps:
     - script: sleep ${{ parameters.helmInstallWait }}
       displayName: "Wait for chart resources to be provisioned"
 
-    - script: helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --logs --timeout ${{ parameters.helmTestTimeout }}s
+    - script: |
+        # Run helm test without --logs (doesn't work with Job-based tests)
+        helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --timeout ${{ parameters.helmTestTimeout }}s
+        
+        # Get logs from test resources
+        echo ""
+        echo "==================== Test Logs ===================="
+        
+        # Find test jobs created by this release (first try by label)
+        TEST_JOBS=$(kubectl get jobs -n ${{ parameters.chartNamespace }} \
+          -l "app.kubernetes.io/instance=${{ parameters.chartReleaseName }}" \
+          -o json | jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | .metadata.name')
+        
+        if [ -z "$TEST_JOBS" ]; then
+          # Fallback: search by name prefix if labels aren't present
+          TEST_JOBS=$(kubectl get jobs -n ${{ parameters.chartNamespace }} -o json | \
+            jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | select(.metadata.name | startswith("${{ parameters.chartReleaseName }}")) | .metadata.name')
+        fi
+        
+        if [ -n "$TEST_JOBS" ]; then
+          # Job-based tests
+          for job in $TEST_JOBS; do
+            echo "--- Logs from job: $job ---"
+            kubectl logs -n ${{ parameters.chartNamespace }} -l "job-name=$job" --tail=-1 --ignore-errors=true
+          done
+        else
+          # Pod-based tests (legacy or no jobs found)
+          TEST_PODS=$(kubectl get pods -n ${{ parameters.chartNamespace }} \
+            -l "app.kubernetes.io/instance=${{ parameters.chartReleaseName }}" \
+            -o json | jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | .metadata.name')
+          
+          if [ -n "$TEST_PODS" ]; then
+            for pod in $TEST_PODS; do
+              echo "--- Logs from pod: $pod ---"
+              kubectl logs -n ${{ parameters.chartNamespace }} $pod --ignore-errors=true
+            done
+          else
+            echo "No test jobs or pods found for release ${{ parameters.chartReleaseName }}"
+          fi
+        fi
+        
+        echo "==================================================="
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Helm Test"
 
     - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }}
