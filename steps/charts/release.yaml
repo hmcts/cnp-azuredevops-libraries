@@ -64,7 +64,13 @@ steps:
       inlineScript: |
         helm repo add bitnami https://charts.bitnami.com/bitnami
         export HELM_EXPERIMENTAL_OCI=1
-        az acr login --name ${{parameters.acrName}}
+
+        az acr login -n ${{parameters.acrName}} --expose-token \
+          --query accessToken -o tsv | \
+        helm registry login ${{parameters.acrName}}.azurecr.io \
+          --username 00000000-0000-0000-0000-000000000000 \
+          --password-stdin
+
 
   - ${{ if eq(parameters.chartPath, './') }}:
     - script: helm dependency update ${{ parameters.chartName }}
