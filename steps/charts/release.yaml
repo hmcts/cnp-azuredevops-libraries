@@ -80,14 +80,6 @@ steps:
     - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
       displayName: "Retrieve helm dependencies (if any)"
 
-  - task: AzureCLI@2
-    displayName: "Login to ACR"
-    inputs:
-      azureSubscription: ${{ parameters.registryServiceConnection }}
-      scriptLocation: "inlineScript"
-      scriptType: "bash"
-      inlineScript: |
-        az acr login --name ${{ parameters.acrName }}
 
   - task: AzureCLI@2
     displayName: "Helm Package"
