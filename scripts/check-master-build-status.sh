@@ -39,10 +39,16 @@ check_branch_build() {
     # Check HTTP response code
     if [ "$http_code" != "200" ]; then
         if [ "$http_code" = "401" ]; then
-            >&2 echo "Error: Authentication failed (401). Check PAT token."
+            echo "Error: Authentication failed (401). Check PAT token."
+            echo "Organization: ${ORGANIZATION}"
+            echo "Project: ${PROJECT}"
+            echo "Pipeline ID: ${PIPELINE_ID}"
             exit 1
         elif [ "$http_code" = "403" ]; then
-            >&2 echo "Error: Access forbidden (403). Check permissions."
+            echo "Error: Access forbidden (403). Check permissions."
+            echo "Organization: ${ORGANIZATION}"
+            echo "Project: ${PROJECT}"
+            echo "Pipeline ID: ${PIPELINE_ID}"
             exit 1
         fi
         echo ""
