@@ -5,60 +5,19 @@
 
 set -euo pipefail
 
-# Default values
+# Environment variables from Azure DevOps pipeline
 ORGANIZATION="${ORGANIZATION:-hmcts}"
 PROJECT="${PROJECT:-$SYSTEM_TEAMPROJECT}"
 PAT="${AZURE_DEVOPS_PAT:-$SYSTEM_ACCESSTOKEN}"
 PIPELINE_ID="${PIPELINE_ID:-$SYSTEM_DEFINITIONID}"
 
-# Usage function
-usage() {
->&2 cat << EOF
---------------------------------------------------------------
-Script to check the build status of the master/main branch
---------------------------------------------------------------
-Usage: $0 [OPTIONS]
-
-Options:
-  -o, --organization    Azure DevOps organization (default: hmcts or \$ORGANIZATION)
-  -p, --project         Azure DevOps project (default: \$SYSTEM_TEAMPROJECT or \$PROJECT)
-  -i, --pipeline-id     Pipeline definition ID (default: \$SYSTEM_DEFINITIONID or \$PIPELINE_ID)
-  -t, --token           Azure DevOps PAT token (default: \$SYSTEM_ACCESSTOKEN or \$AZURE_DEVOPS_PAT)
-  -h, --help            Show this help message
-EOF
-exit 1
-}
-
-# Parse command line arguments
-args=$(getopt -a -o o:p:i:t:h --long organization:,project:,pipeline-id:,token:,help -- "$@")
-if [[ $? -gt 0 ]]; then
-    usage
-fi
-
-eval set -- ${args}
-while :
-do
-    case $1 in
-        -h | --help)           usage                  ; shift   ;;
-        -o | --organization)   ORGANIZATION="$2"      ; shift 2 ;;
-        -p | --project)        PROJECT="$2"           ; shift 2 ;;
-        -i | --pipeline-id)    PIPELINE_ID="$2"       ; shift 2 ;;
-        -t | --token)          PAT="$2"               ; shift 2 ;;
-        --) shift; break ;;
-        *) >&2 echo Unsupported option: $1
-            usage ;;
-    esac
-done
-
 # Validate required parameters
 if [ -z "$ORGANIZATION" ] || [ -z "$PROJECT" ] || [ -z "$PIPELINE_ID" ]; then
-    echo "------------------------"
-    echo "Some values are missing, please supply Organization, Project and Pipeline ID" >&2
-    echo "Organization: ${ORGANIZATION:-[not set]}"
-    echo "Project: ${PROJECT:-[not set]}"
-    echo "Pipeline ID: ${PIPELINE_ID:-[not set]}"
-    echo "------------------------"
-    usage
+    echo "Error: Missing required environment variables" >&2
+    echo "ORGANIZATION: ${ORGANIZATION:-[not set]}" >&2
+    echo "PROJECT: ${PROJECT:-[not set]}" >&2
+    echo "PIPELINE_ID: ${PIPELINE_ID:-[not set]}" >&2
+    exit 1
 fi
 
 # Try to detect master branch by checking both main and master
