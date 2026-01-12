@@ -112,6 +112,12 @@ fi
 
 echo "Using branch: ${MASTER_BRANCH}"
 
+# Debug: Show response before parsing
+echo "Response length: ${#RESPONSE} characters"
+echo "First 500 chars of response:"
+echo "${RESPONSE:0:500}"
+echo ""
+
 # Extract build information
 BUILD_STATUS=$(echo "$RESPONSE" | jq -r '.value[0].status // "unknown"')
 BUILD_RESULT=$(echo "$RESPONSE" | jq -r '.value[0].result // "none"')
