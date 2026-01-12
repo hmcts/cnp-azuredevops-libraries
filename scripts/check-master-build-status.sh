@@ -40,6 +40,7 @@ check_branch_build() {
     local body=$(echo "$response" | sed '$d')
     
     echo "HTTP Status Code: ${http_code}"
+    echo "Response body (first 500 chars): ${body:0:500}"
     
     # Check HTTP response code
     if [ "$http_code" != "200" ]; then
@@ -56,12 +57,16 @@ check_branch_build() {
             echo "Pipeline ID: ${PIPELINE_ID}"
             exit 1
         fi
+        echo "Unexpected HTTP status code"
         echo ""
         return 1
     fi
     
     # Check if response is valid JSON
     if ! echo "$body" | jq empty 2>/dev/null; then
+        echo "Error: Response is not valid JSON"
+        echo "Full response body:"
+        echo "$body"
         echo ""
         return 1
     fi
