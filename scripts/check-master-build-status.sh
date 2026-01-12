@@ -84,12 +84,20 @@ echo "Pipeline ID: ${PIPELINE_ID}"
 echo "PAT token present: $([ -n "$PAT" ] && echo "yes" || echo "no")"
 
 # Try main first, then master
+set +e  # Temporarily disable exit on error for function calls
 RESPONSE=$(check_branch_build "main")
-if [ -n "$RESPONSE" ]; then
+main_exit_code=$?
+set -e  # Re-enable exit on error
+
+if [ $main_exit_code -eq 0 ] && [ -n "$RESPONSE" ]; then
     MASTER_BRANCH="main"
 else
+    set +e
     RESPONSE=$(check_branch_build "master")
-    if [ -n "$RESPONSE" ]; then
+    master_exit_code=$?
+    set -e
+    
+    if [ $master_exit_code -eq 0 ] && [ -n "$RESPONSE" ]; then
         MASTER_BRANCH="master"
     else
         echo "Error: No builds found for main or master branch"
