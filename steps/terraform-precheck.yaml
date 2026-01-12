@@ -44,6 +44,14 @@ parameters:
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
+  
+  - task: Bash@3
+    displayName: 'Check master/main branch build status'
+    inputs:
+      targetType: 'inline'
+      script: |
+        bash $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/check-master-build-status.sh
+      
   - template: ./set-build-repo-suffix-env-var.yaml
 
   - template: ./install-use-tfswitch.yaml
