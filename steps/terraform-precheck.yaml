@@ -47,6 +47,8 @@ steps:
   
   - task: Bash@3
     displayName: 'Check master/main branch build status'
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     inputs:
       targetType: 'inline'
       script: |
