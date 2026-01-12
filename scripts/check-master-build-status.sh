@@ -23,10 +23,10 @@ fi
 # Try to detect master branch by checking both main and master
 check_branch_build() {
     local branch=$1
-    echo "Checking branch: ${branch}"
+    echo "Checking branch: ${branch}" >&2
     local api_url="https://dev.azure.com/${ORGANIZATION}/${PROJECT}/_apis/build/builds?api-version=5.1&definitions=${PIPELINE_ID}&\$top=1&statusFilter=completed,inProgress&branchName=refs/heads/${branch}"
     
-    echo "Making API call..."
+    echo "Making API call..." >&2
     local response
     if [ -n "$PAT" ]; then
         response=$(curl -s -w "\n%{http_code}" -u ":${PAT}" "$api_url")
@@ -34,40 +34,40 @@ check_branch_build() {
         response=$(curl -s -w "\n%{http_code}" "$api_url")
     fi
     
-    echo "API call completed"
+    echo "API call completed" >&2
     # Split response and HTTP code
     local http_code=$(echo "$response" | tail -n1)
     local body=$(echo "$response" | sed '$d')
     
-    echo "HTTP Status Code: ${http_code}"
-    echo "Response body (first 500 chars): ${body:0:500}"
+    echo "HTTP Status Code: ${http_code}" >&2
+    echo "Response body (first 500 chars): ${body:0:500}" >&2
     
     # Check HTTP response code
     if [ "$http_code" != "200" ]; then
         if [ "$http_code" = "401" ]; then
-            echo "Error: Authentication failed (401). Check PAT token."
-            echo "Organization: ${ORGANIZATION}"
-            echo "Project: ${PROJECT}"
-            echo "Pipeline ID: ${PIPELINE_ID}"
+            echo "Error: Authentication failed (401). Check PAT token." >&2
+            echo "Organization: ${ORGANIZATION}" >&2
+            echo "Project: ${PROJECT}" >&2
+            echo "Pipeline ID: ${PIPELINE_ID}" >&2
             exit 1
         elif [ "$http_code" = "403" ]; then
-            echo "Error: Access forbidden (403). Check permissions."
-            echo "Organization: ${ORGANIZATION}"
-            echo "Project: ${PROJECT}"
-            echo "Pipeline ID: ${PIPELINE_ID}"
+            echo "Error: Access forbidden (403). Check permissions." >&2
+            echo "Organization: ${ORGANIZATION}" >&2
+            echo "Project: ${PROJECT}" >&2
+            echo "Pipeline ID: ${PIPELINE_ID}" >&2
             exit 1
         fi
-        echo "Unexpected HTTP status code"
-        echo ""
+        echo "Unexpected HTTP status code" >&2
+        echo "" >&2
         return 1
     fi
     
     # Check if response is valid JSON
     if ! echo "$body" | jq empty 2>/dev/null; then
-        echo "Error: Response is not valid JSON"
-        echo "Full response body:"
-        echo "$body"
-        echo ""
+        echo "Error: Response is not valid JSON" >&2
+        echo "Full response body:" >&2
+        echo "$body" >&2
+        echo "" >&2
         return 1
     fi
     
