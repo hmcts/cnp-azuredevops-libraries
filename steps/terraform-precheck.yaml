@@ -41,7 +41,7 @@ parameters:
   - name: baseDirectory
     default: ''
 
-  - name: overrideBuildCheck
+  - name: overrideMasterCheck
     displayName: Override master/main build status check
     type: boolean
     default: false
@@ -54,7 +54,7 @@ steps:
     displayName: 'Check master/main branch build status'
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-      OVERRIDE_BUILD_CHECK: ${{ parameters.overrideBuildCheck }}
+      OVERRIDE_BUILD_CHECK: ${{ parameters.overrideMasterCheck }}
     inputs:
       targetType: 'inline'
       script: |
