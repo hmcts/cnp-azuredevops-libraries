@@ -2,7 +2,7 @@
 # Script to check the current build status of the master/main branch
 # This is designed to be run as part of pre-commit checks on PRs
 # Returns exit code 1 if the master/main build is failing or in progress, 0 if successful
-# Set OVERRIDE_BUILD_CHECK=true to bypass the check (useful when fixing master/main branch issues)
+# Add the "OverrideMasterCheck" label to the GitHub PR to bypass the check
 
 set -euo pipefail
 
@@ -11,7 +11,10 @@ ORGANIZATION="${ORGANIZATION:-hmcts}"
 PROJECT="${PROJECT:-$SYSTEM_TEAMPROJECT}"
 PAT="${AZURE_DEVOPS_PAT:-$SYSTEM_ACCESSTOKEN}"
 PIPELINE_ID="${PIPELINE_ID:-$SYSTEM_DEFINITIONID}"
-OVERRIDE_BUILD_CHECK="${OVERRIDE_BUILD_CHECK:-false}"
+
+# GitHub PR information (set by Azure Pipelines when triggered by GitHub PR)
+GITHUB_PR_NUMBER="${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER:-}"
+BUILD_REPOSITORY_NAME="${BUILD_REPOSITORY_NAME:-}"
 
 # Validate required parameters
 if [ -z "$ORGANIZATION" ] || [ -z "$PROJECT" ] || [ -z "$PIPELINE_ID" ]; then
@@ -21,6 +24,26 @@ if [ -z "$ORGANIZATION" ] || [ -z "$PROJECT" ] || [ -z "$PIPELINE_ID" ]; then
     echo "PIPELINE_ID: ${PIPELINE_ID:-[not set]}" >&2
     exit 1
 fi
+
+# Function to check if GitHub PR has the override label
+check_pr_label() {
+    if [ -z "$GITHUB_PR_NUMBER" ] || [ -z "$BUILD_REPOSITORY_NAME" ]; then
+        return 1
+    fi
+    
+    # GitHub API URL - BUILD_REPOSITORY_NAME is in format "owner/repo"
+    local api_url="https://api.github.com/repos/${BUILD_REPOSITORY_NAME}/issues/${GITHUB_PR_NUMBER}/labels"
+    
+    local response
+    response=$(curl -s "$api_url")
+    
+    # Check if the response contains the OverrideMasterCheck label
+    if echo "$response" | jq -e '.[] | select(.name == "OverrideMasterCheck")' > /dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
 
 # Try to detect master branch by checking both main and master
 check_branch_build() {
@@ -78,9 +101,9 @@ check_branch_build() {
     fi
 }
 
-# Exit early if override is set
-if [ "$OVERRIDE_BUILD_CHECK" = "true" ]; then
-    echo "OVERRIDE_BUILD_CHECK is set - bypassing build status check"
+# Check if PR has the override label
+if check_pr_label; then
+    echo "PR has 'OverrideMasterCheck' label - bypassing build status check"
     exit 0
 fi
 
