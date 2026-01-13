@@ -2,6 +2,7 @@
 # Script to check the current build status of the master/main branch
 # This is designed to be run as part of pre-commit checks on PRs
 # Returns exit code 1 if the master/main build is failing or in progress, 0 if successful
+# Set OVERRIDE_BUILD_CHECK=true to bypass the check (useful when fixing master/main branch issues)
 
 set -euo pipefail
 
@@ -10,6 +11,7 @@ ORGANIZATION="${ORGANIZATION:-hmcts}"
 PROJECT="${PROJECT:-$SYSTEM_TEAMPROJECT}"
 PAT="${AZURE_DEVOPS_PAT:-$SYSTEM_ACCESSTOKEN}"
 PIPELINE_ID="${PIPELINE_ID:-$SYSTEM_DEFINITIONID}"
+OVERRIDE_BUILD_CHECK="${OVERRIDE_BUILD_CHECK:-false}"
 
 # Validate required parameters
 if [ -z "$ORGANIZATION" ] || [ -z "$PROJECT" ] || [ -z "$PIPELINE_ID" ]; then
@@ -75,6 +77,12 @@ check_branch_build() {
         return 1
     fi
 }
+
+# Exit early if override is set
+if [ "$OVERRIDE_BUILD_CHECK" = "true" ]; then
+    echo "OVERRIDE_BUILD_CHECK is set - bypassing build status check"
+    exit 0
+fi
 
 echo "Checking build status for default branch..."
 
