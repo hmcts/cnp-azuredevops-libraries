@@ -16,7 +16,8 @@ parameters:
     - aksResourceGroupName: cft-preview-01-rg
       aksClusterName: cft-preview-01-aks
       aksEnvironment: preview
-      
+variables:
+  - selfHostedAgent: $[ startsWith(variables['Agent.PoolName'], 'hmcts-') ]
 steps:
 
   - checkout: self
@@ -64,12 +65,19 @@ steps:
       inlineScript: |
         helm repo add bitnami https://charts.bitnami.com/bitnami
         export HELM_EXPERIMENTAL_OCI=1
+        
+        if [[ "$(selfHostedAgent)" == "True" ]]; then
+          echo "Using token-based ACR auth for internal agent pool"
 
-        az acr login -n ${{parameters.acrName}} --expose-token \
-          --query accessToken -o tsv | \
-        helm registry login ${{parameters.acrName}}.azurecr.io \
-          --username 00000000-0000-0000-0000-000000000000 \
-          --password-stdin
+          az acr login -n ${{parameters.acrName}} --expose-token \
+            --query accessToken -o tsv | \
+          helm registry login ${{parameters.acrName}}.azurecr.io \
+            --username 00000000-0000-0000-0000-000000000000 \
+            --password-stdin
+        else
+          echo "Using AAD-based az acr login"
+          az acr login --name ${{ parameters.acrName }}
+        fi
 
 
   - ${{ if eq(parameters.chartPath, './') }}:
@@ -79,7 +87,6 @@ steps:
   - ${{ else }}:
     - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
       displayName: "Retrieve helm dependencies (if any)"
-
 
   - task: AzureCLI@2
     displayName: "Helm Package"
