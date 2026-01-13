@@ -23,10 +23,8 @@ fi
 # Try to detect master branch by checking both main and master
 check_branch_build() {
     local branch=$1
-    echo "Checking branch: ${branch}" >&2
     local api_url="https://dev.azure.com/${ORGANIZATION}/${PROJECT}/_apis/build/builds?api-version=5.1&definitions=${PIPELINE_ID}&\$top=1&statusFilter=completed,inProgress&branchName=refs/heads/${branch}"
     
-    echo "Making API call..." >&2
     local response
     if [ -n "$PAT" ]; then
         response=$(curl -s -w "\n%{http_code}" -u ":${PAT}" "$api_url")
@@ -34,13 +32,9 @@ check_branch_build() {
         response=$(curl -s -w "\n%{http_code}" "$api_url")
     fi
     
-    echo "API call completed" >&2
     # Split response and HTTP code
     local http_code=$(echo "$response" | tail -n1)
     local body=$(echo "$response" | sed '$d')
-    
-    echo "HTTP Status Code: ${http_code}" >&2
-    echo "Response body (first 500 chars): ${body:0:500}" >&2
     
     # Check HTTP response code
     if [ "$http_code" != "200" ]; then
@@ -83,10 +77,6 @@ check_branch_build() {
 }
 
 echo "Checking build status for default branch..."
-echo "Organization: ${ORGANIZATION}"
-echo "Project: ${PROJECT}"
-echo "Pipeline ID: ${PIPELINE_ID}"
-echo "PAT token present: $([ -n "$PAT" ] && echo "yes" || echo "no")"
 
 # Try main first, then master
 set +e  # Temporarily disable exit on error for function calls
@@ -111,12 +101,6 @@ else
 fi
 
 echo "Using branch: ${MASTER_BRANCH}"
-
-# Debug: Show response before parsing
-echo "Response length: ${#RESPONSE} characters"
-echo "First 500 chars of response:"
-echo "${RESPONSE:0:500}"
-echo ""
 
 # Extract build information
 BUILD_STATUS=$(echo "$RESPONSE" | jq -r '.value[0].status // "unknown"')
