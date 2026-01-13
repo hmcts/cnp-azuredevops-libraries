@@ -64,7 +64,9 @@ steps:
         helm repo add bitnami https://charts.bitnami.com/bitnami
         export HELM_EXPERIMENTAL_OCI=1
 
-        if [[ "$(Agent.PoolName)" == hmcts-* ]]; then
+        echo "agent pool name: $AGENT_POOLNAME"
+        
+        if [[ "$AGENT_POOLNAME" == hmcts-* ]]; then
           echo "Using token-based ACR auth for internal agent pool"
 
           az acr login -n ${{parameters.acrName}} --expose-token \
