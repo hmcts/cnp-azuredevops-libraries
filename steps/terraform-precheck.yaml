@@ -41,6 +41,11 @@ parameters:
   - name: baseDirectory
     default: ''
 
+  - name: overrideBuildCheck
+    displayName: Override master/main build status check
+    type: boolean
+    default: false
+
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
@@ -49,6 +54,7 @@ steps:
     displayName: 'Check master/main branch build status'
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      OVERRIDE_BUILD_CHECK: ${{ parameters.overrideBuildCheck }}
     inputs:
       targetType: 'inline'
       script: |
