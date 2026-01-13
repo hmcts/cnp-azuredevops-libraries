@@ -53,6 +53,15 @@ steps:
       ${{ else }}:
         inlineScript: az aks get-credentials --admin --resource-group $(aksResourceGroup) --name $(aksCluster)
 
+  - script: |
+      AGENT_POOL="$(Agent.PoolName)"
+      echo "Agent pool name: '$AGENT_POOL'"
+      if [[ "$AGENT_POOL" == hmcts-* ]]; then
+        echo "HMCTS agent pool detected"
+      fi
+    displayName: 'Check agent pool'
+
+
   - task: AzureCLI@2
     displayName: "Add custom charts repo"
     inputs:
