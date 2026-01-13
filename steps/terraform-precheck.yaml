@@ -45,10 +45,23 @@ steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
   
+  - task: AzureKeyVault@2
+    displayName: 'Get GitHub API token from Keyvault'
+    condition: eq(variables['Build.Reason'], 'PullRequest')
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'github-api-token'
+  
   - task: Bash@3
     displayName: 'Check master/main branch build status'
+    continueOnError: true  # Don't fail the pipeline if the check fails
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      GITHUB_TOKEN: $(github-api-token)
+      BUILD_REPOSITORY_NAME: $(Build.Repository.Name)
+      BUILD_REASON: $(Build.Reason)
     inputs:
       targetType: 'inline'
       script: |
