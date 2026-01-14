@@ -173,10 +173,10 @@ BUILD_URL="https://dev.azure.com/${ORGANIZATION}/${PROJECT}/_build/results?build
 # Check build status and add PR comment if needed
 if [ "$BUILD_STATUS" = "inProgress" ]; then
     echo "${MASTER_BRANCH} build #${BUILD_NUMBER} is in progress"
-    WARNING_MESSAGE="[!WARNING]
-${MASTER_BRANCH} branch build is currently in progress. Please wait for it to complete and ensure it passes before merging this PR.
-
-Build: [#${BUILD_NUMBER}](${BUILD_URL})"
+    WARNING_MESSAGE="> [!WARNING]
+> ${MASTER_BRANCH} branch build is currently in progress. Please wait for it to complete and ensure it passes before merging this PR.
+>
+> Build: [#${BUILD_NUMBER}](${BUILD_URL})"
     add_pr_comment "$WARNING_MESSAGE"
     exit 0
 elif [ "$BUILD_STATUS" = "completed" ]; then
@@ -185,19 +185,19 @@ elif [ "$BUILD_STATUS" = "completed" ]; then
         exit 0
     else
         echo "${MASTER_BRANCH} build #${BUILD_NUMBER} failed (${BUILD_RESULT})"
-        WARNING_MESSAGE="[!WARNING]
-${MASTER_BRANCH} branch build is currently broken. Please fix it before merging this PR.
-
-Build: [#${BUILD_NUMBER}](${BUILD_URL})"
+        WARNING_MESSAGE="> [!WARNING]
+> ${MASTER_BRANCH} branch build is currently broken. Please fix it before merging this PR.
+>
+> Build: [#${BUILD_NUMBER}](${BUILD_URL})"
         add_pr_comment "$WARNING_MESSAGE"
         exit 0
     fi
 else
     echo "${MASTER_BRANCH} build #${BUILD_NUMBER} has unknown status (${BUILD_STATUS})"
-    WARNING_MESSAGE="[!WARNING]
-${MASTER_BRANCH} branch build status is unknown. Please check the build status before merging this PR.
-
-Build: [#${BUILD_NUMBER}](${BUILD_URL})"
+    WARNING_MESSAGE="> [!WARNING]
+> ${MASTER_BRANCH} branch build status is unknown. Please check the build status before merging this PR.
+>
+> Build: [#${BUILD_NUMBER}](${BUILD_URL})"
     add_pr_comment "$WARNING_MESSAGE"
     exit 0
 fi
