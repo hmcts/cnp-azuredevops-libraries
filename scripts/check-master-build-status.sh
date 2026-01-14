@@ -36,8 +36,8 @@ else
     echo "Not running from a GitHub PR build - will skip PR comments"
 fi
 
-# Function to add a warning comment to the GitHub PR
-add_pr_comment() {
+# Function to add or update a warning comment on the GitHub PR
+add_or_update_pr_comment() {
     local message=$1
     
     # Only add comments if running from a PR build
@@ -59,33 +59,32 @@ add_pr_comment() {
         -H "Accept: application/vnd.github.v3+json" \
         "${api_url}")
     
-    # Check if any comment contains the warning marker
-    if echo "$existing_comments" | jq -e '.[] | select(.body | contains("[!WARNING]") and contains("branch build is currently"))' > /dev/null 2>&1; then
-        echo "Warning comment already exists on PR #${GITHUB_PR_NUMBER}, skipping duplicate"
-        return 0
-    fi
+    # Find existing comment with the warning/caution marker
+    local existing_comment_id=$(echo "$existing_comments" | jq -r '.[] | select(.body | contains("[!CAUTION]") or contains("[!WARNING]")) | select(.body | contains("branch build")) | .id' | head -n1)
     
-    # Create JSON payload
-    local payload=$(jq -n --arg msg "$message" '{body: $msg}')
-    
-    # Post comment to GitHub
-    local response
-    response=$(curl -s -w "\n%{http_code}" \
-        -X POST \
-        -H "Authorization: token ${GITHUB_TOKEN}" \
-        -H "Accept: application/vnd.github.v3+json" \
-        -H "Content-Type: application/json" \
-        -d "$payload" \
-        "$api_url")
-    
-    local http_code=$(echo "$response" | tail -n1)
-    
-    if [ "$http_code" = "201" ]; then
-        echo "##vso[task.complete result=SucceededWithIssues;]Warning comment added to PR #${GITHUB_PR_NUMBER}"
-        return 0
+    if [ -n "$existing_comment_id" ]; then
+        # Update existing comment
+        local update_url="https://api.github.com/repos/${BUILD_REPOSITORY_NAME}/issues/comments/${existing_comment_id}"
+        local payload=$(jq -n --arg msg "$message" '{body: $msg}')
+        
+        curl -s -X PATCH \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            "$update_url" > /dev/null
     else
-        echo "##vso[task.logissue type=warning]Failed to add comment to PR (HTTP ${http_code})"
-        return 1
+        # Create new comment
+        local payload=$(jq -n --arg msg "$message" '{body: $msg}')
+        
+        curl -s -X POST \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            "$api_url" > /dev/null
+        
+        echo "##vso[task.complete result=SucceededWithIssues;]Warning comment added to PR #${GITHUB_PR_NUMBER}"
     fi
 }
 
@@ -177,11 +176,17 @@ if [ "$BUILD_STATUS" = "inProgress" ]; then
 > ${MASTER_BRANCH} branch build is currently in progress. Please wait for it to complete and ensure it passes before merging this PR.
 >
 > Build: [#${BUILD_NUMBER}](${BUILD_URL})"
-    add_pr_comment "$WARNING_MESSAGE"
+    add_or_update_pr_comment "$WARNING_MESSAGE"
     exit 0
 elif [ "$BUILD_STATUS" = "completed" ]; then
     if [ "$BUILD_RESULT" = "succeeded" ]; then
         echo "${MASTER_BRANCH} build #${BUILD_NUMBER} is passing"
+        # Update any existing warning comment to show it's resolved
+        SUCCESS_MESSAGE="> [!TIP]
+> ✅ ${MASTER_BRANCH} branch build is now passing!
+>
+> Build: [#${BUILD_NUMBER}](${BUILD_URL})"
+        add_or_update_pr_comment "$SUCCESS_MESSAGE"
         exit 0
     else
         echo "${MASTER_BRANCH} build #${BUILD_NUMBER} failed (${BUILD_RESULT})"
@@ -189,7 +194,7 @@ elif [ "$BUILD_STATUS" = "completed" ]; then
 > ${MASTER_BRANCH} branch build is currently broken. Please fix it before merging this PR.
 >
 > Build: [#${BUILD_NUMBER}](${BUILD_URL})"
-        add_pr_comment "$WARNING_MESSAGE"
+        add_or_update_pr_comment "$WARNING_MESSAGE"
         exit 0
     fi
 else
@@ -198,6 +203,6 @@ else
 > ${MASTER_BRANCH} branch build status is unknown. Please check the build status before merging this PR.
 >
 > Build: [#${BUILD_NUMBER}](${BUILD_URL})"
-    add_pr_comment "$WARNING_MESSAGE"
+    add_or_update_pr_comment "$WARNING_MESSAGE"
     exit 0
 fi
