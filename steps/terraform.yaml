@@ -127,26 +127,24 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  - task: TerraformCLI@2
+  - task: TerraformCLI@3
     displayName: Terraform init ${{ parameters.component }}
     inputs:
+      provider: 'azurerm'
       command: init
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      backendType: azurerm
-      ensureBackend: false
       backendServiceArm: ${{ parameters.serviceConnection }}
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
-      backendAzureRmResourceGroupLocation: ${{ parameters.location }}
       backendAzureRmStorageAccountName: $(controlStorageAccount)
-      backendAzureRmStorageAccountSku: Standard_LRS
       backendAzureRmContainerName: subscription-tfstate
       backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
       commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }} ${{ parameters.initCommandOptions }}'
+      # Removed unsupported params: backendType, ensureBackend, backendAzureRmResourceGroupLocation, backendAzureRmStorageAccountSku
 
-  - task: TerraformCLI@2
+  - task: TerraformCLI@3
     displayName: Terraform validate
     inputs:
       command: validate
@@ -155,7 +153,7 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  - task: TerraformCLI@2
+  - task: TerraformCLI@3
     # retryCountOnFailure: 2
     displayName: Terraform plan ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
@@ -248,7 +246,7 @@ steps:
         az storage azcopy blob upload -c plan-json --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).json -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).json" --subscription ${{ parameters.savePlanResultsServiceConnection }} --account-key $(storage-account-primary-key)
       azureSubscription: ${{ parameters.serviceConnection }}
 
-  - task: TerraformCLI@2
+  - task: TerraformCLI@3
     displayName: Terraform apply ${{ parameters.component }}
     ${{ if parameters.terraformEnvironmentVariables }}:
       env: ${{ parameters.terraformEnvironmentVariables  }}
@@ -269,7 +267,7 @@ steps:
       retryCountOnTaskFailure: 3 # This is at the correct level, aligned with 'displayName' and 'inputs'
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
-      - task: TerraformCLI@2
+      - task: TerraformCLI@3
         displayName: Terraform destroy ${{ parameters.component }}
         ${{ if parameters.terraformEnvironmentVariables }}:
           env: ${{ parameters.terraformEnvironmentVariables  }}
