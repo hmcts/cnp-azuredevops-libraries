@@ -127,12 +127,12 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  - task: Terraform@5
+  - task: TerraformInstaller@1
     displayName: 'Install Terraform'
     inputs:
       terraformVersion: 'latest'
 
-  - task: Terraform@5
+  - task: TerraformTask@5
     displayName: Terraform init ${{ parameters.component }}
     inputs:
       provider: 'azurerm'
@@ -149,7 +149,7 @@ steps:
       commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }} ${{ parameters.initCommandOptions }}'
       # Removed unsupported params: backendType, ensureBackend, backendAzureRmResourceGroupLocation, backendAzureRmStorageAccountSku
 
-  - task: Terraform@5
+  - task: TerraformTask@5
     displayName: Terraform validate
     inputs:
       provider: 'azurerm'
@@ -159,7 +159,7 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  - task: Terraform@5
+  - task: TerraformTask@5
     # retryCountOnFailure: 2
     displayName: Terraform plan ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
@@ -250,7 +250,7 @@ steps:
         az storage azcopy blob upload -c plan-json --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).json -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).json" --subscription ${{ parameters.savePlanResultsServiceConnection }} --account-key $(storage-account-primary-key)
       azureSubscription: ${{ parameters.serviceConnection }}
 
-  - task: Terraform@5
+  - task: TerraformTask@5
     displayName: Terraform apply ${{ parameters.component }}
     ${{ if parameters.terraformEnvironmentVariables }}:
       env: ${{ parameters.terraformEnvironmentVariables  }}
@@ -271,7 +271,7 @@ steps:
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: ms-devlabs.Terraform@2
-      - task: Terraform@5
+      - task: TerraformTask@5
         displayName: Terraform destroy ${{ parameters.component }}
         ${{ if parameters.terraformEnvironmentVariables }}:
           env: ${{ parameters.terraformEnvironmentVariables  }}
