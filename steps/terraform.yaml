@@ -144,6 +144,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+      backendServiceArm: ${{ parameters.serviceConnection }}
       ${{ if and(ne(parameters.terraformInitSubscription, ''), ne(parameters.initCommandOptions, '')) }}:
         commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }} -backend-config=resource_group_name=azure-control-${{ parameters.environment }}-rg -backend-config=storage_account_name=$(controlStorageAccount) -backend-config=container_name=subscription-tfstate -backend-config=key=${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate ${{ parameters.initCommandOptions }}'
       ${{ elseif ne(parameters.terraformInitSubscription, '') }}:
