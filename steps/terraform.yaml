@@ -133,7 +133,7 @@ steps:
       terraformVersion: '1.13.3'
 
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
-    displayName: Terraform init ${{ parameters.component }} }}
+    displayName: Terraform init ${{ parameters.component }}
     inputs:
       provider: 'azurerm'
       command: 'init'
@@ -270,8 +270,7 @@ steps:
       commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName)"
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
-      - task: ms-devlabs.Terraform@2
-      - task: TerraformTask@5
+      - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
         displayName: Terraform destroy ${{ parameters.component }}
         ${{ if parameters.terraformEnvironmentVariables }}:
           env: ${{ parameters.terraformEnvironmentVariables  }}
