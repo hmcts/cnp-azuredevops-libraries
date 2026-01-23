@@ -46,9 +46,6 @@ parameters:
   - name: backendServiceConnection
     default: ''
 
-  - name: backendSubscriptionId
-    default: ''
-
   - name: terraformInitSubscription
     default: ''
 
@@ -156,10 +153,10 @@ steps:
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmContainerName: subscription-tfstate
       backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
-      ${{ if and(ne(parameters.backendSubscriptionId, ''), ne(parameters.initCommandOptions, '')) }}:
-        commandOptions: '-backend-config=subscription_id=${{ parameters.backendSubscriptionId }} ${{ parameters.initCommandOptions }}'
-      ${{ elseif ne(parameters.backendSubscriptionId, '') }}:
-        commandOptions: '-backend-config=subscription_id=${{ parameters.backendSubscriptionId }}'
+      ${{ if and(ne(parameters.terraformInitSubscription, ''), ne(parameters.initCommandOptions, '')) }}:
+        commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }} ${{ parameters.initCommandOptions }}'
+      ${{ elseif ne(parameters.terraformInitSubscription, '') }}:
+        commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }}'
       ${{ elseif ne(parameters.initCommandOptions, '') }}:
         commandOptions: '${{ parameters.initCommandOptions }}'
 
