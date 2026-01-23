@@ -130,7 +130,7 @@ steps:
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
     displayName: 'Install Terraform'
     inputs:
-      terraformVersion: 'latest'
+      terraformVersion: '1.13.3'
 
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
     displayName: Terraform init ${{ parameters.component }} }}
