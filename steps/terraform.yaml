@@ -43,6 +43,9 @@ parameters:
   - name: serviceConnection
     default: ''
 
+  - name: backendServiceConnection
+    default: ''
+
   - name: terraformInitSubscription
     default: ''
 
@@ -142,7 +145,10 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       backendType: 'azurerm'
-      backendServiceArm: ${{ parameters.serviceConnection }}
+      ${{ if ne(parameters.backendServiceConnection, '') }}:
+        backendServiceArm: ${{ parameters.backendServiceConnection }}
+      ${{ else }}:
+        backendServiceArm: ${{ parameters.serviceConnection }}
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmContainerName: subscription-tfstate
