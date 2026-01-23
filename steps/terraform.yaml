@@ -44,7 +44,7 @@ parameters:
     default: ''
 
   - name: backendServiceConnection
-    default: ''
+    default: 'azurerm-control'
 
   - name: terraformInitSubscription
     default: ''
@@ -145,16 +145,12 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       backendType: 'azurerm'
-      backendServiceArm: ${{ parameters.serviceConnection }}
+      backendServiceArm: ${{ parameters.backendServiceConnection }}
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmContainerName: subscription-tfstate
       backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
-      ${{ if and(ne(parameters.terraformInitSubscription, ''), ne(parameters.initCommandOptions, '')) }}:
-        commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }} ${{ parameters.initCommandOptions }}'
-      ${{ elseif ne(parameters.terraformInitSubscription, '') }}:
-        commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }}'
-      ${{ elseif ne(parameters.initCommandOptions, '') }}:
+      ${{ if ne(parameters.initCommandOptions, '') }}:
         commandOptions: '${{ parameters.initCommandOptions }}'
 
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
