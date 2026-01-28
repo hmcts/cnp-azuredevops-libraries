@@ -127,6 +127,15 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
+  - bash: |
+      echo "=== Terraform Backend Configuration Debug ==="
+      echo "backendServiceConnection parameter: ${{ parameters.backendServiceConnection }}"
+      echo "terraformInitSubscription variable: $(terraformInitSubscription)"
+      echo "serviceConnection parameter: ${{ parameters.serviceConnection }}"
+      echo "controlStorageAccount variable: $(controlStorageAccount)"
+      echo "============================================="
+    displayName: 'Debug backend configuration values'
+
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
     displayName: Terraform init ${{ parameters.component }}
     inputs:
