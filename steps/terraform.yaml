@@ -141,7 +141,7 @@ steps:
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmContainerName: subscription-tfstate
       backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
-      backendAzureRmOverrideSubscriptionID: ${{ parameters.terraformInitSubscription }}
+      backendAzureRmOverrideSubscriptionID: $(terraformInitSubscription)
       commandOptions: '${{ parameters.initCommandOptions }}'
 
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
