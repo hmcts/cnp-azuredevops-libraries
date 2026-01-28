@@ -136,8 +136,8 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      ${{ if ne(variables['backendServiceConnection'], '') }}:
-        backendServiceArm: $(backendServiceConnection)
+      ${{ if ne(parameters.backendServiceConnection, '') }}:
+        backendServiceArm: ${{ parameters.backendServiceConnection }}
       ${{ else }}:
         backendServiceArm: ${{ parameters.serviceConnection }}
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
