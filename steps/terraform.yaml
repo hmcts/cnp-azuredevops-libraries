@@ -130,11 +130,6 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
-    displayName: 'Install Terraform'
-    inputs:
-      terraformVersion: '1.13.3'
-
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
     displayName: Terraform init ${{ parameters.component }}
     inputs:
