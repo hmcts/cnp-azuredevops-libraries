@@ -129,7 +129,7 @@ steps:
 
   - bash: |
       echo "=== Terraform Backend Configuration Debug ==="
-      echo "backendServiceConnection parameter: ${{ parameters.backendServiceConnection }}"
+      echo "backendServiceConnection parameter: ${{backendServiceConnection}}"
       echo "terraformInitSubscription variable: $(terraformInitSubscription)"
       echo "serviceConnection parameter: ${{ parameters.serviceConnection }}"
       echo "controlStorageAccount variable: $(controlStorageAccount)"
@@ -145,7 +145,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      backendServiceArm: ${{backendServiceConnection }}
+      backendServiceArm: ${{backendServiceConnection}}
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmContainerName: subscription-tfstate
