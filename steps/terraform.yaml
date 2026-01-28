@@ -145,14 +145,12 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      ${{ if ne(parameters.backendServiceConnection, '') }}:
-        backendServiceArm: ${{ parameters.backendServiceConnection }}
-      ${{ else }}:
-        backendServiceArm: ${{ parameters.serviceConnection }}
+      backendServiceArm: ${{ parameters.backendServiceConnection }}
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmContainerName: subscription-tfstate
       backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
+      backendAzureRmUseCliFlagsForAuthentication: true
       commandOptions: '${{ parameters.initCommandOptions }}'
 
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
