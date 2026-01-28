@@ -60,7 +60,7 @@ def run_tf_init(command, working_directory):
     return output.stdout.decode("utf-8"), output.stderr.decode("utf-8")
 
 
-def run_command(command, working_directory, is_tf_switch=False):
+def run_command(command, working_directory):
     """Run a command and return the output.
     Args:
         command (list): A list of command arguments.
@@ -77,17 +77,8 @@ def run_command(command, working_directory, is_tf_switch=False):
     """
     os.chdir(working_directory)
     try:
-        if is_tf_switch:
-            run_command = subprocess.run(command, capture_output=True, timeout=15)
-        else:
-            run_command = subprocess.run(command, capture_output=True)
+        run_command = subprocess.run(command, capture_output=True)
         return run_command.stdout.decode("utf-8")
-    except subprocess.TimeoutExpired:
-        # get latest stable version if tfswitch hangs
-        command = ["tfswitch", "--latest"]
-        run_command = subprocess.run(command, capture_output=True, timeout=15)
-        return run_command.stdout.decode("utf-8")
-    
     except TypeError:
         run_command = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -672,9 +663,7 @@ def main():
             print(f'component: {component}')
             full_path = f'{working_directory}{component}'
 
-            # fail out loop if terraform version <= 0.13.0
-            command = ["tfswitch", "-b", terraform_binary_path]
-            run_command(command, full_path, True)
+            # Get terraform version
             command = ["terraform", "version", "--json"]
             result = json.loads(run_command(command, full_path))
 

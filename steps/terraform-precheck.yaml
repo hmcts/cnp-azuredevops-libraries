@@ -69,10 +69,10 @@ steps:
       
   - template: ./set-build-repo-suffix-env-var.yaml
 
-  - template: ./install-use-tfswitch.yaml
-    parameters:
-      tfswitchArgs: -b ~/.local/bin/terraform --latest
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
+    displayName: 'Install Terraform'
+    inputs:
+      terraformVersion: '1.13.3'
 
   - task: AzureKeyVault@2
     displayName: 'Retrieve keyvault secret for ADO token'
