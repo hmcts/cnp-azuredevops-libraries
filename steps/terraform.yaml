@@ -141,7 +141,7 @@ steps:
       backendType: azurerm
       ensureBackend: false
       backendServiceArm: ${{ parameters.serviceConnection }}
-      backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
+      #backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
       backendAzureRmResourceGroupLocation: ${{ parameters.location }}
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmStorageAccountSku: Standard_LRS
