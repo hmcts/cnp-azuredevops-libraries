@@ -145,7 +145,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      backendServiceArm: ${{ parameters.backendServiceConnection }}
+      backendServiceArm: ${{backendServiceConnection }}
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmContainerName: subscription-tfstate
