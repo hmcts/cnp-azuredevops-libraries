@@ -128,30 +128,23 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureCLI@2
-    displayName: 'Set backend service connection from subscription name'
+    displayName: 'Verify subscription and backend configuration'
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
       inlineScript: |
-        # Get the subscription name
+        # Get the subscription name for logging
         SUBSCRIPTION_NAME=$(az account show --query name -o tsv)
-        echo "Current subscription: $SUBSCRIPTION_NAME"
-        
-        # Determine backend service connection based on subscription name
-        if [[ "$SUBSCRIPTION_NAME" == *"CONTROL"* ]] || [[ "$SUBSCRIPTION_NAME" == *"Control"* ]]; then
-          BACKEND_CONNECTION="HMCTS-CONTROL"
-        else
-          BACKEND_CONNECTION="HMCTS-CONTROL"  # Default to control for backend storage
-        fi
-        
-        echo "Backend service connection will be: $BACKEND_CONNECTION"
-        echo "##vso[task.setvariable variable=backendServiceConnectionName]$BACKEND_CONNECTION"
+        SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+        echo "Current deployment subscription: $SUBSCRIPTION_NAME ($SUBSCRIPTION_ID)"
+        echo "Backend service connection: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}"
+        echo "Backend will use the service connection specified in the parameter or default to HMCTS-CONTROL"
 
   - bash: |
       echo "=== Terraform Backend Configuration Debug ==="
       echo "backendServiceConnection parameter: ${{ parameters.backendServiceConnection }}"
-      echo "backendServiceConnectionName variable: $(backendServiceConnectionName)"
+      echo "Effective backend connection: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}"
       echo "terraformInitSubscription variable: $(terraformInitSubscription)"
       echo "serviceConnection parameter: ${{ parameters.serviceConnection }}"
       echo "controlStorageAccount variable: $(controlStorageAccount)"
@@ -167,7 +160,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      backendServiceArm: $(backendServiceConnectionName)
+      backendServiceArm: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmContainerName: subscription-tfstate
