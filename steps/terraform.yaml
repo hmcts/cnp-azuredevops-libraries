@@ -128,24 +128,30 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureCLI@2
-    displayName: 'Verify subscription and backend configuration'
+    displayName: 'Get backend service connection name from terraformInitSubscription'
     inputs:
       azureSubscription: ${{ parameters.serviceConnection }}
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
       inlineScript: |
-        # Get the subscription name for logging
-        SUBSCRIPTION_NAME=$(az account show --query name -o tsv)
-        SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-        echo "Current deployment subscription: $SUBSCRIPTION_NAME ($SUBSCRIPTION_ID)"
-        echo "Backend service connection: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}"
-        echo "Backend will use the service connection specified in the parameter or default to HMCTS-CONTROL"
+        # Get current deployment subscription info for logging
+        DEPLOYMENT_SUB_NAME=$(az account show --query name -o tsv)
+        DEPLOYMENT_SUB_ID=$(az account show --query id -o tsv)
+        echo "Current deployment subscription: $DEPLOYMENT_SUB_NAME ($DEPLOYMENT_SUB_ID)"
+        
+        # Get the backend subscription name from terraformInitSubscription ID
+        BACKEND_SUB_NAME=$(az account show --subscription "${{ parameters.terraformInitSubscription }}" --query name -o tsv)
+        echo "Backend subscription ID: ${{ parameters.terraformInitSubscription }}"
+        echo "Backend subscription name: $BACKEND_SUB_NAME"
+        
+        # Set the backend service connection name as a variable
+        echo "##vso[task.setvariable variable=backendServiceConnectionName]$BACKEND_SUB_NAME"
+        echo "Backend service connection will be: $BACKEND_SUB_NAME"
 
   - bash: |
       echo "=== Terraform Backend Configuration Debug ==="
-      echo "backendServiceConnection parameter: ${{ parameters.backendServiceConnection }}"
-      echo "Effective backend connection: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}"
-      echo "terraformInitSubscription variable: $(terraformInitSubscription)"
+      echo "terraformInitSubscription parameter: ${{ parameters.terraformInitSubscription }}"
+      echo "backendServiceConnectionName variable (from lookup): $(backendServiceConnectionName)"
       echo "serviceConnection parameter: ${{ parameters.serviceConnection }}"
       echo "controlStorageAccount variable: $(controlStorageAccount)"
       echo "============================================="
@@ -160,7 +166,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      backendServiceArm: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}
+      backendServiceArm: $(backendServiceConnectionName)
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmContainerName: subscription-tfstate
