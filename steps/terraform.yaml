@@ -43,6 +43,9 @@ parameters:
   - name: serviceConnection
     default: ''
 
+  - name: backendServiceConnection
+    default: ''
+
   - name: terraformInitSubscription
     default: ''
 
@@ -107,13 +110,10 @@ steps:
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'github-api-token'
 
-  - template: ./install-use-tfswitch.yaml
-    parameters:
-      tfswitchArgs: -b ~/.local/bin/terraform
-      ${{ if eq( parameters['baseDirectory'], '') }}:
-        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      ${{ else }}:
-        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
+    displayName: 'Install Terraform'
+    inputs:
+      terraformVersion: '1.13.3'
 
   - task: Bash@3
     displayName: Build resource values
@@ -127,49 +127,46 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  - task: TerraformCLI@2
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
     displayName: Terraform init ${{ parameters.component }}
     inputs:
-      command: init
+      provider: 'azurerm'
+      command: 'init'
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      backendType: azurerm
-      ensureBackend: false
-      backendServiceArm: ${{ parameters.serviceConnection }}
+      backendServiceArm: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}
       backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
-      backendAzureRmResourceGroupLocation: ${{ parameters.location }}
       backendAzureRmStorageAccountName: $(controlStorageAccount)
-      backendAzureRmStorageAccountSku: Standard_LRS
       backendAzureRmContainerName: subscription-tfstate
       backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
-      commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }} ${{ parameters.initCommandOptions }}'
+      commandOptions: '${{ parameters.initCommandOptions }}'
 
-  - task: TerraformCLI@2
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
     displayName: Terraform validate
     inputs:
-      command: validate
+      provider: 'azurerm'
+      command: 'validate'
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  - task: TerraformCLI@2
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
     # retryCountOnFailure: 2
     displayName: Terraform plan ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     ${{ if parameters.terraformEnvironmentVariables }}:
       env: ${{ parameters.terraformEnvironmentVariables  }}
     inputs:
-      command: plan
+      provider: 'azurerm'
+      command: 'plan'
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      environmentServiceName: ${{ parameters.serviceConnection }}
-      runAzLogin: true
-      publishPlanResults: "$(tfPlanName)"
+      environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
       ${{ if eq(parameters['tfVarsFile'], '') }}:
         commandOptions: >
           -out tfplan-$(tfPlanName)
@@ -193,7 +190,6 @@ steps:
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -var-file "${{ parameters.tfVarsFile }}"
           -lock=false
-    retryCountOnTaskFailure: 3 # This is at the correct level, aligned with 'displayName' and 'inputs'
 
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
@@ -248,7 +244,7 @@ steps:
         az storage azcopy blob upload -c plan-json --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).json -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).json" --subscription ${{ parameters.savePlanResultsServiceConnection }} --account-key $(storage-account-primary-key)
       azureSubscription: ${{ parameters.serviceConnection }}
 
-  - task: TerraformCLI@2
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
     displayName: Terraform apply ${{ parameters.component }}
     ${{ if parameters.terraformEnvironmentVariables }}:
       env: ${{ parameters.terraformEnvironmentVariables  }}
@@ -258,29 +254,29 @@ steps:
       and(succeeded(), eq(variables['isMain'], true), eq(variables['isAutoTriggered'], true))
       )
     inputs:
-      runAzLogin: true
-      command: apply
+      provider: 'azurerm'
+      command: 'apply'
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      environmentServiceName: ${{ parameters.serviceConnection }}
+      environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
       commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName)"
-      retryCountOnTaskFailure: 3 # This is at the correct level, aligned with 'displayName' and 'inputs'
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
-      - task: TerraformCLI@2
+      - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
         displayName: Terraform destroy ${{ parameters.component }}
         ${{ if parameters.terraformEnvironmentVariables }}:
           env: ${{ parameters.terraformEnvironmentVariables  }}
         condition: and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'destroy'))
         inputs:
-          command: destroy
+          provider: 'azurerm'
+          command: 'destroy'
           ${{ if eq( parameters['baseDirectory'], '') }}:
             workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
           ${{ else }}:
             workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-          environmentServiceName: ${{ parameters.serviceConnection }}
+          environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
           ${{ if eq(parameters['tfVarsFile'], '') }}:
             commandOptions: >
               -var env=${{ parameters.environment }}
@@ -298,7 +294,6 @@ steps:
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
               -var-file "${{ parameters.tfVarsFile }}"
-
   - task: AzureCLI@2
     displayName: 'Unlock TF state if required'
     condition: |
