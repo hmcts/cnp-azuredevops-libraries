@@ -136,10 +136,11 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      # Only set backend parameters if initCommandOptions doesn't contain backend-config
+      # Always provide backendServiceArm for authentication
+      backendServiceArm: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}
+      # Only set other backend parameters if initCommandOptions doesn't contain backend-config
       # This prevents double backend configuration when repos provide custom backend settings
       ${{ if not(contains(parameters.initCommandOptions, '-backend-config')) }}:
-        backendServiceArm: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}
         backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
         backendAzureRmStorageAccountName: $(controlStorageAccount)
         backendAzureRmContainerName: subscription-tfstate
