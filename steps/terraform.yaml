@@ -136,11 +136,14 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      backendServiceArm: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}
-      backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
-      backendAzureRmStorageAccountName: $(controlStorageAccount)
-      backendAzureRmContainerName: subscription-tfstate
-      backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
+      # Only set backend parameters if initCommandOptions doesn't contain backend-config
+      # This prevents double backend configuration when repos provide custom backend settings
+      ${{ if not(contains(parameters.initCommandOptions, '-backend-config')) }}:
+        backendServiceArm: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}
+        backendAzureRmResourceGroupName: 'azure-control-${{ parameters.environment }}-rg'
+        backendAzureRmStorageAccountName: $(controlStorageAccount)
+        backendAzureRmContainerName: subscription-tfstate
+        backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
       commandOptions: '${{ parameters.initCommandOptions }}'
 
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
