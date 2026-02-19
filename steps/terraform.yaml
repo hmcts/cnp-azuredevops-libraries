@@ -76,6 +76,10 @@ parameters:
     type: string
     default: DTS-CFTPTL-INTSVC
 
+  - name: backendAzureRmKey
+    type: string
+    default: ''
+
 
 steps:
   - checkout: self
