@@ -148,9 +148,9 @@ steps:
       backendAzureRmStorageAccountSku: Standard_LRS
       backendAzureRmContainerName: subscription-tfstate
       ${{ if eq(parameters['backendAzureRmKey'], '') }}:
-        backendAzureRmKey: ${{ parameters.backendAzureRmKey }}
-      ${{ else }}:
         backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
+      ${{ else }}:
+        backendAzureRmKey: ${{ parameters.backendAzureRmKey }}
       commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }} ${{ parameters.initCommandOptions }}'
 
   - task: TerraformCLI@2
