@@ -76,6 +76,10 @@ parameters:
     type: string
     default: DTS-CFTPTL-INTSVC
 
+  - name: backendAzureRmKey
+    type: string
+    default: ''
+
 
 steps:
   - checkout: self
@@ -143,7 +147,10 @@ steps:
       backendAzureRmStorageAccountName: $(controlStorageAccount)
       backendAzureRmStorageAccountSku: Standard_LRS
       backendAzureRmContainerName: subscription-tfstate
-      backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
+      ${{ if eq(parameters['backendAzureRmKey'], '') }}:
+        backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
+      ${{ else }}:
+        backendAzureRmKey: ${{ parameters.backendAzureRmKey }}
       commandOptions: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }} ${{ parameters.initCommandOptions }}'
 
   - task: TerraformCLI@2
