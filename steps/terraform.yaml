@@ -106,6 +106,10 @@ steps:
       serviceConnection: ${{ parameters.serviceConnection }}
       environment: ${{ parameters.environment }}
 
+  - template: ./install-use-tfswitch.yaml
+    parameters:
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+
   - task: Bash@3
     displayName: Install tfcmt
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
@@ -121,11 +125,6 @@ steps:
       ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'github-api-token'
-
-  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
-    displayName: 'Install Terraform'
-    inputs:
-      terraformVersion: '1.13.3'
 
   - task: Bash@3
     displayName: Build resource values
