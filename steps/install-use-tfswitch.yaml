@@ -16,6 +16,7 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
+        set -euo pipefail
         curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | bash -s -- -b  ${{ parameters.tfswitchPath }} ${{ parameters.tfswitchVersion }}
         set -x
         # Make sure ~/.local/bin is set for both root and non-root based agents (self-hosted etc)
@@ -23,5 +24,12 @@ steps:
         echo '##vso[task.prependpath]$(HOME)/.local/bin'
         # Prepend PATH for current ADO task
         export PATH=$HOME/.local/bin:$PATH
-        tfswitch ${{ parameters.tfswitchArgs }}
+        if [ -n "${{ parameters.tfswitchArgs }}" ]; then
+          tfswitch ${{ parameters.tfswitchArgs }}
+        elif [ -f .terraform-version ]; then
+          tfswitch "$(cat .terraform-version)"
+        else
+          echo "##vso[task.logissue type=error]tfswitch requires a version. Provide tfswitchArgs or add .terraform-version in the repo root."
+          exit 1
+        fi
       workingDirectory: ${{ parameters.workingDirectory}}
