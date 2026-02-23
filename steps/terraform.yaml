@@ -52,6 +52,12 @@ parameters:
   - name: backendStorageAccountName
     default: ''
 
+  - name: backendContainerName
+    default: ''
+
+  - name: backendKey
+    default: ''
+
   - name: terraformInitSubscription
     default: ''
 
@@ -145,8 +151,8 @@ steps:
       backendServiceArm: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}
       backendAzureRmResourceGroupName: ${{ coalesce(parameters.backendResourceGroupName, format('azure-control-{0}-rg', parameters.environment)) }}
       backendAzureRmStorageAccountName: ${{ coalesce(parameters.backendStorageAccountName, '$(controlStorageAccount)') }}
-      backendAzureRmContainerName: subscription-tfstate
-      backendAzureRmKey: '${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate'
+      backendAzureRmContainerName: ${{ coalesce(parameters.backendContainerName, 'subscription-tfstate') }}
+      backendAzureRmKey: ${{ coalesce(parameters.backendKey, format('{0}/{1}/{2}/{3}/{4}/terraform.tfstate', parameters.location, parameters.product, variables.buildRepoSuffix, parameters.environment, parameters.component)) }}
       commandOptions: '${{ parameters.initCommandOptions }}'
 
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
