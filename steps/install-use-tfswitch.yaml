@@ -24,12 +24,5 @@ steps:
         echo '##vso[task.prependpath]$(HOME)/.local/bin'
         # Prepend PATH for current ADO task
         export PATH=$HOME/.local/bin:$PATH
-        if [ -n "${{ parameters.tfswitchArgs }}" ]; then
-          tfswitch ${{ parameters.tfswitchArgs }}
-        elif [ -f .terraform-version ]; then
-          tfswitch "$(cat .terraform-version)"
-        else
-          echo "##vso[task.logissue type=error]tfswitch requires a version. Provide tfswitchArgs or add .terraform-version in the repo root."
-          exit 1
-        fi
+        tfswitch ${{ parameters.tfswitchArgs }}
       workingDirectory: ${{ parameters.workingDirectory}}
