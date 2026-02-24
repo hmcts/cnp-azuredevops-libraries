@@ -106,9 +106,13 @@ steps:
       serviceConnection: ${{ parameters.serviceConnection }}
       environment: ${{ parameters.environment }}
 
-  - template: ./install-use-tfswitch.yaml
+    - template: ./install-use-tfswitch.yaml
     parameters:
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      tfswitchArgs: -b ~/.local/bin/terraform
+      ${{ if eq( parameters['baseDirectory'], '') }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      ${{ else }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
   - task: Bash@3
     displayName: Install tfcmt
