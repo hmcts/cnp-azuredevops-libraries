@@ -71,10 +71,8 @@ steps:
 
   - template: ./install-use-tfswitch.yaml
     parameters:
-      ${{ if ne(parameters.repo_name, '') }}:
-        workingDirectory: $(System.DefaultWorkingDirectory)/${{ parameters.repo_name }}
-      ${{ else }}:
-        workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      tfswitchArgs: -b ~/.local/bin/terraform --latest
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureKeyVault@2
     displayName: 'Retrieve keyvault secret for ADO token'
