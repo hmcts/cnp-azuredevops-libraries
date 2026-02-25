@@ -106,9 +106,8 @@ steps:
       serviceConnection: ${{ parameters.serviceConnection }}
       environment: ${{ parameters.environment }}
 
-    - template: ./install-use-tfswitch.yaml
+  - template: ./install-use-tfswitch.yaml
     parameters:
-      tfswitchArgs: -b ~/.local/bin/terraform
       ${{ if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
