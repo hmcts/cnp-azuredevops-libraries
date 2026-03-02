@@ -185,7 +185,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
       ${{ if eq(parameters['tfVarsFile'], '') }}:
-        commandOptions: >
+        commandOptions: >-
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
@@ -193,21 +193,21 @@ steps:
           -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
           -lock=false
       ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
-        commandOptions: >
+        commandOptions: >-
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -lock=false
       ${{ else }}:
-        commandOptions: >
+        commandOptions: >-
           -out tfplan-$(tfPlanName)
           -var env=${{ parameters.environment }}
           -var builtFrom=$(Build.Repository.Name)
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -var-file "${{ parameters.tfVarsFile }}"
           -lock=false
-        retryCountOnTaskFailure: 3 # This is at the correct level, aligned with 'displayName' and 'inputs'
+      retryCountOnTaskFailure: 3 # This is at the correct level, aligned with 'displayName' and 'inputs'
 
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
@@ -280,7 +280,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
       commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName)"
-      retryCountOnTaskFailure: 3 # This is at the correct level, aligned with 'displayName' and 'inputs'
+    retryCountOnTaskFailure: 3 # This is at the correct level, aligned with 'displayName' and 'inputs'
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
@@ -297,18 +297,18 @@ steps:
             workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
           environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
           ${{ if eq(parameters['tfVarsFile'], '') }}:
-            commandOptions: >
+            commandOptions: >-
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
               -var-file "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/environments/${{ parameters.environment }}/$(tfVarsName).tfvars"
           ${{ elseif eq(parameters['tfVarsFile'], 'NULL') }}:
-            commandOptions: >
+            commandOptions: >-
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
           ${{ else }}:
-            commandOptions: >
+            commandOptions: >-
               -var env=${{ parameters.environment }}
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
