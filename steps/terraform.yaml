@@ -165,7 +165,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      backendServiceArm: '${{ parameters.backendServiceConnection }}'
+      backendServiceArm: ${{ parameters.backendServiceConnection, 'HMCTS-CONTROL') }}
       backendAzureRmResourceGroupName: ${{ coalesce(parameters.backendResourceGroupName, format('azure-control-{0}-rg', parameters.environment)) }}
       backendAzureRmStorageAccountName: ${{ coalesce(parameters.backendStorageAccountName, '$(controlStorageAccount)') }}
       backendAzureRmContainerName: ${{ coalesce(parameters.backendContainerName, 'subscription-tfstate') }}
