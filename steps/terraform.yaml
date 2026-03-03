@@ -153,9 +153,6 @@ steps:
         echo "Setting subscription to ${{ parameters.terraformInitSubscription }}"
         az account set --subscription ${{ parameters.terraformInitSubscription }}
 
-
-
-
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
     displayName: Terraform init ${{ parameters.component }}
     inputs:
