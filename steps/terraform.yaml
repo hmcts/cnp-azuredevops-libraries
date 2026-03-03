@@ -142,9 +142,10 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - script: |
-      echo "Active Azure Account:"
-      az account show
-    displayName: "Check Logged-in Subscription"
+      echo "Logging into subscription ${{ parameters.terraformInitSubscription }}"
+      az account set --subscription ${{ parameters.terraformInitSubscription }}
+    displayName: "SUBS TESTING"
+
 
 
   # - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
