@@ -141,10 +141,18 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  - script: |
-      echo "Logging into subscription ${{ parameters.terraformInitSubscription }}"
-      az account set --subscription ${{ parameters.terraformInitSubscription }}
-    displayName: "SUBS TESTING"
+  - task: AzureCLI@2
+    displayName: "Login to Azure subscription"
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnection }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        echo "Active subscription:"
+        az account show
+        echo "Setting subscription to ${{ parameters.terraformInitSubscription }}"
+        az account set --subscription ${{ parameters.terraformInitSubscription }}
+
 
 
 
