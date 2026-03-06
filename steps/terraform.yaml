@@ -150,7 +150,8 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      backendServiceArm: ${{ coalesce(parameters.serviceConnection, 'HMCTS-CONTROL') }}
+      backendServiceArm: ${{ parameters.serviceConnection }}
+      backendAzureRmOverrideSubscriptionID: ${{ parameters.terraformInitSubscription }}
       backendAzureRmResourceGroupName: ${{ coalesce(parameters.backendResourceGroupName, format('azure-control-{0}-rg', parameters.environment)) }}
       backendAzureRmStorageAccountName: ${{ coalesce(parameters.backendStorageAccountName, '$(controlStorageAccount)') }}
       backendAzureRmContainerName: ${{ coalesce(parameters.backendContainerName, 'subscription-tfstate') }}
