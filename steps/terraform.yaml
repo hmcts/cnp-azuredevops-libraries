@@ -58,6 +58,10 @@ parameters:
   - name: backendKey
     default: ''
 
+  - name: backendAzureRmUseEntraIdForAuthentication
+    displayName: Use Entra ID for authentication in Terraform init
+    default: false
+
   - name: terraformInitSubscription
     default: ''
 
@@ -141,7 +145,7 @@ steps:
       filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/build-resource-values.sh
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTask@5
     displayName: Terraform init ${{ parameters.component }}
     inputs:
       provider: 'azurerm'
@@ -150,7 +154,8 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
-      backendServiceArm: ${{ coalesce(parameters.backendServiceConnection, 'HMCTS-CONTROL') }}
+      backendServiceArm: ${{ parameters.serviceConnection }}
+      backendAzureRmOverrideSubscriptionID: ${{ parameters.terraformInitSubscription }}
       backendAzureRmResourceGroupName: ${{ coalesce(parameters.backendResourceGroupName, format('azure-control-{0}-rg', parameters.environment)) }}
       backendAzureRmStorageAccountName: ${{ coalesce(parameters.backendStorageAccountName, '$(controlStorageAccount)') }}
       backendAzureRmContainerName: ${{ coalesce(parameters.backendContainerName, 'subscription-tfstate') }}
@@ -158,9 +163,11 @@ steps:
         backendAzureRmKey: ${{ parameters.backendKey }}
       ${{ else }}:
         backendAzureRmKey: ${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate
+      backendAzureRmUseCliFlagsForAuthentication: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }}'
+      backendAzureRmUseEntraIdForAuthentication: '${{ parameters.backendAzureRmUseEntraIdForAuthentication }}'
       commandOptions: '${{ parameters.initCommandOptions }}'
 
-  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTask@5
     displayName: Terraform validate
     inputs:
       provider: 'azurerm'
@@ -170,7 +177,7 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTask@5
     # retryCountOnFailure: 2
     displayName: Terraform plan ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
@@ -262,7 +269,7 @@ steps:
         az storage azcopy blob upload -c plan-json --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).json -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).json" --subscription ${{ parameters.savePlanResultsServiceConnection }} --account-key $(storage-account-primary-key)
       azureSubscription: ${{ parameters.serviceConnection }}
 
-  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTask@5
     displayName: Terraform apply ${{ parameters.component }}
     ${{ if parameters.terraformEnvironmentVariables }}:
       env: ${{ parameters.terraformEnvironmentVariables  }}
@@ -283,7 +290,7 @@ steps:
     retryCountOnTaskFailure: 3 # This is at the correct level, aligned with 'displayName' and 'inputs'
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
-      - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTaskV4@4
+      - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTask@5
         displayName: Terraform destroy ${{ parameters.component }}
         ${{ if parameters.terraformEnvironmentVariables }}:
           env: ${{ parameters.terraformEnvironmentVariables  }}
