@@ -152,7 +152,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       backendServiceArm: ${{ parameters.serviceConnection }}
       backendAzureRmOverrideSubscriptionID: ${{ parameters.terraformInitSubscription }}
-      backendAzureRmResourceGroupName: ${{ coalesce(parameters.backendResourceGroupName, format('azure-control-{0}-rg', parameters.environment)) }}
+      backendAzureRmResourceGroupName: ${{ coalesce(parameters.backendResourceGroupName, 'azure-control-${{ parameters.environment }}-rg') }}
       backendAzureRmStorageAccountName: ${{ coalesce(parameters.backendStorageAccountName, '$(controlStorageAccount)') }}
       backendAzureRmContainerName: ${{ coalesce(parameters.backendContainerName, 'subscription-tfstate') }}
       ${{ if parameters.backendKey }}:
