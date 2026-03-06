@@ -160,6 +160,7 @@ steps:
       ${{ else }}:
         backendAzureRmKey: ${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate
       backendAzureRmUseCliFlagsForAuthentication: '-backend-config=subscription_id=${{ parameters.terraformInitSubscription }}'
+      backendAzureRmUseEntraIdForAuthentication: false
       commandOptions: '${{ parameters.initCommandOptions }}'
 
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTask@5
