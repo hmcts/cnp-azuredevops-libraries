@@ -24,5 +24,52 @@ steps:
         echo '##vso[task.prependpath]$(HOME)/.local/bin'
         # Prepend PATH for current ADO task
         export PATH=$HOME/.local/bin:$PATH
+        # Temporary workaround for a tfswitch verification issue related to expired HashiCorp signing keys.
+        # This seeds the Terraform key cache until the upstream tfswitch/key handling behavior is fixed.
+        key_cache_dir="$HOME/.terraform.versions"
+        key_source_file="$key_cache_dir/pgp-key.txt"
+        key_processed_file="$key_cache_dir/terraform_latest_public_key.asc"
+        key_url="https://www.hashicorp.com/.well-known/pgp-key.txt"
+        mkdir -p "$key_cache_dir"
+        rm -f "$key_source_file"
+        curl -fsSL "$key_url" -o "$key_source_file"
+        if [ ! -s "$key_source_file" ]; then
+          echo "Failed to fetch Terraform public key from HashiCorp official source: $key_url" >&2
+          exit 1
+        fi
+        awk '
+          /-----BEGIN PGP PUBLIC KEY BLOCK-----/ {
+            block = $0 ORS
+            in_block = 1
+            next
+          }
+          in_block {
+            block = block $0 ORS
+          }
+          /-----END PGP PUBLIC KEY BLOCK-----/ {
+            latest = block
+            block = ""
+            in_block = 0
+          }
+          END {
+            if (latest == "") {
+              exit 1
+            }
+            printf "%s", latest
+          }
+        ' "$key_source_file" > "$key_processed_file"
+        matched_cache_files=0
+        for cache_file in "$key_cache_dir"/terraform_*.asc; do
+          if [ -e "$cache_file" ]; then
+            if [ "$cache_file" = "$key_processed_file" ]; then
+              continue
+            fi
+            cp "$key_processed_file" "$cache_file"
+            matched_cache_files=1
+          fi
+        done
+        if [ "$matched_cache_files" -eq 0 ]; then
+          cp "$key_processed_file" "$key_cache_dir/terraform_72D7468F.asc"
+        fi
         tfswitch ${{ parameters.tfswitchArgs }}
       workingDirectory: ${{ parameters.workingDirectory}}
