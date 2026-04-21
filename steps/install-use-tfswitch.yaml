@@ -24,6 +24,8 @@ steps:
         echo '##vso[task.prependpath]$(HOME)/.local/bin'
         # Prepend PATH for current ADO task
         export PATH=$HOME/.local/bin:$PATH
+        # Temporary workaround for a tfswitch verification issue related to expired HashiCorp signing keys.
+        # This seeds the Terraform key cache until the upstream tfswitch/key handling behavior is fixed.
         key_cache_dir="$HOME/.terraform.versions"
         key_source_file="$key_cache_dir/pgp-key.txt"
         key_processed_file="$key_cache_dir/terraform_latest_public_key.asc"
