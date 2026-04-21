@@ -71,7 +71,7 @@ steps:
 
   - template: ./install-use-tfswitch.yaml
     parameters:
-      tfswitchArgs: -b ~/.local/bin/terraform --latest
+      terraformVersion: latest
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
   - task: AzureKeyVault@2
