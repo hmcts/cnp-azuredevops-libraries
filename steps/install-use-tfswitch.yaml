@@ -65,6 +65,9 @@ steps:
         matched_cache_files=0
         for cache_file in "$key_cache_dir"/terraform_*.asc; do
           if [ -e "$cache_file" ]; then
+            if [ "$cache_file" = "$key_processed_file" ]; then
+              continue
+            fi
             cp "$key_processed_file" "$cache_file"
             matched_cache_files=1
           fi
