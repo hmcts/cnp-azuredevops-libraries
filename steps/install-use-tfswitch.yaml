@@ -24,5 +24,41 @@ steps:
         echo '##vso[task.prependpath]$(HOME)/.local/bin'
         # Prepend PATH for current ADO task
         export PATH=$HOME/.local/bin:$PATH
+        key_cache_dir="$HOME/.terraform.versions"
+        key_source_file="$key_cache_dir/pgp-key.txt"
+        key_processed_file="$key_cache_dir/terraform_latest_public_key.asc"
+        mkdir -p "$key_cache_dir"
+        curl -fsSL https://releases.hashicorp.com/terraform/pgp-key.txt -o "$key_source_file"
+        awk '
+          /-----BEGIN PGP PUBLIC KEY BLOCK-----/ {
+            block = $0 ORS
+            in_block = 1
+            next
+          }
+          in_block {
+            block = block $0 ORS
+          }
+          /-----END PGP PUBLIC KEY BLOCK-----/ {
+            latest = block
+            block = ""
+            in_block = 0
+          }
+          END {
+            if (latest == "") {
+              exit 1
+            }
+            printf "%s", latest
+          }
+        ' "$key_source_file" > "$key_processed_file"
+        matched_cache_files=0
+        for cache_file in "$key_cache_dir"/terraform_*.asc; do
+          if [ -e "$cache_file" ]; then
+            cp "$key_processed_file" "$cache_file"
+            matched_cache_files=1
+          fi
+        done
+        if [ "$matched_cache_files" -eq 0 ]; then
+          cp "$key_processed_file" "$key_cache_dir/terraform_72D7468F.asc"
+        fi
         tfswitch ${{ parameters.tfswitchArgs }}
       workingDirectory: ${{ parameters.workingDirectory}}
