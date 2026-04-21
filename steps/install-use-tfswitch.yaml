@@ -2,27 +2,31 @@
 parameters:
   - name: workingDirectory
     default: $(System.DefaultWorkingDirectory)
-  - name: tfswitchArgs
-    default: ''
-  - name: tfswitchVersion
+  - name: terraformVersion
     default: 'latest'
-  - name: tfswitchPath
+  - name: tfenvVersion
+    default: 'v3.0.0'
+  - name: tfenvPath
     default: '~/.local/bin'
 steps:
   - task: Bash@3
-    displayName: Terraform install (tfswitch)
-    env:
-      BINDIR: ~/.local/bin
+    displayName: Terraform install (tfenv)
     inputs:
       targetType: 'inline'
       script: |
         set -euo pipefail
-        curl -L https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh | bash -s -- -b  ${{ parameters.tfswitchPath }} ${{ parameters.tfswitchVersion }}
+        # Install tfenv
+        rm -rf ~/.tfenv
+        git clone -b ${{ parameters.tfenvVersion }} --single-branch https://github.com/tfutils/tfenv.git ~/.tfenv
+        # Symlink tfenv binaries into path
+        mkdir -p ${{ parameters.tfenvPath }}
+        ln -s -f ~/.tfenv/bin/* ${{ parameters.tfenvPath }}/
         set -x
         # Make sure ~/.local/bin is set for both root and non-root based agents (self-hosted etc)
         # Prepend PATH for other ADO tasks
         echo '##vso[task.prependpath]$(HOME)/.local/bin'
         # Prepend PATH for current ADO task
         export PATH=$HOME/.local/bin:$PATH
-        tfswitch ${{ parameters.tfswitchArgs }}
+        tfenv install ${{ parameters.terraformVersion }}
+        tfenv use ${{ parameters.terraformVersion }}
       workingDirectory: ${{ parameters.workingDirectory}}
