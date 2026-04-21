@@ -28,7 +28,19 @@ steps:
         key_source_file="$key_cache_dir/pgp-key.txt"
         key_processed_file="$key_cache_dir/terraform_latest_public_key.asc"
         mkdir -p "$key_cache_dir"
-        curl -fsSL https://releases.hashicorp.com/terraform/pgp-key.txt -o "$key_source_file"
+        rm -f "$key_source_file"
+        for key_url in \
+          https://www.hashicorp.com/.well-known/pgp-key.txt \
+          https://keybase.io/hashicorp/pgp_keys.asc
+        do
+          if curl -fsSL "$key_url" -o "$key_source_file"; then
+            break
+          fi
+        done
+        if [ ! -s "$key_source_file" ]; then
+          echo "Failed to fetch Terraform public key from supported sources" >&2
+          exit 1
+        fi
         awk '
           /-----BEGIN PGP PUBLIC KEY BLOCK-----/ {
             block = $0 ORS
