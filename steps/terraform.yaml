@@ -167,15 +167,6 @@ steps:
       backendAzureRmUseEntraIdForAuthentication: '${{ parameters.backendAzureRmUseEntraIdForAuthentication }}'
       commandOptions: '${{ parameters.initCommandOptions }}'
 
-  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTask@5
-    displayName: Terraform validate
-    inputs:
-      provider: 'azurerm'
-      command: 'validate'
-      ${{ if eq( parameters['baseDirectory'], '') }}:
-        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      ${{ else }}:
-        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTask@5
     # retryCountOnFailure: 2
