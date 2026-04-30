@@ -95,10 +95,6 @@ parameters:
     type: string
     default: DTS-CFTPTL-INTSVC
 
-  - name: backendAzureRmKey
-    type: string
-    default: ''
-
 
 steps:
   - checkout: self
@@ -218,7 +214,7 @@ steps:
           -var product=${{ parameters.product }} ${{ parameters.planCommandOptions }}
           -var-file "${{ parameters.tfVarsFile }}"
           -lock=false
-    retryCountOnTaskFailure: 3 # This is at the correct level, aligned with 'displayName' and 'inputs'
+    retryCountOnTaskFailure: 3
 
   - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
@@ -291,7 +287,7 @@ steps:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
       commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName)"
-    retryCountOnTaskFailure: 3 # This is at the correct level, aligned with 'displayName' and 'inputs'
+    retryCountOnTaskFailure: 3
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
       - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTask@5
@@ -324,6 +320,7 @@ steps:
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
               -var-file "${{ parameters.tfVarsFile }}"
+
   - task: AzureCLI@2
     displayName: 'Unlock TF state if required'
     condition: |
