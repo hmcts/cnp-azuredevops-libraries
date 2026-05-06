@@ -6,6 +6,7 @@ parameters:
   chartReleaseName: ""
   chartNamespace: ""
   chartPath: "./"
+  createNamespace: false
   helmVersion: "3.17.1"
   helmInstallTimeout: "120"
   helmTestTimeout: "300"
@@ -24,7 +25,7 @@ parameters:
       aksEnvironment: preview
 
 steps:
-  
+
   - checkout: self
     clean: true
 
@@ -69,163 +70,146 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       inlineScript: |
         export HELM_EXPERIMENTAL_OCI=1
-        az acr login --name ${{parameters.acrName}} 
+        az acr login --name ${{parameters.acrName}}
 
-  - ${{ if eq(parameters.chartPath, './') }}:
-    - script: |
-        echo "Chart Path: ${{ parameters.chartPath }}"
-        echo "Working Dir: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)"
-        ls -l
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Provide useful information"
+  - script: |
+      if [ "${{ parameters.chartPath }}" = "./" ]; then
+        CHART_TARGET="${{ parameters.chartName }}"
+      else
+        CHART_PATH_TRIMMED="${{ parameters.chartPath }}"
+        CHART_PATH_TRIMMED="${CHART_PATH_TRIMMED%/}"
+        CHART_NAME_TRIMMED="${{ parameters.chartName }}"
+        CHART_NAME_TRIMMED="${CHART_NAME_TRIMMED#/}"
+        CHART_TARGET="${CHART_PATH_TRIMMED}/${CHART_NAME_TRIMMED}"
+      fi
 
-    - script: helm dependency update ${{ parameters.chartName }}
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Retrieve helm dependencies (if any)"
+      echo "Resolved chart target: ${CHART_TARGET}"
+      echo "##vso[task.setvariable variable=chartTarget]${CHART_TARGET}"
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+    displayName: "Resolve chart target and namespace options"
 
-    - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Delete Previous Test Chart"
+  - script: |
+      echo "Chart Path: ${{ parameters.chartPath }}"
+      echo "Chart Target: $(chartTarget)"
+      echo "Working Dir: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)"
+      ls -l
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+    displayName: "Provide useful information"
 
-    - script: sleep ${{ parameters.helmDeleteWait }}
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Wait for previous chart resources to be deprovisioned"
+  - script: |
+      if [ "${{ parameters.createNamespace }}" != "true" ]; then
+        echo "Namespace creation disabled for this run."
+        echo "##vso[task.setvariable variable=namespaceCreatedByPipeline]false"
+        echo "##vso[task.setvariable variable=namespaceManagedByPipeline]false"
+        echo "##vso[task.setvariable variable=deletePreviousRelease]true"
+        exit 0
+      fi
 
-    - script: |
-        ls -Rla ${{ parameters.chartName }}
-        helm lint ${{ parameters.chartName }}
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Helm Lint"
+      if kubectl get namespace ${{ parameters.chartNamespace }} >/dev/null 2>&1; then
+        echo "Namespace ${{ parameters.chartNamespace }} already exists."
+        PIPELINE_LABEL=$(kubectl get namespace ${{ parameters.chartNamespace }} -o jsonpath='{.metadata.labels.cnp\.validate/template}' 2>/dev/null || true)
+        echo "##vso[task.setvariable variable=namespaceCreatedByPipeline]false"
+        if [ "$PIPELINE_LABEL" = "true" ]; then
+          echo "Namespace ${{ parameters.chartNamespace }} is managed by validation pipeline."
+          echo "##vso[task.setvariable variable=namespaceManagedByPipeline]true"
+          echo "##vso[task.setvariable variable=deletePreviousRelease]true"
+        else
+          echo "Namespace ${{ parameters.chartNamespace }} is not pipeline-managed. Reusing namespace, will clean up helm release only."
+          echo "##vso[task.setvariable variable=namespaceManagedByPipeline]false"
+          echo "##vso[task.setvariable variable=deletePreviousRelease]true"
+        fi
+      else
+        echo "Creating namespace ${{ parameters.chartNamespace }} for validation run."
+        kubectl create namespace ${{ parameters.chartNamespace }}
+        kubectl label namespace ${{ parameters.chartNamespace }} cnp.validate/template=true cnp.validate/build-id=$(Build.BuildId) --overwrite
+        echo "##vso[task.setvariable variable=namespaceCreatedByPipeline]true"
+        echo "##vso[task.setvariable variable=namespaceManagedByPipeline]true"
+        echo "##vso[task.setvariable variable=deletePreviousRelease]false"
+      fi
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+    displayName: "Create namespace for validation"
 
-    - script: helm install ${{ parameters.chartReleaseName }} ${{ parameters.chartName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s ${{ parameters.additionalHelmArgs }}
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Helm Install"
+  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
+    condition: eq(variables['deletePreviousRelease'], 'true')
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+    displayName: "Delete Previous Test Chart"
 
-    - script: sleep ${{ parameters.helmInstallWait }}
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Wait for chart resources to be provisioned"
+  - script: sleep ${{ parameters.helmDeleteWait }}
+    condition: eq(variables['deletePreviousRelease'], 'true')
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+    displayName: "Wait for previous chart resources to be deprovisioned"
 
-    - script: |
-        # Run helm test without --logs (doesn't work with Job-based tests)
-        helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --timeout ${{ parameters.helmTestTimeout }}s
-        
-        # Get logs from test resources
-        echo ""
-        echo "==================== Test Logs ===================="
-        
-        # Find test jobs created by this release (first try by label)
-        TEST_JOBS=$(kubectl get jobs -n ${{ parameters.chartNamespace }} \
+  - script: helm dependency update $(chartTarget)
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+    displayName: "Retrieve helm dependencies (if any)"
+
+  - script: |
+      ls -Rla $(chartTarget)
+      helm lint $(chartTarget)
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+    displayName: "Helm Lint"
+
+  - script: helm install ${{ parameters.chartReleaseName }} $(chartTarget) --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s ${{ parameters.additionalHelmArgs }}
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+    displayName: "Helm Install"
+
+  - script: sleep ${{ parameters.helmInstallWait }}
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+    displayName: "Wait for chart resources to be provisioned"
+
+  - script: |
+      # Run helm test without --logs (doesn't work with Job-based tests)
+      helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --timeout ${{ parameters.helmTestTimeout }}s
+
+      # Get logs from test resources
+      echo ""
+      echo "==================== Test Logs ===================="
+
+      # Find test jobs created by this release (first try by label)
+      TEST_JOBS=$(kubectl get jobs -n ${{ parameters.chartNamespace }} \
+        -l "app.kubernetes.io/instance=${{ parameters.chartReleaseName }}" \
+        -o json | jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | .metadata.name')
+
+      if [ -z "$TEST_JOBS" ]; then
+        # Fallback: search by name prefix if labels aren't present
+        TEST_JOBS=$(kubectl get jobs -n ${{ parameters.chartNamespace }} -o json | \
+          jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | select(.metadata.name | startswith("${{ parameters.chartReleaseName }}")) | .metadata.name')
+      fi
+
+      if [ -n "$TEST_JOBS" ]; then
+        # Job-based tests
+        for job in $TEST_JOBS; do
+          echo "--- Logs from job: $job ---"
+          kubectl logs -n ${{ parameters.chartNamespace }} -l "job-name=$job" --tail=-1 --ignore-errors=true
+        done
+      else
+        # Pod-based tests (legacy or no jobs found)
+        TEST_PODS=$(kubectl get pods -n ${{ parameters.chartNamespace }} \
           -l "app.kubernetes.io/instance=${{ parameters.chartReleaseName }}" \
           -o json | jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | .metadata.name')
-        
-        if [ -z "$TEST_JOBS" ]; then
-          # Fallback: search by name prefix if labels aren't present
-          TEST_JOBS=$(kubectl get jobs -n ${{ parameters.chartNamespace }} -o json | \
-            jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | select(.metadata.name | startswith("${{ parameters.chartReleaseName }}")) | .metadata.name')
-        fi
-        
-        if [ -n "$TEST_JOBS" ]; then
-          # Job-based tests
-          for job in $TEST_JOBS; do
-            echo "--- Logs from job: $job ---"
-            kubectl logs -n ${{ parameters.chartNamespace }} -l "job-name=$job" --tail=-1 --ignore-errors=true
+
+        if [ -n "$TEST_PODS" ]; then
+          for pod in $TEST_PODS; do
+            echo "--- Logs from pod: $pod ---"
+            kubectl logs -n ${{ parameters.chartNamespace }} $pod --ignore-errors=true
           done
         else
-          # Pod-based tests (legacy or no jobs found)
-          TEST_PODS=$(kubectl get pods -n ${{ parameters.chartNamespace }} \
-            -l "app.kubernetes.io/instance=${{ parameters.chartReleaseName }}" \
-            -o json | jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | .metadata.name')
-          
-          if [ -n "$TEST_PODS" ]; then
-            for pod in $TEST_PODS; do
-              echo "--- Logs from pod: $pod ---"
-              kubectl logs -n ${{ parameters.chartNamespace }} $pod --ignore-errors=true
-            done
-          else
-            echo "No test jobs or pods found for release ${{ parameters.chartReleaseName }}"
-          fi
+          echo "No test jobs or pods found for release ${{ parameters.chartReleaseName }}"
         fi
-        
-        echo "==================================================="
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Helm Test"
+      fi
 
-    - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }}
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Delete test Chart"
+      echo "==================================================="
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+    displayName: "Helm Test"
 
-  - ${{ else }}:
+  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
+    condition: and(succeeded(), eq('${{ parameters.createNamespace }}', 'true'))
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+    displayName: "Delete test Chart"
 
-    - script: |
-        echo "Chart Path: ${{ parameters.chartPath }}"
-        echo "Working Dir: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)"
-        ls -l
-      displayName: "Provide useful information"
-
-    - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
-      displayName: "Retrieve helm dependencies (if any)"
-
-    - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
-      displayName: "Delete Previous Test Chart"
-
-    - script: sleep ${{ parameters.helmDeleteWait }}
-      displayName: "Wait for previous chart resources to be deprovisioned"
-
-    - script: |
-        ls -Rla ${{ parameters.chartPath }}${{ parameters.chartName }}
-        helm lint ${{ parameters.chartPath }}${{ parameters.chartName }}
-      displayName: "Helm Lint"
-
-    - script: helm install ${{ parameters.chartReleaseName }} ${{ parameters.chartPath }}${{ parameters.chartName }} --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s ${{ parameters.additionalHelmArgs }}
-      displayName: "Helm Install"
-
-    - script: sleep ${{ parameters.helmInstallWait }}
-      displayName: "Wait for chart resources to be provisioned"
-
-    - script: |
-        # Run helm test without --logs (doesn't work with Job-based tests)
-        helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --timeout ${{ parameters.helmTestTimeout }}s
-        
-        # Get logs from test resources
-        echo ""
-        echo "==================== Test Logs ===================="
-        
-        # Find test jobs created by this release (first try by label)
-        TEST_JOBS=$(kubectl get jobs -n ${{ parameters.chartNamespace }} \
-          -l "app.kubernetes.io/instance=${{ parameters.chartReleaseName }}" \
-          -o json | jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | .metadata.name')
-        
-        if [ -z "$TEST_JOBS" ]; then
-          # Fallback: search by name prefix if labels aren't present
-          TEST_JOBS=$(kubectl get jobs -n ${{ parameters.chartNamespace }} -o json | \
-            jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | select(.metadata.name | startswith("${{ parameters.chartReleaseName }}")) | .metadata.name')
-        fi
-        
-        if [ -n "$TEST_JOBS" ]; then
-          # Job-based tests
-          for job in $TEST_JOBS; do
-            echo "--- Logs from job: $job ---"
-            kubectl logs -n ${{ parameters.chartNamespace }} -l "job-name=$job" --tail=-1 --ignore-errors=true
-          done
-        else
-          # Pod-based tests (legacy or no jobs found)
-          TEST_PODS=$(kubectl get pods -n ${{ parameters.chartNamespace }} \
-            -l "app.kubernetes.io/instance=${{ parameters.chartReleaseName }}" \
-            -o json | jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | .metadata.name')
-          
-          if [ -n "$TEST_PODS" ]; then
-            for pod in $TEST_PODS; do
-              echo "--- Logs from pod: $pod ---"
-              kubectl logs -n ${{ parameters.chartNamespace }} $pod --ignore-errors=true
-            done
-          else
-            echo "No test jobs or pods found for release ${{ parameters.chartReleaseName }}"
-          fi
-        fi
-        
-        echo "==================================================="
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Helm Test"
-
-    - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }}
-      displayName: "Delete test Chart"
+  - script: |
+      echo "Deleting namespace ${{ parameters.chartNamespace }} created by this validation run."
+      kubectl delete namespace ${{ parameters.chartNamespace }}
+    condition: and(succeeded(), eq('${{ parameters.createNamespace }}', 'true'), eq(variables['namespaceCreatedByPipeline'], 'true'))
+    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+    displayName: "Delete validation namespace"
