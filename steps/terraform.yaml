@@ -285,7 +285,7 @@ steps:
         displayName: Terraform destroy ${{ parameters.component }}
         ${{ if parameters.terraformEnvironmentVariables }}:
           env: ${{ parameters.terraformEnvironmentVariables  }}
-        condition: and(succeeded(), eq(variables['isMain'], true), eq('${{ parameters.overrideAction }}', 'destroy'))
+        condition: and(succeeded(), eq('${{ parameters.overrideAction }}', 'destroy'))
         inputs:
           provider: 'azurerm'
           command: 'destroy'
