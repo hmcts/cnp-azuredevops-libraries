@@ -25,7 +25,6 @@ parameters:
     default: 'aks-cft-deploy-bootstrap-issuer-url-token'
   - name: fluxConfigRepo
     type: string
-    default: 'cnp-flux-config'
 
 steps:
 - ${{ if ne(parameters.cluster, 'All') }}:
