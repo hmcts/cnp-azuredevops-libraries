@@ -1,0 +1,51 @@
+parameters:
+  - name: serviceConnection
+    type: string
+    default: ''
+  - name: environment
+    type: string
+    default: ''
+  - name: cluster
+    type: string
+    default: ''
+  - name: clusterPrefix
+    type: string
+    default: 'cft'
+  - name: fluxConfigEnvironment
+    type: string
+    default: ''
+  - name: keyvaultServiceConnection
+    type: string
+    default: 'DTS-CFTPTL-INTSVC'
+  - name: keyvaultName
+    type: string
+    default: 'cftptl-intsvc'
+  - name: gitTokenSecret
+    type: string
+    default: 'aks-cft-deploy-bootstrap-issuer-url-token'
+  - name: fluxConfigRepo
+    type: string
+
+steps:
+- task: AzureKeyVault@1
+  displayName: 'Get OIDC issuer URL git token from Keyvault'
+  inputs:
+    azureSubscription: ${{ parameters.keyvaultServiceConnection }}
+    keyVaultName: ${{ parameters.keyvaultName }}
+    secretsFilter: ${{ parameters.gitTokenSecret }}
+
+- task: AzureCLI@2
+  displayName: 'Update OIDC Issuer URL in flux-config'
+  env:
+    GIT_TOKEN: $(${{ parameters.gitTokenSecret }})
+    ENV: ${{ parameters.environment }}
+    CLUSTER: ${{ parameters.cluster }}
+    FLUX_ENV: ${{ parameters.fluxConfigEnvironment }}
+    CLUSTER_PREFIX: ${{ parameters.clusterPrefix }}
+    FLUX_CONFIG_REPO: ${{ parameters.fluxConfigRepo }}
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnection }}
+    scriptType: bash
+    scriptLocation: scriptPath
+    workingDirectory: $(Pipeline.Workspace)/s/${{ parameters.fluxConfigRepo }}
+    scriptPath: $(Pipeline.Workspace)/s/cnp-azuredevops-libraries/scripts/update-oidc-issuer-url.sh
