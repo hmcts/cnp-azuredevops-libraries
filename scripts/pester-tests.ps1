@@ -1,4 +1,4 @@
-$PESTER_VERSION=5.8.0
+$PESTER_VERSION=6.0.0
 
 if (-Not (Get-Module -ListAvailable -Name Pester)) {
   Install-Module -Name Pester -MaximumVersion $PESTER_VERSION -Force -Verbose -Scope CurrentUser
