@@ -652,6 +652,10 @@ def main():
         }
     }
     current_date = datetime.date.today()
+
+    # Ensure the output file always exists, even if no components are processed.
+    with open(output_file, 'w') as file:
+        json.dump(output_warning, file, indent=4)
     
     # ado error if slack webhook url missing
     if not slack_webhook_url:
@@ -762,8 +766,11 @@ def main():
             raise Exception(e)
         
     ### trigger slack message if we've collated warnings/errors
-    with open(output_file, 'r') as file:
-        complete_file = json.load(file)
+    if os.path.exists(output_file):
+        with open(output_file, 'r') as file:
+            complete_file = json.load(file)
+    else:
+        complete_file = output_warning
         
     # only slack send if we have collated errors/warnings
     if ('error' in complete_file or
