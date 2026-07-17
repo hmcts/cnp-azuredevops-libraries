@@ -2,8 +2,6 @@ parameters:
   serviceConnection: "DCD-CFTAPPS-DEV"
   registryServiceConnection: "azurerm-prod"
   acrName: "hmctsprod"
-  dependencyAcrName: ""
-  dependencyServiceConnection: ""
   chartName: ""
   chartReleaseName: ""
   chartNamespace: ""
@@ -81,37 +79,16 @@ steps:
           az acr login --name ${{ parameters.acrName }}
         fi
 
-  - ${{ if ne(parameters.dependencyAcrName, '') }}:
-    - task: AzureCLI@2
-      displayName: "Authenticate to dependency ACR (${{ parameters.dependencyAcrName }})"
-      inputs:
-        azureSubscription: ${{ coalesce(parameters.dependencyServiceConnection, parameters.registryServiceConnection) }}
-        scriptLocation: "inlineScript"
-        scriptType: bash
-        inlineScript: |
-          export HELM_EXPERIMENTAL_OCI=1
-
-          echo "AZP POOL: '$AZP_POOL' "
-
-          if [[ "$AZP_POOL" == hmcts-* ]]; then
-            echo "Using token-based ACR auth for internal agent pool"
-
-            az acr login -n ${{ parameters.dependencyAcrName }} --expose-token \
-              --query accessToken -o tsv | \
-            helm registry login ${{ parameters.dependencyAcrName }}.azurecr.io \
-              --username 00000000-0000-0000-0000-000000000000 \
-              --password-stdin
-          else
-            echo "Using AAD-based az acr login"
-            az acr login --name ${{ parameters.dependencyAcrName }}
-          fi
-
   - ${{ if eq(parameters.chartPath, './') }}:
-    - script: helm dependency update ${{ parameters.chartName }}
+    - script: |
+        sed -i "s|oci://[^/]*\.azurecr\.io/helm|oci://${{ parameters.acrName }}.azurecr.io/helm|g" ${{ parameters.chartName }}/Chart.yaml
+        helm dependency update ${{ parameters.chartName }}
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Retrieve helm dependencies (if any)"
   - ${{ else }}:
-    - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
+    - script: |
+        sed -i "s|oci://[^/]*\.azurecr\.io/helm|oci://${{ parameters.acrName }}.azurecr.io/helm|g" ${{ parameters.chartPath }}${{ parameters.chartName }}/Chart.yaml
+        helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
       displayName: "Retrieve helm dependencies (if any)"
 
   - task: AzureCLI@2
