@@ -81,6 +81,11 @@ parameters:
   - name: baseDirectory
     default: ''
 
+  - name: singleComponent
+    displayName: Treat the root of the repository as a single component (no subfolders)
+    type: boolean
+    default: false
+
   - name: forcePreventParallelJobRun
     displayName: Always force prevent parallem run job
     type: boolean
@@ -112,7 +117,9 @@ steps:
 
   - template: ./install-use-tfswitch.yaml
     parameters:
-      ${{ if eq( parameters['baseDirectory'], '') }}:
+      ${{ if eq( parameters['singleComponent'], true) }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)'
+      ${{ else if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -150,7 +157,9 @@ steps:
     inputs:
       provider: 'azurerm'
       command: 'init'
-      ${{ if eq( parameters['baseDirectory'], '') }}:
+      ${{ if eq( parameters['singleComponent'], true) }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)'
+      ${{ else if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -172,7 +181,9 @@ steps:
     inputs:
       provider: 'azurerm'
       command: 'validate'
-      ${{ if eq( parameters['baseDirectory'], '') }}:
+      ${{ if eq( parameters['singleComponent'], true) }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)'
+      ${{ else if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -186,7 +197,9 @@ steps:
     inputs:
       provider: 'azurerm'
       command: 'plan'
-      ${{ if eq( parameters['baseDirectory'], '') }}:
+      ${{ if eq( parameters['singleComponent'], true) }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)'
+      ${{ else if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -235,7 +248,9 @@ steps:
           --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
           plan -patch -- \
           terraform show tfplan-$(tfPlanName)
-      ${{ if eq( parameters['baseDirectory'], '') }}:
+      ${{ if eq( parameters['singleComponent'], true) }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)'
+      ${{ else if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -247,7 +262,9 @@ steps:
       targetType: 'inline'
       script: |
         terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[]' > tfplan-${{ parameters.environment }}-${{ parameters.component }}.json
-      ${{ if eq( parameters['baseDirectory'], '') }}:
+      ${{ if eq( parameters['singleComponent'], true) }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)'
+      ${{ else if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -281,7 +298,9 @@ steps:
     inputs:
       provider: 'azurerm'
       command: 'apply'
-      ${{ if eq( parameters['baseDirectory'], '') }}:
+      ${{ if eq( parameters['singleComponent'], true) }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)'
+      ${{ else if eq( parameters['baseDirectory'], '') }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
@@ -297,7 +316,9 @@ steps:
         inputs:
           provider: 'azurerm'
           command: 'destroy'
-          ${{ if eq( parameters['baseDirectory'], '') }}:
+          ${{ if eq( parameters['singleComponent'], true) }}:
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)'
+          ${{ else if eq( parameters['baseDirectory'], '') }}:
             workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
           ${{ else }}:
             workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
