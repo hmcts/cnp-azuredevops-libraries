@@ -18,6 +18,7 @@ parameters:
   aksCluster: ""
   kubeconformValuesFile: ""
   kubernetesVersion: "1.35.0"
+  kubeconformVersion: "v0.6.7"
   runSnapshotTests: false
   runUnitTests: false
   helmUnittestValuesFile: "ci-values-minimal.yaml"
@@ -157,11 +158,20 @@ steps:
 
   - ${{ if ne(parameters.kubeconformValuesFile, '') }}:
     - script: |
-        curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz -C /tmp/
+        curl -sSL https://github.com/yannh/kubeconform/releases/download/${{ parameters.kubeconformVersion }}/kubeconform-linux-amd64.tar.gz | tar xz -C /tmp/
         helm template ${{ parameters.chartReleaseName }} $(chartTarget) \
           -f ${{ parameters.valuesFile }} \
           -f ${{ parameters.kubeconformValuesFile }} \
-          | /tmp/kubeconform -strict -summary -kubernetes-version ${{ parameters.kubernetesVersion }}
+          | /tmp/kubeconform \
+            -strict \
+            -summary \
+            -kubernetes-version ${{ parameters.kubernetesVersion }} \
+            -schema-location default \
+            # default (built-in k8s schemas) is always tried first.
+            # The CRDs catalog below is only fetched for resource types not found
+            # in the default schemas (e.g. KEDA, ASO) — no outbound call is made
+            # for standard Kubernetes resources.
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Kubeconform strict validation"
 
