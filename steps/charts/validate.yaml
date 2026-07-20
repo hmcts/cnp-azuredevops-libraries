@@ -16,6 +16,13 @@ parameters:
   additionalHelmArgs: ""
   aksResourceGroup: ""
   aksCluster: ""
+  kubeconformValuesFile: ""
+  kubernetesVersion: "1.35.0"
+  kubeconformVersion: "v0.6.7"
+  runSnapshotTests: false
+  runUnitTests: false
+  helmUnittestValuesFile: "ci-values-minimal.yaml"
+  helmUnittestVersion: "v0.7.2"
   clustersToCheck:
     - aksResourceGroupName: cft-preview-00-rg
       aksClusterName: cft-preview-00-aks
@@ -148,6 +155,45 @@ steps:
       helm lint $(chartTarget)
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Helm Lint"
+
+  - ${{ if ne(parameters.kubeconformValuesFile, '') }}:
+    - script: |
+        curl -sSL https://github.com/yannh/kubeconform/releases/download/${{ parameters.kubeconformVersion }}/kubeconform-linux-amd64.tar.gz | tar xz -C /tmp/
+        helm template ${{ parameters.chartReleaseName }} $(chartTarget) \
+          -f ${{ parameters.valuesFile }} \
+          -f ${{ parameters.kubeconformValuesFile }} \
+          | /tmp/kubeconform \
+            -strict \
+            -summary \
+            -kubernetes-version ${{ parameters.kubernetesVersion }} \
+            -schema-location default \
+            # default (built-in k8s schemas) is always tried first.
+            # The CRDs catalog below is only fetched for resource types not found
+            # in the default schemas (e.g. KEDA, ASO) — no outbound call is made
+            # for standard Kubernetes resources.
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Kubeconform strict validation"
+
+  - ${{ if eq(parameters.runSnapshotTests, true) }}:
+    - script: |
+        helm plugin install https://github.com/helm-unittest/helm-unittest --version ${{ parameters.helmUnittestVersion }} || true
+        helm unittest $(chartTarget) \
+          --values ${{ parameters.valuesFile }} \
+          --values ${{ parameters.helmUnittestValuesFile }} \
+          -f 'tests/snapshot-tests/*.yaml'
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "helm-unittest snapshot tests"
+
+  - ${{ if eq(parameters.runUnitTests, true) }}:
+    - script: |
+        helm plugin install https://github.com/helm-unittest/helm-unittest --version ${{ parameters.helmUnittestVersion }} || true
+        helm unittest $(chartTarget) \
+          --values ${{ parameters.valuesFile }} \
+          --values ${{ parameters.helmUnittestValuesFile }} \
+          -f 'tests/unit-tests/*.yaml'
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "helm-unittest assertion tests"
 
   - script: helm install ${{ parameters.chartReleaseName }} $(chartTarget) --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s ${{ parameters.additionalHelmArgs }}
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
