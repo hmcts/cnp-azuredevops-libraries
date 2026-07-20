@@ -21,6 +21,7 @@ parameters:
   runSnapshotTests: false
   runUnitTests: false
   helmUnittestValuesFile: "ci-values-minimal.yaml"
+  helmUnittestVersion: "v0.7.2"
   clustersToCheck:
     - aksResourceGroupName: cft-preview-00-rg
       aksClusterName: cft-preview-00-aks
@@ -166,7 +167,7 @@ steps:
 
   - ${{ if eq(parameters.runSnapshotTests, true) }}:
     - script: |
-        helm plugin install https://github.com/helm-unittest/helm-unittest --version v0.7.2 || true
+        helm plugin install https://github.com/helm-unittest/helm-unittest --version ${{ parameters.helmUnittestVersion }} || true
         helm unittest $(chartTarget) \
           --values ${{ parameters.valuesFile }} \
           --values ${{ parameters.helmUnittestValuesFile }} \
@@ -176,7 +177,7 @@ steps:
 
   - ${{ if eq(parameters.runUnitTests, true) }}:
     - script: |
-        helm plugin install https://github.com/helm-unittest/helm-unittest --version v0.7.2 || true
+        helm plugin install https://github.com/helm-unittest/helm-unittest --version ${{ parameters.helmUnittestVersion }} || true
         helm unittest $(chartTarget) \
           --values ${{ parameters.valuesFile }} \
           --values ${{ parameters.helmUnittestValuesFile }} \
