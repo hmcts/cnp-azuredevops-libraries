@@ -17,7 +17,7 @@ parameters:
   aksResourceGroup: ""
   aksCluster: ""
   kubeconformValuesFile: ""
-  kubernetesVersion: "1.29.0"
+  kubernetesVersion: "1.35.0"
   runSnapshotTests: false
   runUnitTests: false
   helmUnittestValuesFile: "ci-values-minimal.yaml"
