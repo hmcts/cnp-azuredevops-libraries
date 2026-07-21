@@ -152,7 +152,7 @@ def is_sensitive_key_path(path: str, sensitive_paths: Set[str]) -> bool:
 def mask_value(value: Any) -> str:
     if value =='<absent>':
         return '<absent>'
-    return '<sensitive>'
+    return '*******'
 
 def diff_before_after(before: Any, after: Any, sensitive_paths: Set[str]) -> List[str]:
     if before is None and after is None:
