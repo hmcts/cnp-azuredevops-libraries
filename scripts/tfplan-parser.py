@@ -132,8 +132,7 @@ def collect_sensitive_paths(change: Dict[str, Any]) -> Set[str]:
     paths: Set[str] = set()
     for field in ('before_sensitive', 'after_sensitive'):
         sens = change.get(field)
-        flat = flatten_dict(sens) if isinstance(sens, (dict, list)) else 
-        ({'value': sens} if sens is not None else {})
+        flat = flatten_dict(sens) if isinstance(sens, (dict, list)) else ({'value': sens} if sens is not None else {})
         for key, value in flat.items():
             if any(sk in key.lower() for sk in SENSITIVE_KEYWORDS):
                 paths.add(key)
