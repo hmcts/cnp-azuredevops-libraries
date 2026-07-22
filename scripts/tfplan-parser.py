@@ -2,7 +2,7 @@ import os
 import re
 import json
 import argparse
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Set
 
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -117,7 +117,44 @@ def flatten_dict(d: Any, prefix: str = '') -> Dict[str, Any]:
                 out[new_p] = v
     return out
 
-def diff_before_after(before: Any, after: Any) -> List[str]:
+SENSITIVE_KEYWORDS = (
+    'password', 
+    'secret', 
+    'key', 
+    'token',
+    'private_key',
+    'client_secret',
+    'access_key',
+    'connection_string'
+)
+
+def collect_sensitive_paths(change: Dict[str, Any]) -> Set[str]:
+    paths: Set[str] = set()
+    for field in ('before_sensitive', 'after_sensitive'):
+        sens = change.get(field)
+        flat = flatten_dict(sens) if isinstance(sens, (dict, list)) else ({'value': sens} if sens is not None else {})
+        for key, value in flat.items():
+            if value is True:
+                paths.add(key)
+    return paths
+
+def is_sensitive_key_path(path: str, sensitive_paths: Set[str]) -> bool:
+    path_1 = path.lower()
+    if path_1 == 'value' or path_1.endswith('value'):
+        return True
+    if any(k in path_1 for k in SENSITIVE_KEYWORDS):
+        return True
+    for sp in sensitive_paths:
+        if path_1 == sp or path_1.startswith(sp + '.') or path_1.startswith(sp + '['):
+            return True
+    return False
+
+def mask_value(value: Any) -> str:
+    if value =='<absent>':
+        return '<absent>'
+    return '*******'
+
+def diff_before_after(before: Any, after: Any, sensitive_paths: Set[str]) -> List[str]:
     if before is None and after is None:
         return []
     fb = flatten_dict(before) if isinstance(before, (dict, list)) else {"value": before}
@@ -128,6 +165,9 @@ def diff_before_after(before: Any, after: Any) -> List[str]:
         vb = fb.get(k, '<absent>')
         va = fa.get(k, '<absent>')
         if vb == va:
+            continue
+        if is_sensitive_key_path(k, sensitive_paths):
+            changes.append(f"{k}: {mask_value(vb)} -> {mask_value(va)}")
             continue
         # Shorten long values
         def shorten(v):
@@ -142,7 +182,8 @@ def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
     actions = change.get('actions') or []
     before = change.get('before')
     after = change.get('after')
-    diffs = diff_before_after(before, after)
+    sensitive_paths = collect_sensitive_paths(change)
+    diffs = diff_before_after(before, after, sensitive_paths)
     # Determine tags-only: all diffs start with 'tags' key path
     tags_only = bool(diffs) and all(d.startswith('tags') or '.tags.' in d for d in diffs)
     # Determine change type
