@@ -76,27 +76,63 @@ echo "Detecting PR environments from ${repo_dir}"
 
 target_branch="${SYSTEM_PULLREQUEST_TARGETBRANCH:-refs/heads/main}"
 target_short="${target_branch#refs/heads/}"
+target_ref=""
 
-# Use local target ref when available. Fetch only when missing to reduce network cost.
-if ! git -C "${repo_dir}" rev-parse --verify "${target_short}" >/dev/null 2>&1; then
-  if git -C "${repo_dir}" fetch --no-tags origin "${target_short}:${target_short}" --depth=1 2>/dev/null; then
-    echo "Fetched target branch ${target_short}"
+# Build target-branch candidates in priority order:
+# 1) Explicit PR target branch from Azure DevOps
+# 2) Repo remote HEAD branch (origin/HEAD)
+# 3) Common defaults (main, master)
+candidate_branches=("${target_short}")
+
+origin_head_short=""
+if origin_head_ref=$(git -C "${repo_dir}" symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null); then
+  origin_head_short="${origin_head_ref#origin/}"
+fi
+if [[ -n "${origin_head_short}" ]]; then
+  candidate_branches+=("${origin_head_short}")
+fi
+candidate_branches+=("main" "master")
+
+# Resolve a usable target ref from local refs first, then fetch when needed.
+for branch_name in "${candidate_branches[@]}"; do
+  [[ -z "${branch_name}" ]] && continue
+
+  if git -C "${repo_dir}" rev-parse --verify "${branch_name}" >/dev/null 2>&1; then
+    target_ref="${branch_name}"
+    break
+  fi
+
+  if git -C "${repo_dir}" rev-parse --verify "origin/${branch_name}" >/dev/null 2>&1; then
+    target_ref="origin/${branch_name}"
+    break
+  fi
+
+  if git -C "${repo_dir}" fetch --no-tags origin "${branch_name}:${branch_name}" --depth=1 >/dev/null 2>&1; then
+    echo "Fetched target branch ${branch_name}"
+    target_ref="${branch_name}"
+    break
+  fi
+done
+
+# If branch refs are unavailable (for example auth/depth limitations), use PR merge base
+# from the checked out commit when available.
+if [[ -z "${target_ref}" ]]; then
+  if git -C "${repo_dir}" rev-parse --verify HEAD^1 >/dev/null 2>&1; then
+    target_ref="HEAD^1"
+    echo "Using HEAD^1 as target ref from PR merge commit"
   else
-    echo "##vso[task.logissue type=error]Could not fetch target branch ${target_short}; failing PR detection"
+    echo "##vso[task.logissue type=error]Could not resolve PR target branch (${target_short}/main/master) and HEAD^1 is unavailable"
     exit 1
   fi
 fi
 
-if ! git -C "${repo_dir}" rev-parse --verify "${target_short}" >/dev/null 2>&1; then
-  echo "##vso[task.logissue type=error]Target branch ${target_short} is unavailable after fetch; failing PR detection"
-  exit 1
-fi
+echo "Using target ref ${target_ref}"
 
 # Prefer three-dot diff for PR semantics. Fallback to two-dot when merge base is unavailable.
-diff_ref="${target_short}...HEAD"
-if ! git -C "${repo_dir}" merge-base "${target_short}" HEAD >/dev/null 2>&1; then
-  echo "Three-dot diff unavailable here; using two-dot diff instead (${target_short}..HEAD)"
-  diff_ref="${target_short}..HEAD"
+diff_ref="${target_ref}...HEAD"
+if ! git -C "${repo_dir}" merge-base "${target_ref}" HEAD >/dev/null 2>&1; then
+  echo "Three-dot diff unavailable here; using two-dot diff instead (${target_ref}..HEAD)"
+  diff_ref="${target_ref}..HEAD"
 fi
 
 # Parse tfvars path convention and append unique env names in-place.
