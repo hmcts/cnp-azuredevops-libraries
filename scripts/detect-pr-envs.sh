@@ -12,6 +12,19 @@ set -euo pipefail
 #   `components/**` changes, so downstream conditions do not need separate `sbox` logic.
 # - Give step stable name `detect_pr_envs` when downstream conditions reference outputs.
 #
+# Checkout style by repository type:
+# - Public repo (best-effort):
+#     - checkout: self
+#   This can work when target refs are already present locally.
+# - Private repo (strict/reliable):
+#     - checkout: self
+#       persistCredentials: true
+#       fetchDepth: 0
+#   This keeps OAuth credentials for git fetch and provides full history so target ref
+#   and merge-base resolution are reliable.
+# - Note: checkout settings are job-scoped. If this script runs in job A, checkout options
+#   in job B do not apply.
+#
 # Example:
 #   - checkout: self
 #   - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
