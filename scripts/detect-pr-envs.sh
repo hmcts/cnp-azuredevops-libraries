@@ -2,6 +2,35 @@
 
 set -euo pipefail
 
+# Usage in Azure DevOps:
+# - Checkout repo under test before running this script.
+# - If this script is stored in a shared repository resource, checkout that resource too
+#   so ShellScript@2 can execute file from workspace.
+# - Run this step only for PullRequest builds when non-PR runs already use full pipeline flow.
+# - Keep downstream stage conditions shaped so non-PR runs bypass PR output checks.
+# - Script always includes `sbox` in `prTargetEnvs` and sets `prRunAllEnvs=true` for
+#   `components/**` changes, so downstream conditions do not need separate `sbox` logic.
+# - Give step stable name `detect_pr_envs` when downstream conditions reference outputs.
+#
+# Example:
+#   - checkout: self
+#   - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+#       - checkout: cnp-azuredevops-libraries
+#       - task: ShellScript@2
+#         name: detect_pr_envs
+#         inputs:
+#           scriptPath: '$(Build.SourcesDirectory)/cnp-azuredevops-libraries/scripts/detect-pr-envs.sh'
+#
+# Downstream stage condition example:
+#   and(
+#     succeeded(),
+#     or(
+#       ne(variables['Build.Reason'], 'PullRequest'),
+#       eq(dependencies.PreCheck.outputs['PreChecks.detect_pr_envs.prRunAllEnvs'], 'true'),
+#       contains(dependencies.PreCheck.outputs['PreChecks.detect_pr_envs.prTargetEnvs'], ',${{ component.env }},')
+#     )
+#   )
+#
 # Generic assumptions for reuse:
 # - env tfvars are stored as environments/<component>/<env>.tfvars
 # - pipeline stage env names match <env> file basenames
