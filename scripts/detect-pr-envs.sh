@@ -52,6 +52,12 @@ set -euo pipefail
 pr_target_envs=",sbox,"
 pr_run_all_envs=false
 
+log_warning() {
+  local message="$1"
+  echo "##vso[task.logissue type=warning]${message}"
+  echo "WARNING: ${message}"
+}
+
 # Non-PR runs do not need env detection. Keep default output stable and exit fast.
 if [[ "${BUILD_REASON:-}" != "PullRequest" ]]; then
   echo "PR detector skipped: BUILD_REASON=${BUILD_REASON:-unknown}"
@@ -90,6 +96,7 @@ echo "Detecting PR environments from ${repo_dir}"
 target_branch="${SYSTEM_PULLREQUEST_TARGETBRANCH:-refs/heads/main}"
 target_short="${target_branch#refs/heads/}"
 target_ref=""
+target_ref_reason=""
 
 # Build target-branch candidates in priority order:
 # 1) Explicit PR target branch from Azure DevOps
@@ -112,17 +119,20 @@ for branch_name in "${candidate_branches[@]}"; do
 
   if git -C "${repo_dir}" rev-parse --verify "${branch_name}" >/dev/null 2>&1; then
     target_ref="${branch_name}"
+    target_ref_reason="local_branch"
     break
   fi
 
   if git -C "${repo_dir}" rev-parse --verify "origin/${branch_name}" >/dev/null 2>&1; then
     target_ref="origin/${branch_name}"
+    target_ref_reason="remote_tracking_branch"
     break
   fi
 
   if git -C "${repo_dir}" fetch --no-tags origin "${branch_name}:${branch_name}" --depth=1 >/dev/null 2>&1; then
-    echo "Fetched target branch ${branch_name}"
+    log_warning "Target branch ${branch_name} not present locally; fetched shallow ref for PR diff"
     target_ref="${branch_name}"
+    target_ref_reason="fetched_branch"
     break
   fi
 done
@@ -130,13 +140,23 @@ done
 # If branch refs are unavailable (for example auth/depth limitations), use PR merge base
 # from the checked out commit when available.
 if [[ -z "${target_ref}" ]]; then
-  if git -C "${repo_dir}" rev-parse --verify HEAD^1 >/dev/null 2>&1; then
+  # Only safe when HEAD is a merge commit (synthetic PR merge checkout).
+  if git -C "${repo_dir}" rev-parse --verify HEAD^2 >/dev/null 2>&1; then
     target_ref="HEAD^1"
-    echo "Using HEAD^1 as target ref from PR merge commit"
+    target_ref_reason="pr_merge_parent"
+    log_warning "Could not resolve target branch refs; using HEAD^1 from merge commit as PR base"
   else
-    echo "##vso[task.logissue type=error]Could not resolve PR target branch (${target_short}/main/master) and HEAD^1 is unavailable"
+    echo "##vso[task.logissue type=error]Could not resolve PR target branch (${target_short}/main/master), and HEAD is not a merge commit; cannot derive safe PR base"
     exit 1
   fi
+fi
+
+if [[ "${target_ref_reason}" == "remote_tracking_branch" ]] && [[ "${target_ref}" != "origin/${target_short}" ]]; then
+  log_warning "Configured PR target ${target_short} unavailable; using fallback remote ref ${target_ref}"
+fi
+
+if [[ "${target_ref_reason}" == "local_branch" ]] && [[ "${target_ref}" != "${target_short}" ]]; then
+  log_warning "Configured PR target ${target_short} unavailable; using fallback local ref ${target_ref}"
 fi
 
 echo "Using target ref ${target_ref}"
@@ -144,7 +164,7 @@ echo "Using target ref ${target_ref}"
 # Prefer three-dot diff for PR semantics. Fallback to two-dot when merge base is unavailable.
 diff_ref="${target_ref}...HEAD"
 if ! git -C "${repo_dir}" merge-base "${target_ref}" HEAD >/dev/null 2>&1; then
-  echo "Three-dot diff unavailable here; using two-dot diff instead (${target_ref}..HEAD)"
+  log_warning "Three-dot diff unavailable; using two-dot diff (${target_ref}..HEAD). Scope may be broader than PR delta"
   diff_ref="${target_ref}..HEAD"
 fi
 
