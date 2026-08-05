@@ -165,6 +165,18 @@ def select_competing_builds(
     return competitors
 
 
+def competitor_log_details(builds: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            "id": build.get("id"),
+            "class": classify_build(build),
+            "reason": build.get("reason"),
+            "sourceBranch": build.get("sourceBranch"),
+        }
+        for build in builds
+    ]
+
+
 def get_builds(current_build_id: int, ado_definition_url: str) -> list[dict[str, Any]] | None:
     """Return competing in-progress builds for current build, or None if current build may proceed."""
     try:
@@ -213,6 +225,14 @@ def get_builds(current_build_id: int, ado_definition_url: str) -> list[dict[str,
     ]
 
     competitors = select_competing_builds(current_build, other_in_progress)
+    logger.info(
+        "Build id %s classified as %s. Total in-progress seen=%s. Policy competitors=%s",
+        current_build_id,
+        classify_build(current_build),
+        len(in_progress_builds),
+        competitor_log_details([build for build in competitors if build.get("id") != current_build_id]),
+    )
+
     if min(build["id"] for build in competitors) == current_build_id:
         logger.info(
             "Build id %s can proceed under policy (class=%s).",
