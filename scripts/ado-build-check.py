@@ -254,12 +254,12 @@ def main(argv: list[str] | None = None) -> int:
     while True:
         elapsed = int(time.monotonic() - wait_start)
         if elapsed > max_wait_seconds:
-            logger.error(
-                "Timed out waiting for concurrency gate after %s seconds (max %s).",
+            logger.warning(
+                "Timed out waiting for concurrency gate after %s seconds (max %s). Proceeding without further blocking.",
                 elapsed,
                 max_wait_seconds,
             )
-            return 1
+            return 0
 
         builds_in_progress = get_builds(buildid, ado_definition_url)
         if isinstance(builds_in_progress, list) and builds_in_progress:
