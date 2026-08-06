@@ -3,6 +3,7 @@ import pathlib
 import sys
 import types
 import unittest
+from unittest import mock
 
 
 SCRIPT_PATH = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "ado-build-check.py"
@@ -93,6 +94,106 @@ class AdoBuildCheckTests(unittest.TestCase):
 
         competitors = MODULE.select_competing_builds(current, others)
         self.assertEqual([build["id"] for build in competitors], [40, 41, 42, 43])
+
+    class _FakeResponse:
+        def __init__(self, status_code: int, payload: dict | None = None, text: str = ""):
+            self.status_code = status_code
+            self._payload = payload
+            self.text = text
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                raise MODULE.requests.RequestException(f"HTTP {self.status_code}")
+
+        def json(self):
+            return self._payload
+
+    def test_get_builds_empty_payload_fails_open(self):
+        MODULE.pat = "token"
+        with mock.patch.object(
+            MODULE.requests,
+            "get",
+            return_value=self._FakeResponse(200, {"value": []}),
+        ):
+            result = MODULE.get_builds(123, "https://dev.azure.com/org/proj/_apis/build/builds")
+        self.assertIsNone(result)
+
+    def test_get_builds_missing_current_id_fallback_not_in_progress_returns_none(self):
+        MODULE.pat = "token"
+        MODULE.organization = "org"
+        MODULE.project = "proj"
+
+        list_payload = {
+            "value": [
+                {
+                    "id": 50,
+                    "sourceBranch": "refs/pull/50/merge",
+                    "reason": "pullRequest",
+                    "status": "inProgress",
+                }
+            ]
+        }
+        fallback_payload = {
+            "id": 123,
+            "sourceBranch": "refs/pull/123/merge",
+            "reason": "pullRequest",
+            "status": "completed",
+        }
+
+        with mock.patch.object(
+            MODULE.requests,
+            "get",
+            side_effect=[
+                self._FakeResponse(200, list_payload),
+                self._FakeResponse(200, fallback_payload),
+            ],
+        ):
+            result = MODULE.get_builds(123, "https://dev.azure.com/org/proj/_apis/build/builds")
+
+        self.assertIsNone(result)
+
+    def test_get_builds_missing_current_id_fallback_in_progress_keeps_policy(self):
+        MODULE.pat = "token"
+        MODULE.organization = "org"
+        MODULE.project = "proj"
+
+        other_pr_in_progress = {
+            "id": 20,
+            "sourceBranch": "refs/pull/20/merge",
+            "reason": "pullRequest",
+            "status": "inProgress",
+            "buildNumber": "20",
+            "queueTime": "2026-08-06T00:00:00Z",
+            "startTime": "2026-08-06T00:00:10Z",
+            "url": "https://example/20",
+            "requestedBy": {"displayName": "User A"},
+        }
+        list_payload = {"value": [other_pr_in_progress]}
+        fallback_payload = {
+            "id": 30,
+            "sourceBranch": "refs/pull/30/merge",
+            "reason": "pullRequest",
+            "status": "inProgress",
+            "buildNumber": "30",
+            "queueTime": "2026-08-06T00:01:00Z",
+            "startTime": "2026-08-06T00:01:10Z",
+            "url": "https://example/30",
+            "requestedBy": {"displayName": "User B"},
+        }
+
+        with mock.patch.object(
+            MODULE.requests,
+            "get",
+            side_effect=[
+                self._FakeResponse(200, list_payload),
+                self._FakeResponse(200, fallback_payload),
+            ],
+        ):
+            result = MODULE.get_builds(30, "https://dev.azure.com/org/proj/_apis/build/builds")
+
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["id"], 20)
 
 
 if __name__ == "__main__":
