@@ -86,8 +86,50 @@ def get_ado_definition_url(org: str, team_project: str, definition_id: str) -> s
     )
 
 
+def get_ado_build_url(org: str, team_project: str, build_id: int) -> str:
+    return (
+        "https://dev.azure.com/"
+        + f"{org}/"
+        + f"{team_project}"
+        + "/_apis/build/builds/"
+        + f"{build_id}?api-version=7.1"
+    )
+
+
 def get_request_headers() -> dict[str, str]:
     return {"Authorization": "Bearer " + pat, "Content-Type": "application/json"}
+
+
+def get_build_by_id(build_id: int) -> dict[str, Any] | None:
+    """Fetch a single build; return None when build no longer exists or is inaccessible."""
+    build_url = get_ado_build_url(organization, project, build_id)
+    try:
+        response = requests.get(
+            build_url,
+            headers=get_request_headers(),
+            timeout=30,
+        )
+        if response.status_code == 404:
+            logger.warning("Current build id %s not found via build-by-id API", build_id)
+            return None
+        if response.status_code == 401 and len(response.text) == 0:
+            logger.error("401 response - token provided is invalid")
+            raise SystemExit(1)
+
+        response.raise_for_status()
+    except requests.RequestException as error:
+        logger.error("ADO build-by-id query failed: %s", error)
+        raise
+
+    try:
+        payload = response.json()
+    except ValueError as error:
+        logger.error("ADO build-by-id query returned invalid JSON")
+        raise RuntimeError("Invalid JSON payload from ADO build-by-id API") from error
+
+    if not isinstance(payload, dict) or payload.get("id") != build_id:
+        logger.warning("Unexpected build-by-id payload for build id %s", build_id)
+    return payload if isinstance(payload, dict) else None
 
 
 def is_mainline_branch(source_branch: str) -> bool:
@@ -203,11 +245,13 @@ def get_builds(current_build_id: int, ado_definition_url: str) -> list[dict[str,
     logger.debug("Provided builds.json is : %s", payload)
     builds = payload.get("value", [])
     if not builds:
-        raise RuntimeError("No build data returned for pipeline definition")
+        logger.warning(
+            "No build data returned for pipeline definition. Proceeding without blocking."
+        )
+        return None
 
     build_ids = [build.get("id") for build in builds]
-    if current_build_id not in build_ids:
-        raise RuntimeError(f"Provided build id {current_build_id} not found in builds")
+    build_missing_from_list = current_build_id not in build_ids
 
     in_progress_builds = [
         build for build in builds if "inProgress" in (build.get("status") or "")
@@ -216,6 +260,30 @@ def get_builds(current_build_id: int, ado_definition_url: str) -> list[dict[str,
         (build for build in in_progress_builds if build.get("id") == current_build_id),
         None,
     )
+
+    if not current_build and build_missing_from_list:
+        logger.warning(
+            "Current build id %s missing from builds list API response; using build-by-id fallback",
+            current_build_id,
+        )
+        current_build = get_build_by_id(current_build_id)
+
+        if not current_build:
+            logger.info("Current build %s is unavailable. Exiting...", current_build_id)
+            return None
+
+        current_status = (current_build.get("status") or "").lower()
+        if "inprogress" not in current_status:
+            logger.info(
+                "Current build %s status is %s. Exiting...",
+                current_build_id,
+                current_build.get("status"),
+            )
+            return None
+
+        if current_build_id not in [build.get("id") for build in in_progress_builds]:
+            in_progress_builds.append(current_build)
+
     if not current_build:
         logger.info("Current build %s is not in progress anymore. Exiting...", current_build_id)
         return None
