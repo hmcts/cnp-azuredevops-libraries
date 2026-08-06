@@ -203,11 +203,19 @@ def get_builds(current_build_id: int, ado_definition_url: str) -> list[dict[str,
     logger.debug("Provided builds.json is : %s", payload)
     builds = payload.get("value", [])
     if not builds:
-        raise RuntimeError("No build data returned for pipeline definition")
+        # Fail open: an empty/unexpected response should not block the pipeline.
+        logger.warning("No build data returned for pipeline definition. Proceeding without blocking.")
+        return None
 
     build_ids = [build.get("id") for build in builds]
     if current_build_id not in build_ids:
-        raise RuntimeError(f"Provided build id {current_build_id} not found in builds")
+        # Fail open: the ADO builds API can omit the current build (e.g. paging/eventual
+        # consistency), so treat this as "cannot determine competitors" rather than fatal.
+        logger.warning(
+            "Provided build id %s not found in builds returned by the API. Proceeding without blocking.",
+            current_build_id,
+        )
+        return None
 
     in_progress_builds = [
         build for build in builds if "inProgress" in (build.get("status") or "")

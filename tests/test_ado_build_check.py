@@ -94,6 +94,24 @@ class AdoBuildCheckTests(unittest.TestCase):
         competitors = MODULE.select_competing_builds(current, others)
         self.assertEqual([build["id"] for build in competitors], [40, 41, 42, 43])
 
+    @staticmethod
+    def _fake_response(payload, status_code=200, text="ok"):
+        response = types.SimpleNamespace()
+        response.status_code = status_code
+        response.text = text
+        response.json = lambda: payload
+        response.raise_for_status = lambda: None
+        return response
+
+    def test_get_builds_fails_open_when_no_builds_returned(self):
+        MODULE.requests.get = lambda *a, **k: self._fake_response({"value": []})
+        self.assertIsNone(MODULE.get_builds(999, "http://example.invalid"))
+
+    def test_get_builds_fails_open_when_current_build_missing(self):
+        other = self.build(1, "refs/heads/feature/x", "individualCI")
+        MODULE.requests.get = lambda *a, **k: self._fake_response({"value": [other]})
+        self.assertIsNone(MODULE.get_builds(999, "http://example.invalid"))
+
 
 if __name__ == "__main__":
     unittest.main()
