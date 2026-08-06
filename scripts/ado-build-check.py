@@ -245,7 +245,10 @@ def get_builds(current_build_id: int, ado_definition_url: str) -> list[dict[str,
     logger.debug("Provided builds.json is : %s", payload)
     builds = payload.get("value", [])
     if not builds:
-        raise RuntimeError("No build data returned for pipeline definition")
+        logger.warning(
+            "No build data returned for pipeline definition. Proceeding without blocking."
+        )
+        return None
 
     build_ids = [build.get("id") for build in builds]
     build_missing_from_list = current_build_id not in build_ids
