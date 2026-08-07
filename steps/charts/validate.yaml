@@ -177,6 +177,9 @@ steps:
 
   - ${{ if eq(parameters.runSnapshotTests, true) }}:
     - script: |
+        VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.valuesFile }}"
+        UNITTEST_VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.helmUnittestValuesFile }}"
+
         DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
         CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
 
@@ -192,14 +195,17 @@ steps:
         echo "Installed version ${INSTALLED_VERSION:-unknown} of plugin helm-unittest"
 
         helm unittest $(chartTarget) \
-          --values ${{ parameters.valuesFile }} \
-          --values ${{ parameters.helmUnittestValuesFile }} \
+          --values "$VALUES_FILE" \
+          --values "$UNITTEST_VALUES_FILE" \
           -f 'tests/snapshot-tests/*.yaml'
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "helm-unittest snapshot tests"
 
   - ${{ if eq(parameters.runUnitTests, true) }}:
     - script: |
+        VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.valuesFile }}"
+        UNITTEST_VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.helmUnittestValuesFile }}"
+
         DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
         CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
 
@@ -215,8 +221,8 @@ steps:
         echo "Installed version ${INSTALLED_VERSION:-unknown} of plugin helm-unittest"
 
         helm unittest $(chartTarget) \
-          --values ${{ parameters.valuesFile }} \
-          --values ${{ parameters.helmUnittestValuesFile }} \
+          --values "$VALUES_FILE" \
+          --values "$UNITTEST_VALUES_FILE" \
           -f 'tests/unit-tests/*.yaml'
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "helm-unittest assertion tests"
