@@ -177,7 +177,20 @@ steps:
 
   - ${{ if eq(parameters.runSnapshotTests, true) }}:
     - script: |
-        helm plugin install https://github.com/helm-unittest/helm-unittest --version ${{ parameters.helmUnittestVersion }} || true
+        DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
+        CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
+
+        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ] && [ "$CURRENT_VERSION" != "$DESIRED_VERSION" ]; then
+          helm plugin uninstall unittest >/dev/null 2>&1 || true
+          helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" >/tmp/helm-unittest-install.log 2>&1 || {
+            cat /tmp/helm-unittest-install.log
+            exit 1
+          }
+        fi
+
+        INSTALLED_VERSION=$(helm plugin list | awk '$1=="unittest" {print $2}')
+        echo "Installed version ${INSTALLED_VERSION:-unknown} of plugin helm-unittest"
+
         helm unittest $(chartTarget) \
           --values ${{ parameters.valuesFile }} \
           --values ${{ parameters.helmUnittestValuesFile }} \
@@ -187,7 +200,20 @@ steps:
 
   - ${{ if eq(parameters.runUnitTests, true) }}:
     - script: |
-        helm plugin install https://github.com/helm-unittest/helm-unittest --version ${{ parameters.helmUnittestVersion }} || true
+        DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
+        CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
+
+        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ] && [ "$CURRENT_VERSION" != "$DESIRED_VERSION" ]; then
+          helm plugin uninstall unittest >/dev/null 2>&1 || true
+          helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" >/tmp/helm-unittest-install.log 2>&1 || {
+            cat /tmp/helm-unittest-install.log
+            exit 1
+          }
+        fi
+
+        INSTALLED_VERSION=$(helm plugin list | awk '$1=="unittest" {print $2}')
+        echo "Installed version ${INSTALLED_VERSION:-unknown} of plugin helm-unittest"
+
         helm unittest $(chartTarget) \
           --values ${{ parameters.valuesFile }} \
           --values ${{ parameters.helmUnittestValuesFile }} \
