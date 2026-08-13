@@ -61,16 +61,10 @@ steps:
       ${{ else }}:
         inlineScript: az aks get-credentials --admin --resource-group $(aksResourceGroup) --name $(aksCluster)
 
-  - task: AzureCLI@2
-    displayName: "ACR Login for Helm"
-    inputs:
-      azureSubscription: ${{ parameters.registryServiceConnection }}
-      scriptLocation: "inlineScript"
-      scriptType: bash
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      inlineScript: |
-        export HELM_EXPERIMENTAL_OCI=1
-        az acr login --name ${{parameters.acrName}}
+  - template: acr-login.yaml
+    parameters:
+      registryServiceConnection: ${{ parameters.registryServiceConnection }}
+      acrName: ${{ parameters.acrName }}
 
   - script: |
       if [ "${{ parameters.chartPath }}" = "./" ]; then
