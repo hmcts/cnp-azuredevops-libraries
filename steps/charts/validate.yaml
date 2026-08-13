@@ -210,9 +210,9 @@ steps:
         DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
         CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
 
-        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ] && [ "$CURRENT_VERSION" != "$DESIRED_VERSION" ]; then
+        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ]; then
           helm plugin uninstall unittest >/dev/null 2>&1 || true
-          helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" >/tmp/helm-unittest-install.log 2>&1 || {
+          helm plugin --verify=false install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" >/tmp/helm-unittest-install.log 2>&1 || {
             cat /tmp/helm-unittest-install.log
             exit 1
           }
