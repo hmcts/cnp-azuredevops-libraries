@@ -21,8 +21,9 @@ parameters:
   kubeconformVersion: "v0.6.7"
   runSnapshotTests: false
   runUnitTests: false
+  unitTestFile: ""
   helmUnittestValuesFile: "ci-values-minimal.yaml"
-  helmUnittestVersion: "v0.7.2"
+  helmUnittestVersion: "v0.8.0"
   clustersToCheck:
     - aksResourceGroupName: cft-preview-00-rg
       aksClusterName: cft-preview-00-aks
@@ -181,9 +182,11 @@ steps:
         UNITTEST_VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.helmUnittestValuesFile }}"
 
         DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
+        # lowercase the version string
+        DESIRED_VERSION="${DESIRED_VERSION,,}"
         CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
 
-        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ] && [ "$CURRENT_VERSION" != "$DESIRED_VERSION" ]; then
+        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ]; then
           helm plugin uninstall unittest >/dev/null 2>&1 || true
           helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" >/tmp/helm-unittest-install.log 2>&1 || {
             cat /tmp/helm-unittest-install.log
@@ -207,9 +210,11 @@ steps:
         UNITTEST_VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.helmUnittestValuesFile }}"
 
         DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
+        # lowercase the version string
+        DESIRED_VERSION="${DESIRED_VERSION,,}"
         CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
 
-        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ] && [ "$CURRENT_VERSION" != "$DESIRED_VERSION" ]; then
+        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ]; then
           helm plugin uninstall unittest >/dev/null 2>&1 || true
           helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" >/tmp/helm-unittest-install.log 2>&1 || {
             cat /tmp/helm-unittest-install.log
@@ -219,11 +224,23 @@ steps:
 
         INSTALLED_VERSION=$(helm plugin list | awk '$1=="unittest" {print $2}')
         echo "Installed version ${INSTALLED_VERSION:-unknown} of plugin helm-unittest"
+        
+        # capture the unit test file parameter into a variable to avoid issues with quoting and special characters
+        read -r UNIT_TEST_FILE <<'EOF'
+          ${{ parameters.unitTestFile }}
+        EOF
+        UNIT_TEST_FILES="tests/unit-tests/*_test.yaml"
+        if [[ -n "$UNIT_TEST_FILE" ]]; then 
+         # this is to block values like `../../somefile` or `somefile; rm -rf /` from being passed in. 
+         # Only allow alphanumeric, dot, underscore, and hyphen characters in the unitTestFile parameter.
+         [[ "$UNIT_TEST_FILE" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "Invalid unitTestFile: $UNIT_TEST_FILE"; exit 1; }; 
+         UNIT_TEST_FILES="tests/unit-tests/$UNIT_TEST_FILE"; 
+        fi
 
         helm unittest $(chartTarget) \
           --values "$VALUES_FILE" \
           --values "$UNITTEST_VALUES_FILE" \
-          -f 'tests/unit-tests/*.yaml'
+          -f "$UNIT_TEST_FILES"
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "helm-unittest assertion tests"
 
