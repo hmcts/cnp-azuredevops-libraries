@@ -269,6 +269,54 @@ steps:
         az storage azcopy blob upload -c plan-json --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).json -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).json" --subscription ${{ parameters.savePlanResultsServiceConnection }} --account-key $(storage-account-primary-key)
       azureSubscription: ${{ parameters.serviceConnection }}
 
+  - task: Bash@3
+    displayName: Debug Graph token before apply
+    ${{ if parameters.terraformEnvironmentVariables }}:
+      env: ${{ parameters.terraformEnvironmentVariables  }}
+    condition: |
+      or(
+      and(succeeded(), eq('${{ parameters.overrideAction }}', 'apply')),
+      and(succeeded(), eq(variables['isMain'], true), eq(variables['isAutoTriggered'], true))
+      )
+    inputs:
+      targetType: inline
+      script: |
+        set -euo pipefail
+
+        token_response=$(curl -sS -X POST "https://login.microsoftonline.com/${ARM_TENANT_ID}/oauth2/v2.0/token" \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          --data-urlencode "client_id=${ARM_CLIENT_ID}" \
+          --data-urlencode "client_secret=${ARM_CLIENT_SECRET}" \
+          --data-urlencode "scope=https://graph.microsoft.com/.default" \
+          --data-urlencode "grant_type=client_credentials")
+
+        python3 - "$token_response" <<'PY'
+        import base64
+        import json
+        import os
+        import sys
+
+        response = json.loads(sys.argv[1])
+        token = response.get("access_token")
+        if not token:
+            print("graphTokenRequest: failed")
+            print("error:", response.get("error"))
+            print("errorDescription:", response.get("error_description"))
+            sys.exit(1)
+
+        payload = token.split(".")[1]
+        payload += "=" * (-len(payload) % 4)
+        claims = json.loads(base64.urlsafe_b64decode(payload))
+        roles = claims.get("roles", [])
+
+        print("graphTokenRequest: success")
+        print("appid:", claims.get("appid") or claims.get("azp"))
+        print("tid:", claims.get("tid"))
+        print("roles:", roles)
+        print("hasEntitlementManagementReadWriteAll:", "EntitlementManagement.ReadWrite.All" in roles)
+        print("expectedAppId:", os.environ.get("ARM_CLIENT_ID"))
+        PY
+
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTask@5
     displayName: Terraform apply ${{ parameters.component }}
     ${{ if parameters.terraformEnvironmentVariables }}:
