@@ -162,6 +162,7 @@ steps:
   # in the default schemas (e.g. KEDA, ASO)
   - ${{ if ne(parameters.kubeconformValuesFile, '') }}:
     - script: |
+        set -e -o pipefail
         curl -sSL https://github.com/yannh/kubeconform/releases/download/${{ parameters.kubeconformVersion }}/kubeconform-linux-amd64.tar.gz | tar xz -C /tmp/
         helm template ${{ parameters.chartReleaseName }} $(chartTarget) \
           -f ${{ parameters.valuesFile }} \
