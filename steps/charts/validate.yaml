@@ -189,7 +189,9 @@ steps:
 
         if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ]; then
           helm plugin uninstall unittest >/dev/null 2>&1 || true
-          helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" >/tmp/helm-unittest-install.log 2>&1 || {
+          # helm v4 plugin installs require provenance verification, but the helm-unittest plugin 1.1.2 does not have a signature. Disable verification for this plugin.
+          # https://github.com/kaiehrhardt/pp/pull/22
+          helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" --verify=false >/tmp/helm-unittest-install.log 2>&1 || {
             cat /tmp/helm-unittest-install.log
             exit 1
           }
@@ -217,7 +219,8 @@ steps:
 
         if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ]; then
           helm plugin uninstall unittest >/dev/null 2>&1 || true
-          helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" >/tmp/helm-unittest-install.log 2>&1 || {
+          # helm v4 plugin installs require provenance verification, but the helm-unittest plugin 1.1.2 does not have a signature. Disable verification for this plugin.
+          helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" --verify=false >/tmp/helm-unittest-install.log 2>&1 || {
             cat /tmp/helm-unittest-install.log
             exit 1
           }
