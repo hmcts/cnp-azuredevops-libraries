@@ -19,6 +19,9 @@ parameters:
   kubeconformValuesFile: ""
   kubernetesVersion: "1.35.0"
   kubeconformVersion: "v0.6.7"
+  # Override the CRDs-catalog -schema-location template kubeconform falls back to for resources
+  # not covered by the built-in k8s schemas. Useful when a CRD is missing/outdated upstream.
+  kubeconformCrdSchemaLocation: "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
   runSnapshotTests: false
   runUnitTests: false
   unitTestFile: ""
@@ -172,7 +175,7 @@ steps:
             -summary \
             -kubernetes-version ${{ parameters.kubernetesVersion }} \
             -schema-location default \
-            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+            -schema-location '${{ parameters.kubeconformCrdSchemaLocation }}'
 
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Kubeconform strict validation"

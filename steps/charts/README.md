@@ -46,6 +46,10 @@ steps:
 | `aksResourceGroup` | _(empty)_ | Override AKS resource group (skips auto-detect) |
 | `aksCluster` | _(empty)_ | Override AKS cluster name (skips auto-detect) |
 | `clustersToCheck` | cft-preview-00/01 | List of clusters to probe for active cluster auto-detection |
+| `kubeconformValuesFile` | _(empty)_ | Values file used to render manifests for kubeconform; when empty, the kubeconform step is skipped |
+| `kubernetesVersion` | `1.35.0` | Kubernetes version kubeconform validates manifests against |
+| `kubeconformVersion` | `v0.6.7` | kubeconform release to install |
+| `kubeconformCrdSchemaLocation` | datreeio/CRDs-catalog template | Fallback `-schema-location` for CRDs not covered by the built-in Kubernetes schemas. Override to point at a fork/mirror or a static schema file if a chart's CRD is missing or out of date in the default catalog |
 
 ## Namespace lifecycle (`createNamespace`)
 
