@@ -182,19 +182,22 @@ steps:
 
         # Auto-detect which ASO CRD groups (if any) the chart actually renders, so
         # consumers don't need to know/declare their chart's ASO CRD groups up front.
-        GROUPS=$(grep -h '^apiVersion:' "$(Agent.TempDirectory)/rendered-manifest.yaml" \
+        # NOTE: variable is intentionally not named GROUPS - bash treats that as a special
+        # read-only array (the process's Unix group IDs) and aborts immediately on assignment.
+        ASO_GROUPS=$(grep -h '^apiVersion:' "$(Agent.TempDirectory)/rendered-manifest.yaml" \
           | awk '{print $2}' \
           | cut -d/ -f1 \
           | grep '\.azure\.com$' \
           | sort -u || true)
 
-        if [ -z "$GROUPS" ]; then
+        if [ -z "$ASO_GROUPS" ]; then
           echo "No ASO CRD groups detected in rendered manifest, skipping local schema generation."
           exit 0
         fi
-        echo "Detected ASO CRD groups: $GROUPS"
+        echo "Detected ASO CRD groups: $ASO_GROUPS"
 
-        sudo apt-get update -qq && sudo apt-get install -y -qq python3-yaml
+        python3 -m venv "$(Agent.TempDirectory)/aso-venv"
+        "$(Agent.TempDirectory)/aso-venv/bin/pip" install --quiet pyyaml
 
         curl -sfL "https://github.com/Azure/azure-service-operator/releases/download/${{ parameters.asoVersion }}/azureserviceoperator_customresourcedefinitions_${{ parameters.asoVersion }}.yaml" \
           -o "$(Agent.TempDirectory)/aso-crds.yaml"
@@ -255,10 +258,10 @@ steps:
         SCHEMA_ROOT="${{ parameters.asoSchemaRoot }}"
         mkdir -p "$SCHEMA_ROOT"
 
-        for GROUP in $GROUPS; do
-          GROUP_DIR="$SCHEMA_ROOT/$GROUP"
+        for ASO_GROUP in $ASO_GROUPS; do
+          GROUP_DIR="$SCHEMA_ROOT/$ASO_GROUP"
           mkdir -p "$GROUP_DIR"
-          (cd "$GROUP_DIR" && python3 "$(Agent.TempDirectory)/generate-aso-schema.py" "$(Agent.TempDirectory)/aso-crds.yaml" "$(Agent.TempDirectory)/openapi2jsonschema.py" "$GROUP")
+          (cd "$GROUP_DIR" && "$(Agent.TempDirectory)/aso-venv/bin/python3" "$(Agent.TempDirectory)/generate-aso-schema.py" "$(Agent.TempDirectory)/aso-crds.yaml" "$(Agent.TempDirectory)/openapi2jsonschema.py" "$ASO_GROUP")
         done
 
         echo "Generated schema files:"
