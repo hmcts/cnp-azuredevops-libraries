@@ -19,9 +19,14 @@ parameters:
   kubeconformValuesFile: ""
   kubernetesVersion: "1.35.0"
   kubeconformVersion: "v0.6.7"
-  # Override the CRDs-catalog -schema-location template kubeconform falls back to for resources
-  # not covered by the built-in k8s schemas. Useful when a CRD is missing/outdated upstream.
+  # Fallback -schema-location kubeconform tries for CRDs not covered by the built-in k8s
+  # schemas or by the auto-generated ASO schemas below (e.g. KEDA). Override to point at
+  # a fork/mirror or a static schema file if a chart's CRD is missing or out of date.
   kubeconformCrdSchemaLocation: "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+  # ASO release to source local CRD schemas from for any ASO CRD groups detected in the rendered chart
+  asoVersion: "v2.17.0"
+  yqVersion: "v4.44.3"
+  asoSchemaRoot: "$(Agent.TempDirectory)/aso-schemas"
   runSnapshotTests: false
   runUnitTests: false
   unitTestFile: ""
@@ -160,9 +165,8 @@ steps:
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Helm Lint"
 
-  # `default` (built-in k8s schemas) is always tried first.
-  # The CRDs catalog below is only fetched for resource types not found
-  # in the default schemas (e.g. KEDA, ASO)
+  # `default` (built-in k8s schemas) is always tried first, followed by any ASO CRD
+  # schemas generated locally from the rendered chart, then the configurable fallback.
   - ${{ if ne(parameters.kubeconformValuesFile, '') }}:
     - script: |
         set -e -o pipefail
@@ -170,12 +174,27 @@ steps:
         helm template ${{ parameters.chartReleaseName }} $(chartTarget) \
           -f ${{ parameters.valuesFile }} \
           -f ${{ parameters.kubeconformValuesFile }} \
-          | /tmp/kubeconform \
-            -strict \
-            -summary \
-            -kubernetes-version ${{ parameters.kubernetesVersion }} \
-            -schema-location default \
-            -schema-location '${{ parameters.kubeconformCrdSchemaLocation }}'
+          > "$(Agent.TempDirectory)/rendered-manifest.yaml"
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Render chart manifests for kubeconform"
+
+    - template: generate-aso-crd-schemas.yaml
+      parameters:
+        asoVersion: ${{ parameters.asoVersion }}
+        yqVersion: ${{ parameters.yqVersion }}
+        schemaRoot: ${{ parameters.asoSchemaRoot }}
+        renderedManifestPath: "$(Agent.TempDirectory)/rendered-manifest.yaml"
+
+    - script: |
+        set -e -o pipefail
+        /tmp/kubeconform \
+          -strict \
+          -summary \
+          -kubernetes-version ${{ parameters.kubernetesVersion }} \
+          -schema-location default \
+          -schema-location '${{ parameters.asoSchemaRoot }}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+          -schema-location '${{ parameters.kubeconformCrdSchemaLocation }}' \
+          < "$(Agent.TempDirectory)/rendered-manifest.yaml"
 
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Kubeconform strict validation"

@@ -49,7 +49,10 @@ steps:
 | `kubeconformValuesFile` | _(empty)_ | Values file used to render manifests for kubeconform; when empty, the kubeconform step is skipped |
 | `kubernetesVersion` | `1.35.0` | Kubernetes version kubeconform validates manifests against |
 | `kubeconformVersion` | `v0.6.7` | kubeconform release to install |
-| `kubeconformCrdSchemaLocation` | datreeio/CRDs-catalog template | Fallback `-schema-location` for CRDs not covered by the built-in Kubernetes schemas. Override to point at a fork/mirror or a static schema file if a chart's CRD is missing or out of date in the default catalog |
+| `kubeconformCrdSchemaLocation` | datreeio/CRDs-catalog template | Final fallback `-schema-location` for any CRD not covered by the built-in Kubernetes schemas or the auto-generated ASO schemas below (e.g. KEDA) |
+| `asoVersion` | `v2.17.0` | ASO release tag to source local CRD schemas from — see [ASO CRD schema generation](#aso-crd-schema-generation) below |
+| `yqVersion` | `v4.44.3` | [mikefarah/yq](https://github.com/mikefarah/yq) release used to extract CRD groups from the ASO bundle |
+| `asoSchemaRoot` | `$(Agent.TempDirectory)/aso-schemas` | Local directory the generated ASO schemas are written to |
 
 ## Namespace lifecycle (`createNamespace`)
 
@@ -99,3 +102,30 @@ Labels are applied **only at creation time**. Reusing an existing namespace (man
 | `helm/` | `my-chart` | `helm/my-chart` |
 | `helm/` | `/my-chart` | `helm/my-chart` (leading `/` stripped) |
 | `helm` | `my-chart` | `helm/my-chart` (trailing `/` added) |
+
+## ASO CRD schema generation
+
+Charts that deploy Azure Service Operator (ASO) custom resources can validate them with kubeconform without depending on the [datreeio/CRDs-catalog](https://github.com/datreeio/CRDs-catalog), which is sometimes missing or out of date for newer ASO CRDs — and without declaring which ASO CRD groups the chart uses.
+
+Whenever `kubeconformValuesFile` is set, the kubeconform step automatically:
+
+1. Renders the chart once and scans the output for any `apiVersion` ending in `.azure.com` to detect the ASO CRD groups actually in use (e.g. `servicebus.azure.com`) — if none are found, schema generation is skipped
+2. Installs `yq` and the [kubeconform `openapi2jsonschema.py`](https://github.com/yannh/kubeconform) generator
+3. Downloads the ASO CRD release bundle for `asoVersion` and filters it down to just the detected groups, generating JSON schemas into `asoSchemaRoot/<group>`
+4. Passes kubeconform `-schema-location` flags for the built-in k8s schemas, the generated ASO schemas, and `kubeconformCrdSchemaLocation` (in that order), so non-ASO CRDs (e.g. KEDA) still fall back to the datreeio catalog
+
+No per-chart configuration is required — just bump the pinned `asoVersion` default in this repo when a chart needs newer ASO CRDs, or override it per-call for testing.
+
+### Usage
+
+```yaml
+steps:
+  - template: steps/charts/validate.yaml@cnp-azuredevops-libraries
+    parameters:
+      chartName: my-chart
+      chartReleaseName: my-chart-ci
+      chartNamespace: my-chart-ci
+      kubeconformValuesFile: ci-values-kubeconform.yaml
+```
+
+The underlying logic lives in `steps/charts/generate-aso-crd-schemas.yaml`, which can also be called standalone (given a `renderedManifestPath`) if you need the generated schemas outside of `validate.yaml`.

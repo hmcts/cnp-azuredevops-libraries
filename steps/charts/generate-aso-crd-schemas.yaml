@@ -1,0 +1,55 @@
+parameters:
+  asoVersion: "v2.17.0"
+  yqVersion: "v4.44.3"
+  schemaRoot: "$(Agent.TempDirectory)/aso-schemas"
+  # Rendered chart manifest to scan for ASO CRD groups actually in use
+  renderedManifestPath: ""
+
+steps:
+  - script: |
+      set -euo pipefail
+
+      # Auto-detect which ASO CRD groups (if any) the chart actually renders, so
+      # consumers don't need to know/declare their chart's ASO CRD groups up front.
+      GROUPS=$(grep -h '^apiVersion:' "${{ parameters.renderedManifestPath }}" \
+        | awk '{print $2}' \
+        | cut -d/ -f1 \
+        | grep '\.azure\.com$' \
+        | sort -u || true)
+
+      if [ -z "$GROUPS" ]; then
+        echo "No ASO CRD groups detected in rendered manifest, skipping local schema generation."
+        exit 0
+      fi
+      echo "Detected ASO CRD groups: $GROUPS"
+
+      # mikefarah/yq - used to pull each detected CRD group out of the full ASO release bundle
+      curl -sfL "https://github.com/mikefarah/yq/releases/download/${{ parameters.yqVersion }}/yq_linux_amd64" -o "$(Agent.TempDirectory)/yq"
+      chmod +x "$(Agent.TempDirectory)/yq"
+      sudo mv "$(Agent.TempDirectory)/yq" /usr/local/bin/yq
+
+      sudo apt-get update -qq && sudo apt-get install -y -qq python3-yaml
+      curl -sfL https://raw.githubusercontent.com/yannh/kubeconform/master/scripts/openapi2jsonschema.py -o "$(Agent.TempDirectory)/openapi2jsonschema.py"
+
+      curl -sfL "https://github.com/Azure/azure-service-operator/releases/download/${{ parameters.asoVersion }}/azureserviceoperator_customresourcedefinitions_${{ parameters.asoVersion }}.yaml" \
+        -o "$(Agent.TempDirectory)/aso-crds.yaml"
+
+      SCHEMA_ROOT="${{ parameters.schemaRoot }}"
+      mkdir -p "$SCHEMA_ROOT"
+
+      for GROUP in $GROUPS; do
+        GROUP_DIR="$SCHEMA_ROOT/$GROUP"
+        mkdir -p "$GROUP_DIR"
+
+        # ASO's release bundle is a plain multi-document YAML stream of standalone
+        # CustomResourceDefinition objects (NOT a `kind: List` with an `items:` array),
+        # so the filter operates directly on each document rather than via `.items[]`.
+        yq "select(.spec.group == \"$GROUP\")" "$(Agent.TempDirectory)/aso-crds.yaml" \
+          > "$(Agent.TempDirectory)/$GROUP-crds.yaml"
+
+        (cd "$GROUP_DIR" && python3 "$(Agent.TempDirectory)/openapi2jsonschema.py" "$(Agent.TempDirectory)/$GROUP-crds.yaml")
+      done
+
+      echo "Generated schema files:"
+      find "$SCHEMA_ROOT" -type f | sort
+    displayName: "Generate ASO CRD schemas from rendered manifest (bypasses datreeio catalog bugs)"
