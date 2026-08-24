@@ -25,7 +25,6 @@ parameters:
   kubeconformCrdSchemaLocation: "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
   # ASO release to source local CRD schemas from for any ASO CRD groups detected in the rendered chart
   asoVersion: "v2.17.0"
-  yqVersion: "v4.44.3"
   asoSchemaRoot: "$(Agent.TempDirectory)/aso-schemas"
   runSnapshotTests: false
   runUnitTests: false
@@ -178,12 +177,94 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Render chart manifests for kubeconform"
 
-    - template: generate-aso-crd-schemas.yaml
-      parameters:
-        asoVersion: ${{ parameters.asoVersion }}
-        yqVersion: ${{ parameters.yqVersion }}
-        schemaRoot: ${{ parameters.asoSchemaRoot }}
-        renderedManifestPath: "$(Agent.TempDirectory)/rendered-manifest.yaml"
+    - script: |
+        set -euo pipefail
+
+        # Auto-detect which ASO CRD groups (if any) the chart actually renders, so
+        # consumers don't need to know/declare their chart's ASO CRD groups up front.
+        GROUPS=$(grep -h '^apiVersion:' "$(Agent.TempDirectory)/rendered-manifest.yaml" \
+          | awk '{print $2}' \
+          | cut -d/ -f1 \
+          | grep '\.azure\.com$' \
+          | sort -u || true)
+
+        if [ -z "$GROUPS" ]; then
+          echo "No ASO CRD groups detected in rendered manifest, skipping local schema generation."
+          exit 0
+        fi
+        echo "Detected ASO CRD groups: $GROUPS"
+
+        sudo apt-get update -qq && sudo apt-get install -y -qq python3-yaml
+
+        curl -sfL "https://github.com/Azure/azure-service-operator/releases/download/${{ parameters.asoVersion }}/azureserviceoperator_customresourcedefinitions_${{ parameters.asoVersion }}.yaml" \
+          -o "$(Agent.TempDirectory)/aso-crds.yaml"
+
+        # Fetched fresh each run so upstream fixes/CRD-version support land automatically.
+        curl -sfL https://raw.githubusercontent.com/yannh/kubeconform/master/scripts/openapi2jsonschema.py \
+          -o "$(Agent.TempDirectory)/openapi2jsonschema.py"
+
+        cat > "$(Agent.TempDirectory)/generate-aso-schema.py" <<'PYEOF'
+        import importlib.util
+        import sys
+
+        import yaml
+
+        bundle_path, upstream_path, group = sys.argv[1], sys.argv[2], sys.argv[3]
+
+        spec = importlib.util.spec_from_file_location("openapi2jsonschema", upstream_path)
+        upstream = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(upstream)  # `__main__` guard means this only defines functions
+
+        def additional_properties(data, skip=False):
+            "This recreates the behaviour of kubectl at https://github.com/kubernetes/kubernetes/blob/225b9119d6a8f03fcbe3cc3d590c261965d928d0/pkg/kubectl/validation/schema.go#L312"
+            if isinstance(data, dict):
+                if "properties" in data and not skip:
+                    if "additionalProperties" not in data:
+                        data["additionalProperties"] = False
+                for k, v in data.items():
+                    if k == "properties" and isinstance(v, dict):
+                        # v is a {field name: schema} map, not a schema itself - a CRD field can
+                        # legitimately be named "properties", so don't recurse into v as a whole.
+                        for field_schema in v.values():
+                            additional_properties(field_schema)
+                    else:
+                        additional_properties(v)
+            return data
+
+        # Patches out a bug in the upstream function of the same name: it doesn't special-case
+        # CRD fields literally named "properties", so it mistakes a field's own schema for the
+        # enclosing object's {field name: schema} map and corrupts it with a stray key.
+        upstream.additional_properties = additional_properties
+
+        with open(bundle_path) as f:
+            for doc in yaml.safe_load_all(f):
+                if not doc or doc.get("kind") != "CustomResourceDefinition":
+                    continue
+                if doc["spec"]["group"] != group:
+                    continue
+                for version in doc["spec"].get("versions", []):
+                    schema = version.get("schema", {}).get("openAPIV3Schema")
+                    if not schema:
+                        continue
+                    filename = "{kind}_{version}.json".format(
+                        kind=doc["spec"]["names"]["kind"], version=version["name"]
+                    ).lower()
+                    upstream.write_schema_file(schema, filename)
+        PYEOF
+
+        SCHEMA_ROOT="${{ parameters.asoSchemaRoot }}"
+        mkdir -p "$SCHEMA_ROOT"
+
+        for GROUP in $GROUPS; do
+          GROUP_DIR="$SCHEMA_ROOT/$GROUP"
+          mkdir -p "$GROUP_DIR"
+          (cd "$GROUP_DIR" && python3 "$(Agent.TempDirectory)/generate-aso-schema.py" "$(Agent.TempDirectory)/aso-crds.yaml" "$(Agent.TempDirectory)/openapi2jsonschema.py" "$GROUP")
+        done
+
+        echo "Generated schema files:"
+        find "$SCHEMA_ROOT" -type f | sort
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Generate ASO CRD schemas from rendered manifest (bypasses datreeio catalog bugs)"
 
     - script: |
         set -e -o pipefail

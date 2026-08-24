@@ -51,7 +51,6 @@ steps:
 | `kubeconformVersion` | `v0.6.7` | kubeconform release to install |
 | `kubeconformCrdSchemaLocation` | datreeio/CRDs-catalog template | Final fallback `-schema-location` for any CRD not covered by the built-in Kubernetes schemas or the auto-generated ASO schemas below (e.g. KEDA) |
 | `asoVersion` | `v2.17.0` | ASO release tag to source local CRD schemas from — see [ASO CRD schema generation](#aso-crd-schema-generation) below |
-| `yqVersion` | `v4.44.3` | [mikefarah/yq](https://github.com/mikefarah/yq) release used to extract CRD groups from the ASO bundle |
 | `asoSchemaRoot` | `$(Agent.TempDirectory)/aso-schemas` | Local directory the generated ASO schemas are written to |
 
 ## Namespace lifecycle (`createNamespace`)
@@ -110,8 +109,8 @@ Charts that deploy Azure Service Operator (ASO) custom resources can validate th
 Whenever `kubeconformValuesFile` is set, the kubeconform step automatically:
 
 1. Renders the chart once and scans the output for any `apiVersion` ending in `.azure.com` to detect the ASO CRD groups actually in use (e.g. `servicebus.azure.com`) — if none are found, schema generation is skipped
-2. Installs `yq` and the [kubeconform `openapi2jsonschema.py`](https://github.com/yannh/kubeconform) generator
-3. Downloads the ASO CRD release bundle for `asoVersion` and filters it down to just the detected groups, generating JSON schemas into `asoSchemaRoot/<group>`
+2. Downloads the ASO CRD release bundle for `asoVersion`, and kubeconform's [openapi2jsonschema.py](https://github.com/yannh/kubeconform/blob/master/scripts/openapi2jsonschema.py) generator, fresh each run
+3. For each detected group, runs the generator against the bundle to write that group's JSON schemas into `asoSchemaRoot/<group>` — patching the generator's `additional_properties()` in-process first, since the upstream version mistakes a CRD field literally named `properties` for the enclosing object's own `{field name: schema}` map and corrupts it
 4. Passes kubeconform `-schema-location` flags for the built-in k8s schemas, the generated ASO schemas, and `kubeconformCrdSchemaLocation` (in that order), so non-ASO CRDs (e.g. KEDA) still fall back to the datreeio catalog
 
 No per-chart configuration is required — just bump the pinned `asoVersion` default in this repo when a chart needs newer ASO CRDs, or override it per-call for testing.
@@ -128,4 +127,3 @@ steps:
       kubeconformValuesFile: ci-values-kubeconform.yaml
 ```
 
-The underlying logic lives in `steps/charts/generate-aso-crd-schemas.yaml`, which can also be called standalone (given a `renderedManifestPath`) if you need the generated schemas outside of `validate.yaml`.
