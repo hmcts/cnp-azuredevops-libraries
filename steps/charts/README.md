@@ -46,6 +46,12 @@ steps:
 | `aksResourceGroup` | _(empty)_ | Override AKS resource group (skips auto-detect) |
 | `aksCluster` | _(empty)_ | Override AKS cluster name (skips auto-detect) |
 | `clustersToCheck` | cft-preview-00/01 | List of clusters to probe for active cluster auto-detection |
+| `runSnapshotTests` | `false` | Runs `helm-unittest` snapshot tests from `tests/snapshot-tests/*.yaml` |
+| `helmUnittestValuesFiles` | `["ci-values-minimal.yaml"]` | Array of values files used to run snapshot tests; one `helm unittest` run per file |
+| `runUnitTests` | `false` | Runs `helm-unittest` assertion tests from `tests/unit-tests/*_test.yaml` |
+| `unitTestFile` | _(empty)_ | Optional single unit test file name under `tests/unit-tests/` |
+| `helmUnittestValuesFile` | `ci-values-minimal.yaml` | Secondary values file for unit tests and default snapshot test run |
+| `helmUnittestVersion` | `v1.1.2` | Version of `helm-unittest` plugin to install |
 
 ## Namespace lifecycle (`createNamespace`)
 

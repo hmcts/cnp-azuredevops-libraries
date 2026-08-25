@@ -20,6 +20,8 @@ parameters:
   kubernetesVersion: "1.35.0"
   kubeconformVersion: "v0.6.7"
   runSnapshotTests: false
+  helmUnittestValuesFiles:
+    - "ci-values-minimal.yaml"
   runUnitTests: false
   unitTestFile: ""
   helmUnittestValuesFile: "ci-values-minimal.yaml"
@@ -177,76 +179,16 @@ steps:
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Kubeconform strict validation"
 
-  - ${{ if eq(parameters.runSnapshotTests, true) }}:
-    - script: |
-        VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.valuesFile }}"
-        UNITTEST_VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.helmUnittestValuesFile }}"
-
-        DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
-        # lowercase the version string
-        DESIRED_VERSION="${DESIRED_VERSION,,}"
-        CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
-
-        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ]; then
-          helm plugin uninstall unittest >/dev/null 2>&1 || true
-          # helm v4 plugin installs require provenance verification, but the helm-unittest plugin 1.1.2 does not have a signature. Disable verification for this plugin.
-          # https://github.com/kaiehrhardt/pp/pull/22
-          helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" --verify=false >/tmp/helm-unittest-install.log 2>&1 || {
-            cat /tmp/helm-unittest-install.log
-            exit 1
-          }
-        fi
-
-        INSTALLED_VERSION=$(helm plugin list | awk '$1=="unittest" {print $2}')
-        echo "Installed version ${INSTALLED_VERSION:-unknown} of plugin helm-unittest"
-
-        helm unittest $(chartTarget) \
-          --values "$VALUES_FILE" \
-          --values "$UNITTEST_VALUES_FILE" \
-          -f 'tests/snapshot-tests/*.yaml'
+  - template: chart-tests.yaml
+    parameters:
+      valuesFile: ${{ parameters.valuesFile }}
+      helmUnittestValuesFile: ${{ parameters.helmUnittestValuesFile }}
+      helmUnittestVersion: ${{ parameters.helmUnittestVersion }}
+      runSnapshotTests: ${{ parameters.runSnapshotTests }}
+      helmUnittestValuesFiles: ${{ parameters.helmUnittestValuesFiles }}
+      runUnitTests: ${{ parameters.runUnitTests }}
+      unitTestFile: ${{ parameters.unitTestFile }}
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "helm-unittest snapshot tests"
-
-  - ${{ if eq(parameters.runUnitTests, true) }}:
-    - script: |
-        VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.valuesFile }}"
-        UNITTEST_VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.helmUnittestValuesFile }}"
-
-        DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
-        # lowercase the version string
-        DESIRED_VERSION="${DESIRED_VERSION,,}"
-        CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
-
-        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ]; then
-          helm plugin uninstall unittest >/dev/null 2>&1 || true
-          # helm v4 plugin installs require provenance verification, but the helm-unittest plugin 1.1.2 does not have a signature. Disable verification for this plugin.
-          helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" --verify=false >/tmp/helm-unittest-install.log 2>&1 || {
-            cat /tmp/helm-unittest-install.log
-            exit 1
-          }
-        fi
-
-        INSTALLED_VERSION=$(helm plugin list | awk '$1=="unittest" {print $2}')
-        echo "Installed version ${INSTALLED_VERSION:-unknown} of plugin helm-unittest"
-        
-        # capture the unit test file parameter into a variable to avoid issues with quoting and special characters
-        read -r UNIT_TEST_FILE <<'EOF'
-          ${{ parameters.unitTestFile }}
-        EOF
-        UNIT_TEST_FILES="tests/unit-tests/*_test.yaml"
-        if [[ -n "$UNIT_TEST_FILE" ]]; then 
-         # this is to block values like `../../somefile` or `somefile; rm -rf /` from being passed in. 
-         # Only allow alphanumeric, dot, underscore, and hyphen characters in the unitTestFile parameter.
-         [[ "$UNIT_TEST_FILE" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "Invalid unitTestFile: $UNIT_TEST_FILE"; exit 1; }; 
-         UNIT_TEST_FILES="tests/unit-tests/$UNIT_TEST_FILE"; 
-        fi
-
-        helm unittest $(chartTarget) \
-          --values "$VALUES_FILE" \
-          --values "$UNITTEST_VALUES_FILE" \
-          -f "$UNIT_TEST_FILES"
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "helm-unittest assertion tests"
 
   - script: helm install ${{ parameters.chartReleaseName }} $(chartTarget) --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s ${{ parameters.additionalHelmArgs }}
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
