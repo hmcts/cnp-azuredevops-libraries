@@ -125,6 +125,8 @@ When enabled, no per-chart configuration is required beyond the flag — just bu
 
 ### Implementation notes
 
+Schema generation logic lives in [`scripts/generate-aso-schemas.sh`](../../scripts/generate-aso-schemas.sh) (group detection, bundle/generator download, venv setup) and [`scripts/write-aso-schema.py`](../../scripts/write-aso-schema.py) (the patched generator invocation, run once per detected group).
+
 - The detected-group script variables are named `ASO_GROUPS`/`ASO_GROUP` rather than `GROUPS`/`GROUP` — bash treats `GROUPS` as a special read-only array (the process's Unix group IDs) and silently aborts the script on assignment.
 - The upstream ASO CRD bundle and `openapi2jsonschema.py` generator are downloaded fresh each run, so upstream fixes and new CRD-version support land automatically without a version bump in this repo.
 - A CRD field can legitimately be named `properties`, so the generator's `additional_properties()` patch only recurses into a `properties` key's *values* (the field schemas), not the key itself — otherwise a field's own schema gets mistaken for the enclosing object's `{field name: schema}` map and corrupted.
