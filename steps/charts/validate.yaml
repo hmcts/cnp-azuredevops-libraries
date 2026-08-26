@@ -144,15 +144,10 @@ steps:
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Create namespace for validation"
 
-  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
+  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --wait || true
     condition: eq(variables['deletePreviousRelease'], 'true')
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Delete Previous Test Chart"
-
-  - script: sleep ${{ parameters.helmDeleteWait }}
-    condition: eq(variables['deletePreviousRelease'], 'true')
-    workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-    displayName: "Wait for previous chart resources to be deprovisioned"
 
   - script: helm dependency update $(chartTarget)
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
@@ -404,7 +399,7 @@ steps:
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Helm Test"
 
-  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
+  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --wait || true
     condition: and(succeeded(), eq('${{ parameters.createNamespace }}', 'true'))
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Delete test Chart"
