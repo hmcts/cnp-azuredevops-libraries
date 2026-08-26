@@ -15,7 +15,7 @@ variables:
 - name: runUnitTestsEnabled
   value: ${{ or(eq(parameters.runUnitTests, true), eq(parameters.runUnitTests, 'true')) }}
 - name: chartTypeModified
-  value: false
+  value: 'false'
 
 steps:
   - ${{ if or(eq(variables['runSnapshotTestsEnabled'], true), eq(variables['runUnitTestsEnabled'], true)) }}:
@@ -82,7 +82,7 @@ steps:
         workingDirectory: ${{ parameters.workingDirectory }}
         displayName: "helm-unittest assertion tests ($UNIT_TEST_FILES)"
 
-  - ${{ if and(eq(variables['chartTypeModified'], true), eq(parameters.chartType, 'library')) }}:
+  - ${{ if and(eq(variables['chartTypeModified'], 'true'), eq(parameters.chartType, 'library')) }}:
     - script: |
         yq eval -i '.type = "library"' $(buildRepoSuffix)/Chart.yaml
         echo "Reverted chart type to 'library' in $(buildRepoSuffix)/Chart.yaml"
