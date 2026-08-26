@@ -37,6 +37,14 @@ steps:
         fi
       workingDirectory: ${{ parameters.workingDirectory }}
       displayName: "Change chart type to 'application' if needed"
+    - script: |
+        # Set the chart target name from the repository suffix, e.g. `chart-function` -> `function`
+        BUILD_REPO_SUFFIX="$(buildRepoSuffix)"
+        chartTarget="${BUILD_REPO_SUFFIX#chart-}"
+        echo "Chart target: $chartTarget"
+        echo "##vso[task.setvariable variable=chartTarget;]$chartTarget"
+      workingDirectory: ${{ parameters.workingDirectory }}
+      displayName: "Set chart target directory"
 
   - ${{ if and(eq(parameters.runSnapshotTests, true), gt(length(parameters.helmUnittestValuesFiles), 0)) }}:
     - ${{ each testValuesFile in parameters.helmUnittestValuesFiles }}:
