@@ -10,7 +10,7 @@ parameters:
   workingDirectory: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)"
 
 steps:
-  - ${{ if or(eq(variables['runSnapshotTestsEnabled'], true), eq(variables['runUnitTestsEnabled'], true)) }}:
+  - ${{ if or(eq(parameters.runSnapshotTests, true), eq(parameters.runUnitTests, true)) }}:
     - script: |
         DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
         DESIRED_VERSION="${DESIRED_VERSION,,}"
@@ -29,8 +29,6 @@ steps:
         echo "Installed version ${INSTALLED_VERSION:-unknown} of plugin helm-unittest"
       workingDirectory: ${{ parameters.workingDirectory }}
       displayName: "Install helm-unittest plugin"
-
-  - ${{ if or(eq(variables['runSnapshotTestsEnabled'], true), eq(variables['runUnitTestsEnabled'], true)) }}:
     - script: |
         if [[ "${{ parameters.chartType }}" == "library" ]]; then
           yq eval -i '.type = "application"' $(buildRepoSuffix)/Chart.yaml
@@ -40,7 +38,7 @@ steps:
       workingDirectory: ${{ parameters.workingDirectory }}
       displayName: "Change chart type to 'application' if needed"
 
-  - ${{ if and(eq(variables['runSnapshotTestsEnabled'], true), gt(length(parameters.helmUnittestValuesFiles), 0)) }}:
+  - ${{ if and(eq(parameters.runSnapshotTests, true), gt(length(parameters.helmUnittestValuesFiles), 0)) }}:
     - ${{ each testValuesFile in parameters.helmUnittestValuesFiles }}:
       - script: |
           VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.valuesFile }}"
@@ -52,7 +50,7 @@ steps:
         workingDirectory: ${{ parameters.workingDirectory }}
         displayName: "helm-unittest snapshot tests (${{ testValuesFile }})"
 
-  - ${{ if and(eq(variables['runUnitTestsEnabled'], true), gt(length(parameters.helmUnittestValuesFiles), 0)) }}:
+  - ${{ if and(eq(parameters.runUnitTests, true), gt(length(parameters.helmUnittestValuesFiles), 0)) }}:
     - ${{ each testValuesFile in parameters.helmUnittestValuesFiles }}:
       - script: |
           VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.valuesFile }}"
