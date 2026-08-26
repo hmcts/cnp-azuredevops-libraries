@@ -10,12 +10,9 @@ parameters:
   workingDirectory: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)"
 
 variables:
-- name: runSnapshotTestsEnabled
-  value: ${{ or(eq(parameters.runSnapshotTests, true), eq(parameters.runSnapshotTests, 'true')) }}
-- name: runUnitTestsEnabled
-  value: ${{ or(eq(parameters.runUnitTests, true), eq(parameters.runUnitTests, 'true')) }}
-- name: chartTypeModified
-  value: 'false'
+  runSnapshotTestsEnabled: ${{ or(eq(parameters.runSnapshotTests, true), eq(parameters.runSnapshotTests, 'true')) }}
+  runUnitTestsEnabled: ${{ or(eq(parameters.runUnitTests, true), eq(parameters.runUnitTests, 'true')) }}
+  chartTypeModified: 'false'
 
 steps:
   - ${{ if or(eq(variables['runSnapshotTestsEnabled'], true), eq(variables['runUnitTestsEnabled'], true)) }}:
