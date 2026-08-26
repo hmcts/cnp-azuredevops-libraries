@@ -19,6 +19,10 @@ parameters:
   kubeconformValuesFile: ""
   kubernetesVersion: "1.35.0"
   kubeconformVersion: "v0.6.7"
+  kubeconformCrdSchemaLocation: "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+  asoVersion: "v2.17.0"
+  asoSchemaRoot: "$(Agent.TempDirectory)/aso-schemas"
+  generateAsoSchemas: false
   runSnapshotTests: false
   runUnitTests: false
   unitTestFile: ""
@@ -137,7 +141,7 @@ steps:
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Create namespace for validation"
 
-  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
+  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --wait || true
     condition: eq(variables['deletePreviousRelease'], 'true')
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Delete Previous Test Chart"
@@ -157,9 +161,6 @@ steps:
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Helm Lint"
 
-  # `default` (built-in k8s schemas) is always tried first.
-  # The CRDs catalog below is only fetched for resource types not found
-  # in the default schemas (e.g. KEDA, ASO)
   - ${{ if ne(parameters.kubeconformValuesFile, '') }}:
     - script: |
         set -e -o pipefail
@@ -167,12 +168,29 @@ steps:
         helm template ${{ parameters.chartReleaseName }} $(chartTarget) \
           -f ${{ parameters.valuesFile }} \
           -f ${{ parameters.kubeconformValuesFile }} \
-          | /tmp/kubeconform \
-            -strict \
-            -summary \
-            -kubernetes-version ${{ parameters.kubernetesVersion }} \
-            -schema-location default \
-            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+          > "$(Agent.TempDirectory)/rendered-manifest.yaml"
+      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+      displayName: "Render chart manifests for kubeconform"
+
+    - ${{ if eq(parameters.generateAsoSchemas, true) }}:
+      - script: |
+          bash $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/generate-aso-schemas.sh \
+            "$(Agent.TempDirectory)/rendered-manifest.yaml" \
+            "${{ parameters.asoVersion }}" \
+            "${{ parameters.asoSchemaRoot }}"
+        workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+        displayName: "Generate ASO CRD schemas from rendered manifest (bypasses datreeio catalog bugs)"
+
+    - script: |
+        set -e -o pipefail
+        /tmp/kubeconform \
+          -strict \
+          -summary \
+          -kubernetes-version ${{ parameters.kubernetesVersion }} \
+          -schema-location default \
+          -schema-location '${{ parameters.asoSchemaRoot }}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+          -schema-location '${{ parameters.kubeconformCrdSchemaLocation }}' \
+          < "$(Agent.TempDirectory)/rendered-manifest.yaml"
 
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Kubeconform strict validation"
@@ -183,7 +201,6 @@ steps:
         UNITTEST_VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.helmUnittestValuesFile }}"
 
         DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
-        # lowercase the version string
         DESIRED_VERSION="${DESIRED_VERSION,,}"
         CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
 
@@ -211,7 +228,6 @@ steps:
         UNITTEST_VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.helmUnittestValuesFile }}"
 
         DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
-        # lowercase the version string
         DESIRED_VERSION="${DESIRED_VERSION,,}"
         CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
 
@@ -226,14 +242,11 @@ steps:
         INSTALLED_VERSION=$(helm plugin list | awk '$1=="unittest" {print $2}')
         echo "Installed version ${INSTALLED_VERSION:-unknown} of plugin helm-unittest"
         
-        # capture the unit test file parameter into a variable to avoid issues with quoting and special characters
         read -r UNIT_TEST_FILE <<'EOF'
           ${{ parameters.unitTestFile }}
         EOF
         UNIT_TEST_FILES="tests/unit-tests/*_test.yaml"
         if [[ -n "$UNIT_TEST_FILE" ]]; then 
-         # this is to block values like `../../somefile` or `somefile; rm -rf /` from being passed in. 
-         # Only allow alphanumeric, dot, underscore, and hyphen characters in the unitTestFile parameter.
          [[ "$UNIT_TEST_FILE" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "Invalid unitTestFile: $UNIT_TEST_FILE"; exit 1; }; 
          UNIT_TEST_FILES="tests/unit-tests/$UNIT_TEST_FILE"; 
         fi
@@ -254,32 +267,26 @@ steps:
     displayName: "Wait for chart resources to be provisioned"
 
   - script: |
-      # Run helm test without --logs (doesn't work with Job-based tests)
       helm test --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --timeout ${{ parameters.helmTestTimeout }}s
 
-      # Get logs from test resources
       echo ""
       echo "==================== Test Logs ===================="
 
-      # Find test jobs created by this release (first try by label)
       TEST_JOBS=$(kubectl get jobs -n ${{ parameters.chartNamespace }} \
         -l "app.kubernetes.io/instance=${{ parameters.chartReleaseName }}" \
         -o json | jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | .metadata.name')
 
       if [ -z "$TEST_JOBS" ]; then
-        # Fallback: search by name prefix if labels aren't present
         TEST_JOBS=$(kubectl get jobs -n ${{ parameters.chartNamespace }} -o json | \
           jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | select(.metadata.name | startswith("${{ parameters.chartReleaseName }}")) | .metadata.name')
       fi
 
       if [ -n "$TEST_JOBS" ]; then
-        # Job-based tests
         for job in $TEST_JOBS; do
           echo "--- Logs from job: $job ---"
           kubectl logs -n ${{ parameters.chartNamespace }} -l "job-name=$job" --tail=-1 --ignore-errors=true
         done
       else
-        # Pod-based tests (legacy or no jobs found)
         TEST_PODS=$(kubectl get pods -n ${{ parameters.chartNamespace }} \
           -l "app.kubernetes.io/instance=${{ parameters.chartReleaseName }}" \
           -o json | jq -r '.items[] | select(.metadata.annotations."helm.sh/hook" == "test") | .metadata.name')
@@ -298,7 +305,7 @@ steps:
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Helm Test"
 
-  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
+  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --wait || true
     condition: and(succeeded(), eq('${{ parameters.createNamespace }}', 'true'))
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Delete test Chart"
