@@ -162,38 +162,19 @@ steps:
     displayName: "Helm Lint"
 
   - ${{ if ne(parameters.kubeconformValuesFile, '') }}:
-    - script: |
-        set -e -o pipefail
-        curl -sSL https://github.com/yannh/kubeconform/releases/download/${{ parameters.kubeconformVersion }}/kubeconform-linux-amd64.tar.gz | tar xz -C /tmp/
-        helm template ${{ parameters.chartReleaseName }} $(chartTarget) \
-          -f ${{ parameters.valuesFile }} \
-          -f ${{ parameters.kubeconformValuesFile }} \
-          > "$(Agent.TempDirectory)/rendered-manifest.yaml"
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Render chart manifests for kubeconform"
-
-    - ${{ if eq(parameters.generateAsoSchemas, true) }}:
-      - script: |
-          bash $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/generate-aso-schemas.sh \
-            "$(Agent.TempDirectory)/rendered-manifest.yaml" \
-            "${{ parameters.asoVersion }}" \
-            "${{ parameters.asoSchemaRoot }}"
-        workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-        displayName: "Generate ASO CRD schemas from rendered manifest (bypasses datreeio catalog bugs)"
-
-    - script: |
-        set -e -o pipefail
-        /tmp/kubeconform \
-          -strict \
-          -summary \
-          -kubernetes-version ${{ parameters.kubernetesVersion }} \
-          -schema-location default \
-          -schema-location '${{ parameters.asoSchemaRoot }}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
-          -schema-location '${{ parameters.kubeconformCrdSchemaLocation }}' \
-          < "$(Agent.TempDirectory)/rendered-manifest.yaml"
-
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "Kubeconform strict validation"
+    - template: kubeconform.yaml
+      parameters:
+        workingDirectory: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)"
+        chartTarget: "$(chartTarget)"
+        chartReleaseName: "${{ parameters.chartReleaseName }}"
+        valuesFile: "${{ parameters.valuesFile }}"
+        kubeconformValuesFile: "${{ parameters.kubeconformValuesFile }}"
+        kubernetesVersion: "${{ parameters.kubernetesVersion }}"
+        kubeconformVersion: "${{ parameters.kubeconformVersion }}"
+        kubeconformCrdSchemaLocation: "${{ parameters.kubeconformCrdSchemaLocation }}"
+        asoVersion: "${{ parameters.asoVersion }}"
+        asoSchemaRoot: "${{ parameters.asoSchemaRoot }}"
+        generateAsoSchemas: ${{ parameters.generateAsoSchemas }}
 
   - ${{ if eq(parameters.runSnapshotTests, true) }}:
     - script: |

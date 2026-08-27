@@ -2,6 +2,8 @@
 
 `steps/charts/validate.yaml` — Azure DevOps step template for Helm chart CI validation against a live AKS cluster.
 
+`steps/charts/kubeconform.yaml` — Azure DevOps step template for rendering a chart and running strict kubeconform validation, with optional ASO schema generation.
+
 ## What it does
 
 1. Authenticates to AKS and ACR
@@ -109,6 +111,22 @@ Labels are applied **only at creation time**. Reusing an existing namespace (man
 | `helm` | `my-chart` | `helm/my-chart` (trailing `/` added) |
 
 ## ASO CRD schema generation
+
+The kubeconform steps are also available as a standalone template for pipelines that already manage chart checkout, dependency injection, or runtime working directories themselves. It accepts a chart target and values files, then performs rendering, optional ASO schema generation, and strict kubeconform validation:
+
+```yaml
+steps:
+  - template: steps/charts/kubeconform.yaml@cnp-azuredevops-libraries
+    parameters:
+      workingDirectory: "$(Pipeline.Workspace)/consumer"
+      chartTarget: servicebus
+      chartReleaseName: chart-servicebus-ci
+      valuesFile: ci-values.yaml
+      generateAsoSchemas: true
+      libraryCheckoutPath: "$(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries"
+```
+
+Set `kubeconformValuesFile` when validation needs a second values file. The template always uses the built-in Kubernetes schemas, generated ASO schemas when enabled, and the configured CRD catalogue fallback.
 
 Charts that deploy Azure Service Operator (ASO) custom resources can validate them with kubeconform without depending on the [datreeio/CRDs-catalog](https://github.com/datreeio/CRDs-catalog), which is sometimes missing or out of date for newer ASO CRDs — and without declaring which ASO CRD groups the chart uses.
 
