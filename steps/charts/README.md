@@ -2,6 +2,8 @@
 
 `steps/charts/validate.yaml` — Azure DevOps step template for Helm chart CI validation against a live AKS cluster.
 
+`steps/charts/kubeconform.yaml` — Azure DevOps step template for rendering a chart and running strict kubeconform validation, with optional ASO schema generation.
+
 ## What it does
 
 1. Authenticates to AKS and ACR
@@ -26,32 +28,39 @@ steps:
 
 ## Parameters
 
-| Parameter | Default | Description |
-|---|---|---|
-| `serviceConnection` | `DCD-CFTAPPS-DEV` | Azure service connection for AKS auth |
-| `registryServiceConnection` | `azurerm-prod` | Azure service connection for ACR login |
-| `acrName` | `hmctsprod` | ACR instance to authenticate against |
-| `chartName` | _(required)_ | Chart directory name (relative to `chartPath`) |
-| `chartReleaseName` | _(required)_ | Helm release name used for install/test/delete |
-| `chartNamespace` | _(required)_ | Kubernetes namespace for the release |
-| `chartPath` | `./` | Path to the chart root; combined with `chartName` when not `./` |
-| `createNamespace` | `false` | When `true`, enables namespace lifecycle management and post-test cleanup |
-| `helmVersion` | `3.17.1` | Helm version to install |
-| `helmInstallTimeout` | `120` | Seconds to wait for `helm install` |
-| `helmTestTimeout` | `300` | Seconds to wait for `helm test` |
-| `helmDeleteWait` | `0` | Seconds to wait after pre-install helm delete |
-| `helmInstallWait` | `0` | Seconds to wait after helm install before testing |
-| `valuesFile` | `ci-values.yaml` | Values file passed to `helm install` |
-| `additionalHelmArgs` | _(empty)_ | Extra args appended to `helm install` |
-| `aksResourceGroup` | _(empty)_ | Override AKS resource group (skips auto-detect) |
-| `aksCluster` | _(empty)_ | Override AKS cluster name (skips auto-detect) |
-| `clustersToCheck` | cft-preview-00/01 | List of clusters to probe for active cluster auto-detection |
-| `runSnapshotTests` | `false` | Runs `helm-unittest` snapshot tests from `tests/snapshot-tests/*.yaml` |
-| `helmUnittestValuesFiles` | `["ci-values-minimal.yaml"]` | Array of values files used to run snapshot tests; one `helm unittest` run per file |
-| `runUnitTests` | `false` | Runs `helm-unittest` assertion tests from `tests/unit-tests/*_test.yaml` |
-| `helmUnittestFile` | _(empty)_ | Optional single unit test file name under `tests/unit-tests/` |
-| `helmUnittestValuesFile` | `ci-values-minimal.yaml` | Secondary values file for unit tests and default snapshot test run |
-| `helmUnittestVersion` | `v1.1.2` | Version of `helm-unittest` plugin to install |
+| Parameter                      | Default | Description |
+|--------------------------------|---|---|
+| `serviceConnection`            | `DCD-CFTAPPS-DEV` | Azure service connection for AKS auth |
+| `registryServiceConnection`    | `azurerm-prod` | Azure service connection for ACR login |
+| `acrName`                      | `hmctsprod` | ACR instance to authenticate against |
+| `chartName`                    | _(required)_ | Chart directory name (relative to `chartPath`) |
+| `chartReleaseName`             | _(required)_ | Helm release name used for install/test/delete |
+| `chartNamespace`               | _(required)_ | Kubernetes namespace for the release |
+| `chartPath`                    | `./` | Path to the chart root; combined with `chartName` when not `./` |
+| `createNamespace`              | `false` | When `true`, enables namespace lifecycle management and post-test cleanup |
+| `helmVersion`                  | `3.17.1` | Helm version to install |
+| `helmInstallTimeout`           | `120` | Seconds to wait for `helm install` |
+| `helmTestTimeout`              | `300` | Seconds to wait for `helm test` |
+| `helmDeleteWait`               | `0` | Seconds to wait after pre-install helm delete |
+| `helmInstallWait`              | `0` | Seconds to wait after helm install before testing |
+| `valuesFile`                   | `ci-values.yaml` | Values file passed to `helm install` |
+| `additionalHelmArgs`           | _(empty)_ | Extra args appended to `helm install` |
+| `aksResourceGroup`             | _(empty)_ | Override AKS resource group (skips auto-detect) |
+| `aksCluster`                   | _(empty)_ | Override AKS cluster name (skips auto-detect) |
+| `clustersToCheck`              | cft-preview-00/01 | List of clusters to probe for active cluster auto-detection |
+| `kubeconformValuesFile`        | _(empty)_ | Values file used to render manifests for kubeconform; when empty, the kubeconform step is skipped |
+| `kubernetesVersion`            | `1.35.0` | Kubernetes version kubeconform validates manifests against |
+| `kubeconformVersion`           | `v0.6.7` | kubeconform release to install |
+| `kubeconformCrdSchemaLocation` | datreeio/CRDs-catalog template | Final fallback `-schema-location` for any CRD not covered by the built-in Kubernetes schemas or the auto-generated ASO schemas below (e.g. KEDA). Override to point at a fork/mirror or a static schema file if a chart's CRD is missing or out of date |
+| `generateAsoSchemas`           | `false` | Opt-in: locally generate ASO CRD schemas for kubeconform — see [ASO CRD schema generation](#aso-crd-schema-generation) below |
+| `asoVersion`                   | `v2.17.0` | ASO release tag to source local CRD schemas from — see [ASO CRD schema generation](#aso-crd-schema-generation) below |
+| `asoSchemaRoot`                | `$(Agent.TempDirectory)/aso-schemas` | Local directory the generated ASO schemas are written to |
+| `runSnapshotTests`             | `false` | Runs `helm-unittest` snapshot tests from `tests/snapshot-tests/*.yaml` |
+| `helmUnittestValuesFiles`      | `["ci-values-minimal.yaml"]` | Array of values files used to run snapshot tests; one `helm unittest` run per file |
+| `runUnitTests`                 | `false` | Runs `helm-unittest` assertion tests from `tests/unit-tests/*_test.yaml` |
+| `helmUnittestFile`             | _(empty)_ | Optional single unit test file name under `tests/unit-tests/` |
+| `helmUnittestValuesFile`       | `ci-values-minimal.yaml` | Secondary values file for unit tests and default snapshot test run |
+| `helmUnittestVersion`          | `v1.1.2` | Version of `helm-unittest` plugin to install |
 
 ## Namespace lifecycle (`createNamespace`)
 
@@ -101,3 +110,71 @@ Labels are applied **only at creation time**. Reusing an existing namespace (man
 | `helm/` | `my-chart` | `helm/my-chart` |
 | `helm/` | `/my-chart` | `helm/my-chart` (leading `/` stripped) |
 | `helm` | `my-chart` | `helm/my-chart` (trailing `/` added) |
+
+## ASO CRD schema generation
+
+The kubeconform steps are also available as a standalone template for pipelines that already manage chart checkout, dependency injection, or runtime working directories themselves. It accepts a chart target and values files, then performs rendering, optional ASO schema generation, and strict kubeconform validation:
+
+```yaml
+steps:
+  - template: steps/charts/kubeconform.yaml@cnp-azuredevops-libraries
+    parameters:
+      workingDirectory: "$(Pipeline.Workspace)/consumer"
+      chartTarget: servicebus
+      chartReleaseName: chart-servicebus-ci
+      valuesFile: ci-values.yaml
+      generateAsoSchemas: true
+      libraryCheckoutPath: "$(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries"
+```
+
+Set `kubeconformValuesFile` when validation needs a second values file. The template always uses the built-in Kubernetes schemas, generated ASO schemas when enabled, and the configured CRD catalogue fallback.
+
+Charts that deploy Azure Service Operator (ASO) custom resources can validate them with kubeconform without depending on the [datreeio/CRDs-catalog](https://github.com/datreeio/CRDs-catalog), which is sometimes missing or out of date for newer ASO CRDs — and without declaring which ASO CRD groups the chart uses.
+
+This is opt-in via `generateAsoSchemas: true` (default `false`), since not every consumer can or wants to fetch and run the upstream ASO CRD bundle/generator locally. When enabled, and whenever `kubeconformValuesFile` is set, the kubeconform step automatically:
+
+1. Renders the chart once and scans the output for any `apiVersion` ending in `.azure.com` to detect the ASO CRD groups actually in use (e.g. `servicebus.azure.com`) — if none are found, schema generation is skipped
+2. Downloads the ASO CRD release bundle for `asoVersion`, and kubeconform's [openapi2jsonschema.py](https://github.com/yannh/kubeconform/blob/master/scripts/openapi2jsonschema.py) generator, fresh each run
+3. For each detected group, runs the generator against the bundle to write that group's JSON schemas into `asoSchemaRoot/<group>` — patching the generator's `additional_properties()` in-process first, since the upstream version mistakes a CRD field literally named `properties` for the enclosing object's own `{field name: schema}` map and corrupts it
+4. Passes kubeconform `-schema-location` flags for the built-in k8s schemas, the generated ASO schemas, and `kubeconformCrdSchemaLocation` (in that order), so non-ASO CRDs (e.g. KEDA) still fall back to the datreeio catalog
+
+If `generateAsoSchemas` is left `false` (or a chart has no detected ASO CRD groups), kubeconform validates ASO CRDs against `kubeconformCrdSchemaLocation` (`datreeio` by default) same as before this feature existed.
+
+When enabled, no per-chart configuration is required beyond the flag — just bump the pinned `asoVersion` default in this repo when a chart needs newer ASO CRDs, or override it per-call for testing.
+
+### Implementation notes
+
+Schema generation logic lives in [`scripts/generate-aso-schemas.sh`](../../scripts/generate-aso-schemas.sh) (group detection, bundle/generator download, venv setup) and [`scripts/write-aso-schema.py`](../../scripts/write-aso-schema.py) (the patched generator invocation, run once per detected group).
+
+- The detected-group script variables are named `ASO_GROUPS`/`ASO_GROUP` rather than `GROUPS`/`GROUP` — bash treats `GROUPS` as a special read-only array (the process's Unix group IDs) and silently aborts the script on assignment.
+- The upstream ASO CRD bundle and `openapi2jsonschema.py` generator are downloaded fresh each run, so upstream fixes and new CRD-version support land automatically without a version bump in this repo.
+- A CRD field can legitimately be named `properties`, so the generator's `additional_properties()` patch only recurses into a `properties` key's *values* (the field schemas), not the key itself — otherwise a field's own schema gets mistaken for the enclosing object's `{field name: schema}` map and corrupted.
+
+### Usage
+
+```yaml
+steps:
+  - template: steps/charts/validate.yaml@cnp-azuredevops-libraries
+    parameters:
+      chartName: my-chart
+      chartReleaseName: my-chart-ci
+      chartNamespace: my-chart-ci
+      kubeconformValuesFile: ci-values-kubeconform.yaml
+      generateAsoSchemas: true
+```
+
+## Unit and snapshot tests
+
+`runSnapshotTests` and `runUnitTests` each install (or reinstall, if the version differs) the `helm-unittest` plugin at `helmUnittestVersion`, then run `helm unittest` with `valuesFile` and `helmUnittestValuesFile`.
+
+- Snapshot tests always run the full `tests/snapshot-tests/*.yaml` set.
+- Unit tests run the full `tests/unit-tests/*_test.yaml` set by default, or a single file when `unitTestFile` is set. `unitTestFile` is read via a heredoc rather than a plain variable assignment, to avoid quoting/word-splitting issues with the raw parameter value, and is restricted to `[A-Za-z0-9._-]+` to block path traversal or shell injection (e.g. `../../somefile`, `somefile; rm -rf /`).
+
+## Helm test log capture
+
+The `Helm Test` step runs `helm test` without `--logs`, since that flag does not retrieve logs for Job-based test hooks — only Pod-based ones. The step retrieves logs itself afterwards instead:
+
+1. Looks up test hook resources labelled `app.kubernetes.io/instance=<chartReleaseName>`, preferring Jobs over Pods
+2. If no labelled Jobs are found, falls back to matching Job names by the `<chartReleaseName>` prefix, in case the chart's test hooks aren't labelled
+3. Streams logs from whichever resource type was found
+
