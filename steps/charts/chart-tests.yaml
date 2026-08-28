@@ -3,7 +3,7 @@ parameters:
   helmUnittestVersion: "v1.1.2"
   runSnapshotTests: false
   helmUnittestValuesFiles:
-    - "ci-values-minimal.yaml"
+    - "ci-values.yaml"
   runUnitTests: false
   helmUnittestFile: ""
   chartType: "application"
