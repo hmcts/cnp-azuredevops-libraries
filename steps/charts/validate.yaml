@@ -27,9 +27,10 @@ parameters:
   helmUnittestValuesFiles:
     - "ci-values-minimal.yaml"
   runUnitTests: false
-  unitTestFile: ""
   helmUnittestValuesFile: "ci-values-minimal.yaml"
   helmUnittestVersion: "v1.1.2"
+  chartType: "application"
+  helmUnittestFile: ""
   clustersToCheck:
     - aksResourceGroupName: cft-preview-00-rg
       aksClusterName: cft-preview-00-aks

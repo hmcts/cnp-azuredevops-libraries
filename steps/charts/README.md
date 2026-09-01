@@ -165,10 +165,11 @@ steps:
 
 ## Unit and snapshot tests
 
-`runSnapshotTests` and `runUnitTests` each install (or reinstall, if the version differs) the `helm-unittest` plugin at `helmUnittestVersion`, then run `helm unittest` with `valuesFile` and `helmUnittestValuesFile`.
+`runSnapshotTests` and `runUnitTests` each install (or reinstall, if the version differs) the `helm-unittest` plugin at `helmUnittestVersion`, then run `helm unittest` with `valuesFile` and `helmUnittestValuesFiles`.
 
 - Snapshot tests always run the full `tests/snapshot-tests/*.yaml` set.
-- Unit tests run the full `tests/unit-tests/*_test.yaml` set by default, or a single file when `unitTestFile` is set. `unitTestFile` is read via a heredoc rather than a plain variable assignment, to avoid quoting/word-splitting issues with the raw parameter value, and is restricted to `[A-Za-z0-9._-]+` to block path traversal or shell injection (e.g. `../../somefile`, `somefile; rm -rf /`).
+- Unit tests run the full `tests/unit-tests/*_test.yaml` set by default, or a single file when `helmUnittestFile` is set. `helmUnittestFile` is read via a heredoc rather than a plain variable assignment, 
+to avoid quoting/word-splitting issues with the raw parameter value, and is restricted to `[A-Za-z0-9._-]+` to block path traversal or shell injection (e.g. `../../somefile`, `somefile; rm -rf /`).
 
 ## Helm test log capture
 
