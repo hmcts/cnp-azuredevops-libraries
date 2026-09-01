@@ -38,7 +38,7 @@ steps:
 | `chartNamespace`               | _(required)_ | Kubernetes namespace for the release |
 | `chartPath`                    | `./` | Path to the chart root; combined with `chartName` when not `./` |
 | `createNamespace`              | `false` | When `true`, enables namespace lifecycle management and post-test cleanup |
-| `helmVersion`                  | `3.17.1` | Helm version to install |
+| `helmVersion`                  | `4.2.4` | Helm version to install |
 | `helmInstallTimeout`           | `120` | Seconds to wait for `helm install` |
 | `helmTestTimeout`              | `300` | Seconds to wait for `helm test` |
 | `helmDeleteWait`               | `0` | Seconds to wait after pre-install helm delete |
@@ -56,10 +56,11 @@ steps:
 | `asoVersion`                   | `v2.17.0` | ASO release tag to source local CRD schemas from — see [ASO CRD schema generation](#aso-crd-schema-generation) below |
 | `asoSchemaRoot`                | `$(Agent.TempDirectory)/aso-schemas` | Local directory the generated ASO schemas are written to |
 | `runSnapshotTests`             | `false` | Runs `helm-unittest` snapshot tests from `tests/snapshot-tests/*.yaml` |
-| `helmUnittestValuesFiles`      | `["ci-values-minimal.yaml"]` | Array of values files used to run snapshot tests; one `helm unittest` run per file |
+| `helmUnittestValuesFiles`      | `["ci-values-minimal.yaml"]` | Array of values files used to run snapshot and unit tests; one `helm unittest` run per file |
 | `runUnitTests`                 | `false` | Runs `helm-unittest` assertion tests from `tests/unit-tests/*_test.yaml` |
+| `chartType`                    | `application` | Chart type from `Chart.yaml` (`application` or `library`); library charts are temporarily treated as application for `helm-unittest` |
 | `helmUnittestFile`             | _(empty)_ | Optional single unit test file name under `tests/unit-tests/` |
-| `helmUnittestValuesFile`       | `ci-values-minimal.yaml` | Secondary values file for unit tests and default snapshot test run |
+| `helmUnittestValuesFile`       | `ci-values-minimal.yaml` | Deprecated: use `helmUnittestValuesFiles` |
 | `helmUnittestVersion`          | `v1.1.2` | Version of `helm-unittest` plugin to install |
 
 ## Namespace lifecycle (`createNamespace`)
