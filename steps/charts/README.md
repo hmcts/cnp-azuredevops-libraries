@@ -38,7 +38,7 @@ steps:
 | `chartNamespace`               | _(required)_ | Kubernetes namespace for the release |
 | `chartPath`                    | `./` | Path to the chart root; combined with `chartName` when not `./` |
 | `createNamespace`              | `false` | When `true`, enables namespace lifecycle management and post-test cleanup |
-| `helmVersion`                  | `3.17.1` | Helm version to install |
+| `helmVersion`                  | `4.2.4` | Helm version to install |
 | `helmInstallTimeout`           | `120` | Seconds to wait for `helm install` |
 | `helmTestTimeout`              | `300` | Seconds to wait for `helm test` |
 | `helmDeleteWait`               | `0` | Seconds to wait after pre-install helm delete |
