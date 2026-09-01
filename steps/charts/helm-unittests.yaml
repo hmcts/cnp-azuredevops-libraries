@@ -1,0 +1,88 @@
+parameters:
+  valuesFile: "ci-values.yaml"
+  helmUnittestVersion: "v1.1.2"
+  runSnapshotTests: false
+  helmUnittestValuesFiles:
+    - "ci-values.yaml"
+  runUnitTests: false
+  helmUnittestFile: ""
+  chartType: "application"
+  workingDirectory: "$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)"
+
+steps:
+  - ${{ if or(eq(parameters.runSnapshotTests, true), eq(parameters.runUnitTests, true)) }}:
+    - script: |
+        DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
+        DESIRED_VERSION="${DESIRED_VERSION,,}"
+        CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
+
+        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ]; then
+          helm plugin uninstall unittest >/dev/null 2>&1 || true
+          # helm v4 plugin installs require provenance verification, but the helm-unittest plugin does not have a signature.
+          helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" --verify=false >/tmp/helm-unittest-install.log 2>&1 || {
+            cat /tmp/helm-unittest-install.log
+            exit 1
+          }
+        fi
+
+        INSTALLED_VERSION=$(helm plugin list | awk '$1=="unittest" {print $2}')
+        echo "Installed version ${INSTALLED_VERSION:-unknown} of plugin helm-unittest"
+      workingDirectory: ${{ parameters.workingDirectory }}
+      displayName: "Install helm-unittest plugin"
+    - script: |
+        if [[ "${{ parameters.chartType }}" == "library" ]]; then
+          yq eval -i '.type = "application"' $(buildRepoSuffix)/Chart.yaml
+          echo "Changed chart type to 'application' in $(buildRepoSuffix)/Chart.yaml"
+          echo "##vso[task.setvariable variable=chartTypeModified;]true"
+        fi
+      workingDirectory: ${{ parameters.workingDirectory }}
+      displayName: "Change chart type to 'application' if needed"
+    - script: |
+        # Set the chart target name from the repository suffix, e.g. `chart-function` -> `function`
+        BUILD_REPO_SUFFIX="$(buildRepoSuffix)"
+        chartTarget="${BUILD_REPO_SUFFIX#chart-}"
+        echo "Chart target: $chartTarget"
+        echo "##vso[task.setvariable variable=chartTarget;]$chartTarget"
+      workingDirectory: ${{ parameters.workingDirectory }}
+      displayName: "Set chart target directory"
+
+  - ${{ if and(eq(parameters.runSnapshotTests, true), gt(length(parameters.helmUnittestValuesFiles), 0)) }}:
+    - ${{ each testValuesFile in parameters.helmUnittestValuesFiles }}:
+      - script: |
+          VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.valuesFile }}"
+          SNAPSHOT_VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ testValuesFile }}"
+          helm unittest $(chartTarget) \
+            --values "$VALUES_FILE" \
+            --values "$SNAPSHOT_VALUES_FILE" \
+            -f 'tests/snapshot-tests/*.yaml'
+        workingDirectory: ${{ parameters.workingDirectory }}
+        displayName: "helm-unittest snapshot tests (${{ testValuesFile }})"
+
+  - ${{ if and(eq(parameters.runUnitTests, true), gt(length(parameters.helmUnittestValuesFiles), 0)) }}:
+    - ${{ each testValuesFile in parameters.helmUnittestValuesFiles }}:
+      - script: |
+          VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.valuesFile }}"
+          UNITTEST_VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ testValuesFile }}"
+
+          read -r UNIT_TEST_FILE <<'EOF'
+            ${{ parameters.helmUnittestFile }}
+          EOF
+          UNIT_TEST_FILES="tests/unit-tests/*_test.yaml"
+          if [[ -n "$UNIT_TEST_FILE" ]]; then
+            [[ "$UNIT_TEST_FILE" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "Invalid helmUnittestFile: $UNIT_TEST_FILE"; exit 1; };
+            UNIT_TEST_FILES="tests/unit-tests/$UNIT_TEST_FILE";
+          fi
+  
+          helm unittest $(chartTarget) \
+            --values "$VALUES_FILE" \
+            --values "$UNITTEST_VALUES_FILE" \
+            -f "$UNIT_TEST_FILES"
+        workingDirectory: ${{ parameters.workingDirectory }}
+        displayName: "helm-unittest assertion tests ($UNIT_TEST_FILES)"
+
+  - ${{ if and(eq(variables['chartTypeModified'], 'true'), eq(parameters.chartType, 'library')) }}:
+    - script: |
+        yq eval -i '.type = "library"' $(buildRepoSuffix)/Chart.yaml
+        echo "Reverted chart type to 'library' in $(buildRepoSuffix)/Chart.yaml"
+      workingDirectory: ${{ parameters.workingDirectory }}
+      displayName: "Revert chart type to 'library' if it was modified"

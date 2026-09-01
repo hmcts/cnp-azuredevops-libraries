@@ -28,38 +28,40 @@ steps:
 
 ## Parameters
 
-| Parameter | Default | Description |
-|---|---|---|
-| `serviceConnection` | `DCD-CFTAPPS-DEV` | Azure service connection for AKS auth |
-| `registryServiceConnection` | `azurerm-prod` | Azure service connection for ACR login |
-| `acrName` | `hmctsprod` | ACR instance to authenticate against |
-| `chartName` | _(required)_ | Chart directory name (relative to `chartPath`) |
-| `chartReleaseName` | _(required)_ | Helm release name used for install/test/delete |
-| `chartNamespace` | _(required)_ | Kubernetes namespace for the release |
-| `chartPath` | `./` | Path to the chart root; combined with `chartName` when not `./` |
-| `createNamespace` | `false` | When `true`, enables namespace lifecycle management and post-test cleanup |
-| `helmVersion` | `3.17.1` | Helm version to install |
-| `helmInstallTimeout` | `120` | Seconds to wait for `helm install` |
-| `helmTestTimeout` | `300` | Seconds to wait for `helm test` |
-| `helmDeleteWait` | `0` | Seconds to wait after pre-install helm delete |
-| `helmInstallWait` | `0` | Seconds to wait after helm install before testing |
-| `valuesFile` | `ci-values.yaml` | Values file passed to `helm install` |
-| `additionalHelmArgs` | _(empty)_ | Extra args appended to `helm install` |
-| `aksResourceGroup` | _(empty)_ | Override AKS resource group (skips auto-detect) |
-| `aksCluster` | _(empty)_ | Override AKS cluster name (skips auto-detect) |
-| `clustersToCheck` | cft-preview-00/01 | List of clusters to probe for active cluster auto-detection |
-| `kubeconformValuesFile` | _(empty)_ | Values file used to render manifests for kubeconform; when empty, the kubeconform step is skipped |
-| `kubernetesVersion` | `1.35.0` | Kubernetes version kubeconform validates manifests against |
-| `kubeconformVersion` | `v0.6.7` | kubeconform release to install |
+| Parameter                      | Default | Description |
+|--------------------------------|---|---|
+| `serviceConnection`            | `DCD-CFTAPPS-DEV` | Azure service connection for AKS auth |
+| `registryServiceConnection`    | `azurerm-prod` | Azure service connection for ACR login |
+| `acrName`                      | `hmctsprod` | ACR instance to authenticate against |
+| `chartName`                    | _(required)_ | Chart directory name (relative to `chartPath`) |
+| `chartReleaseName`             | _(required)_ | Helm release name used for install/test/delete |
+| `chartNamespace`               | _(required)_ | Kubernetes namespace for the release |
+| `chartPath`                    | `./` | Path to the chart root; combined with `chartName` when not `./` |
+| `createNamespace`              | `false` | When `true`, enables namespace lifecycle management and post-test cleanup |
+| `helmVersion`                  | `4.2.4` | Helm version to install |
+| `helmInstallTimeout`           | `120` | Seconds to wait for `helm install` |
+| `helmTestTimeout`              | `300` | Seconds to wait for `helm test` |
+| `helmDeleteWait`               | `0` | Seconds to wait after pre-install helm delete |
+| `helmInstallWait`              | `0` | Seconds to wait after helm install before testing |
+| `valuesFile`                   | `ci-values.yaml` | Values file passed to `helm install` |
+| `additionalHelmArgs`           | _(empty)_ | Extra args appended to `helm install` |
+| `aksResourceGroup`             | _(empty)_ | Override AKS resource group (skips auto-detect) |
+| `aksCluster`                   | _(empty)_ | Override AKS cluster name (skips auto-detect) |
+| `clustersToCheck`              | cft-preview-00/01 | List of clusters to probe for active cluster auto-detection |
+| `kubeconformValuesFile`        | _(empty)_ | Values file used to render manifests for kubeconform; when empty, the kubeconform step is skipped |
+| `kubernetesVersion`            | `1.35.0` | Kubernetes version kubeconform validates manifests against |
+| `kubeconformVersion`           | `v0.6.7` | kubeconform release to install |
 | `kubeconformCrdSchemaLocation` | datreeio/CRDs-catalog template | Final fallback `-schema-location` for any CRD not covered by the built-in Kubernetes schemas or the auto-generated ASO schemas below (e.g. KEDA). Override to point at a fork/mirror or a static schema file if a chart's CRD is missing or out of date |
-| `generateAsoSchemas` | `false` | Opt-in: locally generate ASO CRD schemas for kubeconform — see [ASO CRD schema generation](#aso-crd-schema-generation) below |
-| `asoVersion` | `v2.17.0` | ASO release tag to source local CRD schemas from — see [ASO CRD schema generation](#aso-crd-schema-generation) below |
-| `asoSchemaRoot` | `$(Agent.TempDirectory)/aso-schemas` | Local directory the generated ASO schemas are written to |
-| `runSnapshotTests` | `false` | Run `helm-unittest` snapshot tests (`tests/snapshot-tests/*.yaml`) |
-| `runUnitTests` | `false` | Run `helm-unittest` assertion tests — see [Unit and snapshot tests](#unit-and-snapshot-tests) below |
-| `unitTestFile` | _(empty)_ | Restrict `runUnitTests` to a single file — see [Unit and snapshot tests](#unit-and-snapshot-tests) below |
-| `helmUnittestValuesFile` | `ci-values-minimal.yaml` | Values file passed to `helm unittest` alongside `valuesFile` |
-| `helmUnittestVersion` | `v0.8.0` | `helm-unittest` plugin version to install (case-insensitive comparison; only reinstalls when the installed version differs) |
+| `generateAsoSchemas`           | `false` | Opt-in: locally generate ASO CRD schemas for kubeconform — see [ASO CRD schema generation](#aso-crd-schema-generation) below |
+| `asoVersion`                   | `v2.17.0` | ASO release tag to source local CRD schemas from — see [ASO CRD schema generation](#aso-crd-schema-generation) below |
+| `asoSchemaRoot`                | `$(Agent.TempDirectory)/aso-schemas` | Local directory the generated ASO schemas are written to |
+| `runSnapshotTests`             | `false` | Runs `helm-unittest` snapshot tests from `tests/snapshot-tests/*.yaml` |
+| `helmUnittestValuesFiles`      | `["ci-values-minimal.yaml"]` | Array of values files used to run snapshot and unit tests; one `helm unittest` run per file |
+| `runUnitTests`                 | `false` | Runs `helm-unittest` assertion tests from `tests/unit-tests/*_test.yaml` |
+| `chartType`                    | `application` | Chart type from `Chart.yaml` (`application` or `library`); library charts are temporarily treated as application for `helm-unittest` |
+| `helmUnittestFile`             | _(empty)_ | Optional single unit test file name under `tests/unit-tests/` |
+| `helmUnittestValuesFile`       | `ci-values-minimal.yaml` | Deprecated: use `helmUnittestValuesFiles` |
+| `helmUnittestVersion`          | `v1.1.2` | Version of `helm-unittest` plugin to install |
 
 ## Namespace lifecycle (`createNamespace`)
 
@@ -164,10 +166,11 @@ steps:
 
 ## Unit and snapshot tests
 
-`runSnapshotTests` and `runUnitTests` each install (or reinstall, if the version differs) the `helm-unittest` plugin at `helmUnittestVersion`, then run `helm unittest` with `valuesFile` and `helmUnittestValuesFile`.
+`runSnapshotTests` and `runUnitTests` each install (or reinstall, if the version differs) the `helm-unittest` plugin at `helmUnittestVersion`, then run `helm unittest` with `valuesFile` and `helmUnittestValuesFiles`.
 
 - Snapshot tests always run the full `tests/snapshot-tests/*.yaml` set.
-- Unit tests run the full `tests/unit-tests/*_test.yaml` set by default, or a single file when `unitTestFile` is set. `unitTestFile` is read via a heredoc rather than a plain variable assignment, to avoid quoting/word-splitting issues with the raw parameter value, and is restricted to `[A-Za-z0-9._-]+` to block path traversal or shell injection (e.g. `../../somefile`, `somefile; rm -rf /`).
+- Unit tests run the full `tests/unit-tests/*_test.yaml` set by default, or a single file when `helmUnittestFile` is set. `helmUnittestFile` is read via a heredoc rather than a plain variable assignment, 
+to avoid quoting/word-splitting issues with the raw parameter value, and is restricted to `[A-Za-z0-9._-]+` to block path traversal or shell injection (e.g. `../../somefile`, `somefile; rm -rf /`).
 
 ## Helm test log capture
 

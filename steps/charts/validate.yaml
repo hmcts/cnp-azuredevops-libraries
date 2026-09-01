@@ -7,7 +7,7 @@ parameters:
   chartNamespace: ""
   chartPath: "./"
   createNamespace: false
-  helmVersion: "3.17.1"
+  helmVersion: "4.2.4"
   helmInstallTimeout: "120"
   helmTestTimeout: "300"
   helmDeleteWait: "0"
@@ -24,10 +24,13 @@ parameters:
   asoSchemaRoot: "$(Agent.TempDirectory)/aso-schemas"
   generateAsoSchemas: false
   runSnapshotTests: false
+  helmUnittestValuesFiles:
+    - "ci-values-minimal.yaml"
   runUnitTests: false
-  unitTestFile: ""
   helmUnittestValuesFile: "ci-values-minimal.yaml"
-  helmUnittestVersion: "v0.8.0"
+  helmUnittestVersion: "v1.1.2"
+  chartType: "application"
+  helmUnittestFile: ""
   clustersToCheck:
     - aksResourceGroupName: cft-preview-00-rg
       aksClusterName: cft-preview-00-aks
@@ -141,7 +144,7 @@ steps:
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Create namespace for validation"
 
-  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} --wait || true
+  - script: helm delete --namespace ${{ parameters.chartNamespace }} ${{ parameters.chartReleaseName }} || true
     condition: eq(variables['deletePreviousRelease'], 'true')
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
     displayName: "Delete Previous Test Chart"
@@ -176,68 +179,16 @@ steps:
         asoSchemaRoot: "${{ parameters.asoSchemaRoot }}"
         generateAsoSchemas: ${{ parameters.generateAsoSchemas }}
 
-  - ${{ if eq(parameters.runSnapshotTests, true) }}:
-    - script: |
-        VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.valuesFile }}"
-        UNITTEST_VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.helmUnittestValuesFile }}"
-
-        DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
-        DESIRED_VERSION="${DESIRED_VERSION,,}"
-        CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
-
-        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ]; then
-          helm plugin uninstall unittest >/dev/null 2>&1 || true
-          helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" >/tmp/helm-unittest-install.log 2>&1 || {
-            cat /tmp/helm-unittest-install.log
-            exit 1
-          }
-        fi
-
-        INSTALLED_VERSION=$(helm plugin list | awk '$1=="unittest" {print $2}')
-        echo "Installed version ${INSTALLED_VERSION:-unknown} of plugin helm-unittest"
-
-        helm unittest $(chartTarget) \
-          --values "$VALUES_FILE" \
-          --values "$UNITTEST_VALUES_FILE" \
-          -f 'tests/snapshot-tests/*.yaml'
+  - template: helm-unittests.yaml
+    parameters:
+      valuesFile: ${{ parameters.valuesFile }}
+      helmUnittestVersion: ${{ parameters.helmUnittestVersion }}
+      runSnapshotTests: ${{ parameters.runSnapshotTests }}
+      helmUnittestValuesFiles: ${{ parameters.helmUnittestValuesFiles }}
+      runUnitTests: ${{ parameters.runUnitTests }}
+      helmUnittestFile: ${{ parameters.helmUnittestFile }}
+      chartType: ${{ parameters.chartType }}
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "helm-unittest snapshot tests"
-
-  - ${{ if eq(parameters.runUnitTests, true) }}:
-    - script: |
-        VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.valuesFile }}"
-        UNITTEST_VALUES_FILE="$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.helmUnittestValuesFile }}"
-
-        DESIRED_VERSION="${{ parameters.helmUnittestVersion }}"
-        DESIRED_VERSION="${DESIRED_VERSION,,}"
-        CURRENT_VERSION=$(helm plugin list 2>/dev/null | awk '$1=="unittest" {print $2}')
-
-        if [ "$CURRENT_VERSION" != "${DESIRED_VERSION#v}" ]; then
-          helm plugin uninstall unittest >/dev/null 2>&1 || true
-          helm plugin install https://github.com/helm-unittest/helm-unittest --version "$DESIRED_VERSION" >/tmp/helm-unittest-install.log 2>&1 || {
-            cat /tmp/helm-unittest-install.log
-            exit 1
-          }
-        fi
-
-        INSTALLED_VERSION=$(helm plugin list | awk '$1=="unittest" {print $2}')
-        echo "Installed version ${INSTALLED_VERSION:-unknown} of plugin helm-unittest"
-        
-        read -r UNIT_TEST_FILE <<'EOF'
-          ${{ parameters.unitTestFile }}
-        EOF
-        UNIT_TEST_FILES="tests/unit-tests/*_test.yaml"
-        if [[ -n "$UNIT_TEST_FILE" ]]; then 
-         [[ "$UNIT_TEST_FILE" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "Invalid unitTestFile: $UNIT_TEST_FILE"; exit 1; }; 
-         UNIT_TEST_FILES="tests/unit-tests/$UNIT_TEST_FILE"; 
-        fi
-
-        helm unittest $(chartTarget) \
-          --values "$VALUES_FILE" \
-          --values "$UNITTEST_VALUES_FILE" \
-          -f "$UNIT_TEST_FILES"
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
-      displayName: "helm-unittest assertion tests"
 
   - script: helm install ${{ parameters.chartReleaseName }} $(chartTarget) --namespace ${{ parameters.chartNamespace }} -f ${{ parameters.valuesFile }} --wait --timeout ${{ parameters.helmInstallTimeout }}s ${{ parameters.additionalHelmArgs }}
     workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
