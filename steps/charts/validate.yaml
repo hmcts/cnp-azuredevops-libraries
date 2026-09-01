@@ -178,7 +178,7 @@ steps:
         asoSchemaRoot: "${{ parameters.asoSchemaRoot }}"
         generateAsoSchemas: ${{ parameters.generateAsoSchemas }}
 
-  - template: chart-tests.yaml
+  - template: helm-unittests.yaml
     parameters:
       valuesFile: ${{ parameters.valuesFile }}
       helmUnittestVersion: ${{ parameters.helmUnittestVersion }}
