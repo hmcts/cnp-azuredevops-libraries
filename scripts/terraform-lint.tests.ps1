@@ -24,7 +24,9 @@ else
       Context "When validated for linting errors" {
         It "Should not return any linting errors for files in <Instance>" -TestCases $TfFolderTestCases {
           Param($Instance)
-          Invoke-Expression "terraform fmt -check=true $Instance" | should -BeNullOrEmpty -Because "all files should pass linting"
+          $fmtOut = & terraform fmt -check=true -diff $Instance 2>&1
+          if ($fmtOut) { Write-Output $fmtOut }
+          @($fmtOut) | Should -BeNullOrEmpty -Because "all files should pass linting"
       }
     }
   }
