@@ -2,7 +2,17 @@
 set -e
 
 rm -rf ~/.tfenv
-git clone -b v3.0.0 --single-branch https://github.com/tfutils/tfenv.git ~/.tfenv
+
+TFENV_VERSION=$1
+
+if [ -z "$TFENV_VERSION" ]; then
+  echo "TFENV_VERSION is not set. Setting to default"
+  TFENV_VERSION="v3.0.0"
+else
+  echo "TFENV_VERSION is set to $TFENV_VERSION"
+fi
+
+git clone -b "$TFENV_VERSION" --single-branch https://github.com/tfutils/tfenv.git ~/.tfenv
 
 if [ $(whoami) == "root" ]; then
   ln -s -f ~/.tfenv/bin/* /usr/local/bin
