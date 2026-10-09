@@ -469,7 +469,7 @@ def main(argv=None):
         today=datetime.date.today(),
         slack_webhook_url=os.getenv("SLACK_WEBHOOK_URL"),
         build_repository=os.getenv("BUILD_REPOSITORY_NAME"),
-        build_url=build_url = f'{os.getenv("SYSTEM_COLLECTIONURI")}{os.getenv("SYSTEM_TEAMPROJECT")}/_build/results?buildId={os.getenv("BUILD_BUILDID")}',
+        build_url=f'{os.getenv("SYSTEM_COLLECTIONURI")}{os.getenv("SYSTEM_TEAMPROJECT")}/_build/results?buildId={os.getenv("BUILD_BUILDID")}',
         github_user=os.getenv("BUILD_SOURCEVERSIONAUTHOR"),
         slack_notifications_enabled=args.slack_notifications == "true",
     )
