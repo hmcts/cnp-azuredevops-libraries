@@ -1,0 +1,10 @@
+# Add this section to nagger-versions.yaml in hmcts/cnp-deprecation-map.
+# Replace the example names with the exact old/new service connection names
+# documented by DTSPO-34618 before merging the map change.
+service_connections:
+  "legacy-service-connection":
+    identity_type: "ServicePrincipal"
+    replacement_identity_type: "ManagedIdentity"
+    replacement_identity_name_suffix: "-WIF-mi"
+    replacement_name_suffix: "-WIF"
+    date_deadline: "2026-11-30"

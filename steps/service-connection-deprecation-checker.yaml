@@ -1,0 +1,44 @@
+---
+parameters:
+  - name: serviceConnections
+    type: object
+    default: []
+  - name: kvConnectedServiceName
+    default: 'azurerm-sandbox'
+  - name: slackNotificationsEnabled
+    type: boolean
+    default: true
+
+steps:
+  - script: |
+      git clone --depth 1 https://github.com/hmcts/cnp-deprecation-map.git
+    displayName: Clone deprecation map
+
+  - task: AzureKeyVault@2
+    displayName: Retrieve Slack webhook URL from Key Vault
+    inputs:
+      runAsPreJob: false
+      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+      keyVaultName: 'infra-vault-nonprod'
+      secretsFilter: 'registry-slack-webhook'
+
+  - ${{ each serviceConnection in parameters.serviceConnections }}:
+    - task: AzureCLI@2
+      displayName: 'Check service connection deprecation: ${{ serviceConnection }}'
+      inputs:
+        azureSubscription: ${{ serviceConnection }}
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          set -euo pipefail
+          python3 "$(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-service-connection-nagger.py" \
+            --filepath "$(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml" \
+            --service-connection "$SERVICE_CONNECTION" \
+            --slack-notifications "${{ parameters.slackNotificationsEnabled }}"
+      env:
+        SERVICE_CONNECTION: ${{ serviceConnection }}
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        SLACK_WEBHOOK_URL: $(registry-slack-webhook)
+        BUILD_REPOSITORY_NAME: $(Build.Repository.Name)
+        BUILD_BUILDURI: $(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)
+        BUILD_SOURCEVERSIONAUTHOR: $(Build.SourceVersionAuthor)
