@@ -6,7 +6,7 @@ parameters:
   - name: kvConnectedServiceName
     default: 'azurerm-sandbox'
   - name: slackNotificationsEnabled
-    type: boolean
+    type: string
     default: false
 
 steps:
