@@ -150,7 +150,7 @@ def get_service_endpoint(service_connection, organization_url, project, access_t
 
     query = urlencode(
         {
-            "endpointNames": service_connection,
+            "actionFilter": "view",
             "api-version": "7.1",
         }
     )

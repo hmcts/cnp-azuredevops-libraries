@@ -5,6 +5,7 @@ import pathlib
 import subprocess
 import tempfile
 import unittest
+from urllib.parse import parse_qs, urlparse
 from unittest import mock
 
 
@@ -171,6 +172,9 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
 
         self.assertEqual(result["id"], "matching")
         request = urlopen.call_args.args[0]
+        query = parse_qs(urlparse(request.full_url).query)
+        self.assertEqual(query["actionFilter"], ["view"])
+        self.assertNotIn("endpointNames", query)
         self.assertEqual(request.get_header("Authorization"), "Bearer token")
 
     @mock.patch.object(MODULE, "notify_slack")
