@@ -266,7 +266,7 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "repo",
             "build-url",
             "alice",
-            slack_notifications_enabled=False,
+            slack_notifications_enabled=false,
         )
 
         self.assertEqual(result, 0)
