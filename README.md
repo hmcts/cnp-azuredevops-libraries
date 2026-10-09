@@ -175,9 +175,11 @@ and Entra service principals.
 Slack notices use the GitHub-author-to-Slack-user mapping from
 `hmcts/github-slack-user-mappings`, matching the existing Terraform nagger;
 no Slack recipient is configured in the deprecation map. The reusable checker
-has a `slackNotificationsEnabled` boolean parameter (default `true`) so Slack
+has a `slackNotificationsEnabled` string parameter (default `false`) so Slack
 delivery can be disabled for testing without disabling pipeline warnings or
-deadline enforcement. See
+deadline enforcement. The checker also accepts a `deprecationMapRef` parameter;
+its current default points to the open DTSPO-34384 map PR branch for pre-merge
+testing and should be changed to `master` after that PR is merged. See
 [`examples/service-connection-deprecation-map.yaml`](examples/service-connection-deprecation-map.yaml)
 for a placeholder example.
 

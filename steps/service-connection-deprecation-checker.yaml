@@ -8,10 +8,14 @@ parameters:
   - name: slackNotificationsEnabled
     type: string
     default: false
+  - name: deprecationMapRef
+    type: string
+    default: feat/DTSPO-34384-service-connection-policy
 
 steps:
   - script: |
-      git clone --depth 1 https://github.com/hmcts/cnp-deprecation-map.git
+      git clone --depth 1 --branch "${{ parameters.deprecationMapRef }}" \
+        https://github.com/hmcts/cnp-deprecation-map.git
     displayName: Clone deprecation map
 
   - task: AzureKeyVault@2
