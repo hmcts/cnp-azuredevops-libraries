@@ -358,10 +358,11 @@ def check_service_connection(
     after_deadline = today > deadline
     level = "error" if after_deadline else "warning"
     status = "is deprecated and must be replaced" if after_deadline else "is deprecated"
+    documentation_link = "https://hmcts.atlassian.net/wiki/spaces/DTSPO/pages/277283418/DTSPO-33859+-+Convert+existing+Azure+DevOps+service+connections+to+Workload+Identity+Federation"
     message = (
         f"Service connection '{service_connection}' {status}. "
-        f"Use '{replacement_name}' by {deadline.isoformat()}. "
-        f"See the service connection migration guidance."
+        f"\nPlease replace existing service connection with '{replacement_name}' before deprecation deadline {deadline.isoformat()}. "
+        f"\nFor more information, see the service connection migration guidance - {documentation_link}. "
     )
     log_pipeline_issue(level, message)
 
@@ -468,7 +469,7 @@ def main(argv=None):
         today=datetime.date.today(),
         slack_webhook_url=os.getenv("SLACK_WEBHOOK_URL"),
         build_repository=os.getenv("BUILD_REPOSITORY_NAME"),
-        build_url=os.getenv("BUILD_BUILDURI"),
+        build_url=build_url = f'{os.getenv("SYSTEM_COLLECTIONURI")}{os.getenv("SYSTEM_TEAMPROJECT")}/_build/results?buildId={os.getenv("BUILD_BUILDID")}',
         github_user=os.getenv("BUILD_SOURCEVERSIONAUTHOR"),
         slack_notifications_enabled=args.slack_notifications == "true",
     )
