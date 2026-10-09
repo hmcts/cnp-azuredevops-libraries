@@ -26,6 +26,74 @@ steps:
       keyVaultName: 'infra-vault-nonprod'
       secretsFilter: 'registry-slack-webhook'
 
+  - bash: |
+    python3 - <<'PY'
+    import json
+    import os
+    from urllib.error import HTTPError, URLError
+    from urllib.parse import urlencode
+    from urllib.request import Request, urlopen
+
+    org = os.environ["SYSTEM_COLLECTIONURI"].rstrip("/")
+    project = os.environ["SYSTEM_TEAMPROJECT"]
+    project_id = "c8947a39-47e3-4236-8bc8-51ff42dbda51"
+    namespace = "49b48001-ca20-4adc-8111-5b60c903a50c"
+    endpoints = {
+        "DCD-CFTAPPS-SBOX": "26222a8b-7fc9-482f-b449-dd29c2cab1ab",
+        "DCD-CFTAPPS-SBOX-WIF": "b9b3abab-f378-4495-b5d7-f1e7f60e919b",
+    }
+    token = os.environ["SYSTEM_ACCESSTOKEN"]
+
+    def get_json(url):
+        request = Request(url, headers={"Authorization": f"Bearer {token}"})
+        try:
+            with urlopen(request, timeout=20) as response:
+                return response.status, json.loads(response.read().decode("utf-8"))
+        except HTTPError as error:
+            return error.code, None
+        except URLError as error:
+            print(f"Request failed: {type(error.reason).__name__}")
+            return None, None
+
+    for name, endpoint_id in endpoints.items():
+        security_token = f"endpoints/{project_id}/{endpoint_id}"
+        print(f"\n--- {name} ({endpoint_id}) ---")
+
+        for permission, label in ((1, "Use"), (16, "ViewEndpoint")):
+            query = urlencode({
+                "tokens": security_token,
+                "alwaysAllowAdministrators": "false",
+                "api-version": "7.1",
+            })
+            url = f"{org}/_apis/permissions/{namespace}/{permission}?{query}"
+            status, result = get_json(url)
+            values = result.get("value") if isinstance(result, dict) else None
+            print(f"HasPermissions {label}: HTTP {status}; result={values}")
+
+        direct_url = (
+            f"{org}/{project}/_apis/serviceendpoint/endpoints/"
+            f"{endpoint_id}?api-version=7.1"
+        )
+        status, endpoint = get_json(direct_url)
+        returned_name = endpoint.get("name") if isinstance(endpoint, dict) else None
+        returned_id = endpoint.get("id") if isinstance(endpoint, dict) else None
+        print(f"Direct endpoint GET: HTTP {status}; name={returned_name}; id={returned_id}")
+
+        list_query = urlencode({"endpointNames": name, "api-version": "7.1"})
+        list_url = f"{org}/{project}/_apis/serviceendpoint/endpoints?{list_query}"
+        status, result = get_json(list_url)
+        found_names = [
+            item.get("name")
+            for item in (result.get("value", []) if isinstance(result, dict) else [])
+            if isinstance(item, dict)
+        ]
+        print(f"Name-filtered endpoint list: HTTP {status}; names={found_names}")
+    PY
+  displayName: Diagnose service connection visibility
+  continueOnError: true
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    
   - ${{ each serviceConnection in parameters.serviceConnections }}:
     - task: AzureCLI@2
       displayName: 'Check service connection deprecation: ${{ serviceConnection }}'
