@@ -7,7 +7,7 @@ parameters:
     default: 'azurerm-sandbox'
   - name: slackNotificationsEnabled
     type: string
-    default: false
+    default: 'false'
   - name: deprecationMapRef
     type: string
     default: feat/DTSPO-34384-service-connection-policy
@@ -58,7 +58,7 @@ steps:
       for name, endpoint_id in endpoints.items():
           security_token = f"endpoints/{project_id}/{endpoint_id}"
           print(f"\n--- {name} ({endpoint_id}) ---")
-  
+
           for permission, label in ((1, "Use"), (16, "ViewEndpoint")):
               query = urlencode({
                   "tokens": security_token,
@@ -69,7 +69,7 @@ steps:
               status, result = get_json(url)
               values = result.get("value") if isinstance(result, dict) else None
               print(f"HasPermissions {label}: HTTP {status}; result={values}")
-  
+
           direct_url = (
               f"{org}/{project}/_apis/serviceendpoint/endpoints/"
               f"{endpoint_id}?api-version=7.1"
@@ -78,7 +78,7 @@ steps:
           returned_name = endpoint.get("name") if isinstance(endpoint, dict) else None
           returned_id = endpoint.get("id") if isinstance(endpoint, dict) else None
           print(f"Direct endpoint GET: HTTP {status}; name={returned_name}; id={returned_id}")
-  
+
           list_query = urlencode({"endpointNames": name, "api-version": "7.1"})
           list_url = f"{org}/{project}/_apis/serviceendpoint/endpoints?{list_query}"
           status, result = get_json(list_url)
@@ -88,12 +88,12 @@ steps:
               if isinstance(item, dict)
           ]
           print(f"Name-filtered endpoint list: HTTP {status}; names={found_names}")
-    PY
-  displayName: Diagnose service connection visibility
-  continueOnError: true
-  env:
-    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-    
+      PY
+    displayName: Diagnose service connection visibility
+    continueOnError: true
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
   - ${{ each serviceConnection in parameters.serviceConnections }}:
     - task: AzureCLI@2
       displayName: 'Check service connection deprecation: ${{ serviceConnection }}'
