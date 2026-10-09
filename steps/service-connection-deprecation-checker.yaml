@@ -7,7 +7,7 @@ parameters:
     default: 'azurerm-sandbox'
   - name: slackNotificationsEnabled
     type: boolean
-    default: true
+    default: false
 
 steps:
   - script: |
