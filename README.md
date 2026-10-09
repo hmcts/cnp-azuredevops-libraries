@@ -161,9 +161,12 @@ In terraform you can then reference this variable as `var.foo`
 The Terraform template checks the `serviceConnection` and, when different, the
 `backendServiceConnection` against the static `service_connections` policy in
 `cnp-deprecation-map/nagger-versions.yaml`. The nagger reads this file at
-runtime and does not modify it. Each entry specifies the legacy identity type,
-replacement identity type, suffixes used to derive the replacement connection
-name and validate its Azure service principal display name, and the deadline.
+runtime and does not modify it. Map keys are policy identifiers, not Azure
+DevOps service connection names; policies are selected by the current identity
+type. Only one policy may match a given identity type. Each entry specifies
+the legacy identity type, replacement identity type, suffixes used to derive
+the replacement connection name and validate its Azure service principal
+display name, and the deadline.
 It only warns or fails when the legacy identity, replacement connection, and
 replacement identity all match the policy; otherwise it logs why the check was
 skipped. The pipeline identity needs permission to read service connections

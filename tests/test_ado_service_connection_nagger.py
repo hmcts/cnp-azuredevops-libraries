@@ -38,11 +38,11 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "identity_name": "legacy-WIF-mi",
         }
 
-    def test_load_config_returns_matching_connection(self):
+    def test_load_config_returns_policies_keyed_by_identifier(self):
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8") as config_file:
             config_file.write(
                 "service_connections:\n"
-                "  legacy:\n"
+                "  policy-id-not-ado-name:\n"
                 "    identity_type: ServicePrincipal\n"
                 "    replacement_identity_type: ManagedIdentity\n"
                 "    replacement_identity_name_suffix: -WIF-mi\n"
@@ -51,20 +51,50 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             )
             config_file.flush()
 
-            result = MODULE.load_service_connection_config(config_file.name, "legacy")
+            result = MODULE.load_service_connection_policies(config_file.name)
 
-        self.assertEqual(result["replacement_name_suffix"], "-WIF")
-        self.assertEqual(result["replacement_identity_name_suffix"], "-WIF-mi")
-        self.assertEqual(result["date_deadline"], datetime.date(2026, 11, 30))
+        self.assertEqual(len(result), 1)
+        policy_id, policy = result[0]
+        self.assertEqual(policy_id, "policy-id-not-ado-name")
+        self.assertEqual(policy["replacement_name_suffix"], "-WIF")
+        self.assertEqual(policy["replacement_identity_name_suffix"], "-WIF-mi")
+        self.assertEqual(policy["date_deadline"], datetime.date(2026, 11, 30))
 
-    def test_load_config_returns_none_for_unmapped_connection(self):
+    def test_load_config_returns_empty_list_when_no_policies(self):
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8") as config_file:
             config_file.write("service_connections: {}\n")
             config_file.flush()
 
-            result = MODULE.load_service_connection_config(config_file.name, "other")
+            result = MODULE.load_service_connection_policies(config_file.name)
+
+        self.assertEqual(result, [])
+
+    def test_policy_selection_ignores_policy_identifier(self):
+        policies = [("arbitrary-policy-id", self.config)]
+
+        result = MODULE.select_service_connection_policy(
+            policies, "ServicePrincipal"
+        )
+
+        self.assertEqual(result, ("arbitrary-policy-id", self.config))
+
+    def test_policy_selection_returns_none_when_identity_type_does_not_match(self):
+        policies = [("arbitrary-policy-id", self.config)]
+
+        result = MODULE.select_service_connection_policy(
+            policies, "ManagedIdentity"
+        )
 
         self.assertIsNone(result)
+
+    def test_policy_selection_fails_if_identity_type_is_ambiguous(self):
+        policies = [
+            ("first-policy", self.config),
+            ("second-policy", self.config),
+        ]
+
+        with self.assertRaisesRegex(ValueError, "Multiple service connection policies"):
+            MODULE.select_service_connection_policy(policies, "ServicePrincipal")
 
     def test_get_github_slack_user_mapping_returns_user_id(self):
         mappings = {
@@ -266,7 +296,7 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "repo",
             "build-url",
             "alice",
-            slack_notifications_enabled=false,
+            slack_notifications_enabled=False,
         )
 
         self.assertEqual(result, 0)

@@ -17,7 +17,7 @@ import yaml
 logger = logging.getLogger("ado-service-connection-nagger")
 
 
-def load_service_connection_config(filepath, service_connection):
+def load_service_connection_policies(filepath):
     with open(filepath, encoding="utf-8") as config_file:
         config = yaml.safe_load(config_file) or {}
 
@@ -25,47 +25,67 @@ def load_service_connection_config(filepath, service_connection):
     if not isinstance(connections, dict):
         raise ValueError("'service_connections' must be a mapping")
 
-    connection = connections.get(service_connection)
-    if connection is None:
-        return None
-    if not isinstance(connection, dict):
-        raise ValueError(
-            f"Configuration for service connection '{service_connection}' must be a mapping"
-        )
+    policies = []
+    for policy_id, connection in connections.items():
+        if not isinstance(connection, dict):
+            raise ValueError(
+                f"Service connection policy '{policy_id}' must be a mapping"
+            )
 
-    identity_type = connection.get("identity_type")
-    replacement_identity_type = connection.get("replacement_identity_type")
-    replacement_identity_name_suffix = connection.get(
-        "replacement_identity_name_suffix"
-    )
-    replacement_name_suffix = connection.get("replacement_name_suffix")
-    deadline = connection.get("date_deadline")
-    required = {
-        "identity_type": identity_type,
-        "replacement_identity_type": replacement_identity_type,
-        "replacement_identity_name_suffix": replacement_identity_name_suffix,
-        "replacement_name_suffix": replacement_name_suffix,
-        "date_deadline": deadline,
-    }
-    missing = [key for key, value in required.items() if not value]
-    if missing:
-        raise ValueError(
-            f"Service connection '{service_connection}' is missing required "
-            f"configuration: {', '.join(missing)}"
+        identity_type = connection.get("identity_type")
+        replacement_identity_type = connection.get("replacement_identity_type")
+        replacement_identity_name_suffix = connection.get(
+            "replacement_identity_name_suffix"
         )
+        replacement_name_suffix = connection.get("replacement_name_suffix")
+        deadline = connection.get("date_deadline")
+        required = {
+            "identity_type": identity_type,
+            "replacement_identity_type": replacement_identity_type,
+            "replacement_identity_name_suffix": replacement_identity_name_suffix,
+            "replacement_name_suffix": replacement_name_suffix,
+            "date_deadline": deadline,
+        }
+        missing = [key for key, value in required.items() if not value]
+        if missing:
+            raise ValueError(
+                f"Service connection policy '{policy_id}' is missing required "
+                f"configuration: {', '.join(missing)}"
+            )
 
-    if isinstance(deadline, datetime.datetime):
-        deadline = deadline.date()
-    elif not isinstance(deadline, datetime.date):
-        deadline = datetime.date.fromisoformat(str(deadline))
-    return {
-        **connection,
-        "identity_type": identity_type,
-        "replacement_identity_type": replacement_identity_type,
-        "replacement_identity_name_suffix": replacement_identity_name_suffix,
-        "replacement_name_suffix": replacement_name_suffix,
-        "date_deadline": deadline,
-    }
+        if isinstance(deadline, datetime.datetime):
+            deadline = deadline.date()
+        elif not isinstance(deadline, datetime.date):
+            deadline = datetime.date.fromisoformat(str(deadline))
+        policies.append(
+            (
+                policy_id,
+                {
+                    **connection,
+                    "identity_type": identity_type,
+                    "replacement_identity_type": replacement_identity_type,
+                    "replacement_identity_name_suffix": replacement_identity_name_suffix,
+                    "replacement_name_suffix": replacement_name_suffix,
+                    "date_deadline": deadline,
+                },
+            )
+        )
+    return policies
+
+
+def select_service_connection_policy(policies, identity_type):
+    matching_policies = [
+        (policy_id, policy)
+        for policy_id, policy in policies
+        if policy["identity_type"] == identity_type
+    ]
+    if len(matching_policies) > 1:
+        policy_ids = ", ".join(policy_id for policy_id, _ in matching_policies)
+        raise ValueError(
+            f"Multiple service connection policies match identity type "
+            f"'{identity_type}': {policy_ids}"
+        )
+    return matching_policies[0] if matching_policies else None
 
 
 def normalize_identity_type(service_principal_type):
@@ -374,27 +394,71 @@ def main(argv=None):
         handlers=[logging.StreamHandler(stream=sys.stdout)],
     )
 
-    config = load_service_connection_config(args.filepath, args.service_connection)
-    if config is None:
-        logger.info("No deprecation-map entry for service connection '%s'", args.service_connection)
+    policies = load_service_connection_policies(args.filepath)
+    if not policies:
+        logger.info("No service connection deprecation policies are configured")
         return 0
 
     current_identity_info = get_current_identity_info()
+    logger.info(
+        "Using service connection '%s' with identity '%s' (type: %s)",
+        args.service_connection,
+        current_identity_info["identity_name"],
+        current_identity_info["identity_type"],
+    )
+    selected_policy = select_service_connection_policy(
+        policies, current_identity_info["identity_type"]
+    )
+    if selected_policy is None:
+        logger.info(
+            "Skipping service connection '%s': no policy matches identity type '%s'",
+            args.service_connection,
+            current_identity_info["identity_type"],
+        )
+        return 0
+    policy_id, config = selected_policy
+    logger.info(
+        "Selected deprecation policy '%s' for service connection '%s'",
+        policy_id,
+        args.service_connection,
+    )
+
     replacement_endpoint = None
     replacement_identity_info = None
     if current_identity_info["identity_type"] == config["identity_type"]:
         replacement_name = args.service_connection + config["replacement_name_suffix"]
+        logger.info(
+            "Looking for replacement service connection '%s'",
+            replacement_name,
+        )
         replacement_endpoint = get_service_endpoint(
             replacement_name,
             os.getenv("SYSTEM_COLLECTIONURI"),
             os.getenv("SYSTEM_TEAMPROJECT"),
             os.getenv("SYSTEM_ACCESSTOKEN"),
         )
+        if replacement_endpoint is None:
+            logger.info(
+                "Replacement service connection '%s' does not exist",
+                replacement_name,
+            )
+        else:
+            logger.info(
+                "Found replacement service connection '%s'",
+                replacement_endpoint.get("name", replacement_name),
+            )
         replacement_identity_info = (
             get_endpoint_identity_info(replacement_endpoint)
             if replacement_endpoint is not None
             else None
         )
+        if replacement_identity_info is not None:
+            logger.info(
+                "Replacement service connection '%s' uses identity '%s' (type: %s)",
+                replacement_endpoint.get("name", replacement_name),
+                replacement_identity_info["identity_name"],
+                replacement_identity_info["identity_type"],
+            )
     return check_service_connection(
         service_connection=args.service_connection,
         config=config,
