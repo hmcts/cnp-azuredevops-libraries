@@ -104,6 +104,14 @@ steps:
   - bash: echo ${{ parameters.environment }}
     displayName: Display environment parameter
 
+  - template: ./service-connection-deprecation-checker.yaml
+    parameters:
+      serviceConnections:
+        - ${{ parameters.serviceConnection }}
+        - ${{ if and(ne(parameters.backendServiceConnection, ''), ne(parameters.backendServiceConnection, parameters.serviceConnection)) }}:
+          - ${{ parameters.backendServiceConnection }}
+      kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+
   - template: ./set-build-repo-suffix-env-var.yaml
   - template: ./keyvault-read.yaml
     parameters:

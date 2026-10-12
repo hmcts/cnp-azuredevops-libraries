@@ -156,6 +156,38 @@ Which then can be used as variable within terraform code as shown in below examp
 ```
 In terraform you can then reference this variable as `var.foo`
 
+### Service connection deprecation check
+
+The Terraform template checks the `serviceConnection` and, when different, the
+`backendServiceConnection` against the static `service_connections` policy in
+`cnp-deprecation-map/nagger-versions.yaml`. The nagger reads this file at
+runtime and does not modify it. Map keys are policy identifiers, not Azure
+DevOps service connection names; policies are selected by the current identity
+type. Only one policy may match a given identity type. Each entry specifies
+the legacy identity type, replacement identity type, suffixes used to derive
+the replacement connection name and validate its Azure service principal
+display name, and the deadline.
+It only warns or fails when the legacy identity, replacement connection, and
+replacement identity all match the policy; otherwise it logs why the check was
+skipped. The pipeline identity needs permission to read service connections
+and Entra service principals.
+
+Slack notices use the GitHub-author-to-Slack-user mapping from
+`hmcts/github-slack-user-mappings`, matching the existing Terraform nagger;
+no Slack recipient is configured in the deprecation map. The reusable checker
+has a `slackNotificationsEnabled` string parameter (default `false`) so Slack
+delivery can be disabled for testing without disabling pipeline warnings or
+deadline enforcement. The checker also accepts a `deprecationMapRef` parameter;
+its current default points to the open DTSPO-34384 map PR branch for pre-merge
+testing and should be changed to `master` after that PR is merged. See
+[`examples/service-connection-deprecation-map.yaml`](examples/service-connection-deprecation-map.yaml)
+for a placeholder example.
+
+Before the deadline, matching deprecated service principals generate a
+pipeline warning and a Slack message; after the deadline, they fail the
+pipeline. Authentication and service endpoint lookup errors fail the check
+rather than being treated as a successful migration.
+
 ### Using tfcmt and tfplan-viewer functions with Terraform
 
 By default, the pipeline will use a tool called tfcmt to post comments on pull requests with the output of the terraform plan command at each stage.
@@ -185,4 +217,3 @@ To enable this, add the following values to your pipeline:
 ```
 
 To also disable the tfcmt functionality, pass the `publishPlanResults` parameter to the terraform.yaml with a value of `false`
-

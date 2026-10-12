@@ -4,6 +4,13 @@ parameters:
   customImageTag: ''
 
 steps:
+- template: ./service-connection-deprecation-checker.yaml
+  parameters:
+    serviceConnections:
+      - ${{ parameters.serviceConnection }}
+      - ${{ if and(ne(parameters.backendServiceConnection, ''), ne(parameters.backendServiceConnection, parameters.serviceConnection)) }}:
+          - ${{ parameters.backendServiceConnection }}
+    kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
 
 # On PR: Set the tag to the PR number
 - script: |
