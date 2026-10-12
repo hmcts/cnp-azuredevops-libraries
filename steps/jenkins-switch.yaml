@@ -2,6 +2,15 @@ parameters:
   serviceConnection: ''
 
 steps:
+
+- template: ./service-connection-deprecation-checker.yaml
+  parameters:
+    serviceConnections:
+      - ${{ parameters.serviceConnection }}
+      - ${{ if and(ne(parameters.backendServiceConnection, ''), ne(parameters.backendServiceConnection, parameters.serviceConnection)) }}:
+          - ${{ parameters.backendServiceConnection }}
+    kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+
 - script: sudo apt-get install python3-setuptools; sudo python3 -m pip install https://github.com/hay/xml2json/zipball/master
   displayName: 'Install xml2json'
 

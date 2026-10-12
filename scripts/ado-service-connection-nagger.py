@@ -361,7 +361,7 @@ def check_service_connection(
     documentation_link = "https://hmcts.atlassian.net/wiki/spaces/DTSPO/pages/277283418/DTSPO-33859+-+Convert+existing+Azure+DevOps+service+connections+to+Workload+Identity+Federation"
     message = (
         f"Service connection '{service_connection}' {status}. "
-        f"\nPlease replace existing service connection with '{replacement_name}' before deprecation deadline {deadline.isoformat()}. "
+        f"\nPlease replace existing service connection in your pipeline with '{replacement_name}' before deprecation deadline {deadline.isoformat()}. "
         f"\nFor more information, see the service connection migration guidance - {documentation_link}. "
     )
     log_pipeline_issue(level, message)

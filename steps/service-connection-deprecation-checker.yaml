@@ -28,7 +28,7 @@ steps:
 
   - ${{ each serviceConnection in parameters.serviceConnections }}:
     - task: AzureCLI@2
-      displayName: 'Check service connection deprecation: ${{ serviceConnection }}'
+      displayName: 'ADO service connection nagger: ${{ serviceConnection }}'
       inputs:
         azureSubscription: ${{ serviceConnection }}
         scriptType: bash
