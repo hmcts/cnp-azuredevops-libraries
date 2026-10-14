@@ -69,6 +69,7 @@
   /* Make 'Yes' (tag-only) badge grey like 'No' */
   .badge.tag-yes { background: var(--muted); color: #fff; }
     .badge.tag-no { background: var(--muted); color: #fff; }
+    .badge.change-read, .badge.read-yes, .badge.read-no { background: var(--muted); color: #fff; }
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
     thead th { background: linear-gradient(var(--bg-alt), var(--bg)); position: sticky; top: 0; z-index: 5; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-soft); padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); }
   thead th.sortable { cursor: pointer; user-select: none; }
@@ -131,6 +132,11 @@
             <button type="button" class="ms-trigger" id="ms-trigger-tags">All</button>
             <div class="ms-panel" id="ms-panel-tags"></div>
           </div>
+          <div class="ms-container" data-filter="data">
+            <span class="ms-label">Data Reads</span>
+            <button type="button" class="ms-trigger" id="ms-trigger-data">All</button>
+            <div class="ms-panel" id="ms-panel-data"></div>
+          </div>
           <label class="ms-search">Search
             <div class="search-box">
               <input type="text" id="search-text" placeholder="Name / details..." />
@@ -151,6 +157,7 @@
         <th>Resource Name</th>
         <th>Change Type</th>
         <th>Tags Only</th>
+        <th>Data Reads</th>
         <th>Details</th>
       </tr>
     </thead>
@@ -175,7 +182,8 @@
       env: getUnique(1),
       location: getUnique(2),
       change: getUnique(4).map(v => v.toLowerCase()),
-      tags: ['yes','no']
+      tags: ['yes','no'],
+      data: ['yes','no']
     };
 
     // Build panel with checkboxes
@@ -226,8 +234,8 @@
       }
     }
 
-    ['stage','env','location','change','tags'].forEach(buildPanel);
-    ['stage','env','location','change','tags'].forEach(updateTriggerLabel);
+    ['stage','env','location','change','tags','data'].forEach(buildPanel);
+    ['stage','env','location','change','tags','data'].forEach(updateTriggerLabel);
 
     // Toggle panel visibility
     document.querySelectorAll('.ms-trigger').forEach(btn => {
@@ -253,14 +261,19 @@
       let cls = 'change-update';
       if (txt.startsWith('create')) cls = 'change-create';
       else if (txt.startsWith('delete') || txt.startsWith('destroy')) cls = 'change-delete';
+      else if (txt.startsWith('read')) cls = 'change-read';
       changeCell.innerHTML = `<span class="badge ${cls}">${changeCell.textContent}</span>`;
       // Tags badge
   const tagsCell = r.cells[5];
       const tYes = tagsCell.textContent.trim().toLowerCase() === 'yes';
   tagsCell.innerHTML = `<span class="badge ${tYes ? 'tag-yes' : 'tag-no'}">${tYes ? 'Yes' : 'No'}</span>`;
       if (tYes) r.classList.add('tag-only-row');
+      // Data reads badge
+      const dataCell = r.cells[6];
+      const dYes = dataCell.textContent.trim().toLowerCase() === 'yes';
+      dataCell.innerHTML = `<span class="badge ${dYes ? 'read-yes' : 'read-no'}">${dYes ? 'Yes' : 'No'}</span>`;
       // Details formatting (monospace for resource names inside quotes )
-  const detailsCell = r.cells[6];
+  const detailsCell = r.cells[7];
       detailsCell.innerHTML = detailsCell.textContent
         .replace(/(\bversion\b)/ig,'<strong>$1</strong>')
         .replace(/(tags?)/ig,'<strong>$1</strong>');
@@ -279,6 +292,7 @@
       const locs = getSelectedValues('location');
       const changes = getSelectedValues('change');
       const tagsSel = getSelectedValues('tags');
+      const dataSel = getSelectedValues('data');
       const search = document.getElementById('search-text').value.toLowerCase().trim();
       let visible = 0;
       rows.forEach(row => {
@@ -288,12 +302,14 @@
         const locVal = row.cells[2].textContent.trim();
         const changeVal = row.cells[4].textContent.trim().toLowerCase();
         const tagsVal = row.cells[5].textContent.trim().toLowerCase();
+        const dataVal = row.cells[6].textContent.trim().toLowerCase();
         const strings = row.textContent.toLowerCase();
         if (stages.length && !stages.includes(stageVal)) show = false;
         if (envs.length && !envs.includes(envVal)) show = false;
         if (locs.length && !locs.includes(locVal)) show = false;
         if (changes.length && !changes.includes(changeVal)) show = false;
         if (tagsSel.length && !tagsSel.includes(tagsVal)) show = false;
+        if (dataSel.length && !dataSel.includes(dataVal)) show = false;
         if (search && !strings.includes(search)) show = false;
         row.style.display = show ? '' : 'none';
         if (show) visible++;
@@ -304,7 +320,7 @@
     }
 
     function resetFilters() {
-      ['stage','env','location','change','tags'].forEach(key => {
+      ['stage','env','location','change','tags','data'].forEach(key => {
         const panel = document.getElementById(`ms-panel-${key}`);
         panel.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
         updateTriggerLabel(key);
