@@ -268,6 +268,7 @@ def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
     elif actions == ['read']:
         change_type = 'read'
     data_reads = rc.get('mode') == 'data' or actions == ['read']
+    null_resource = rc.get('type') == 'null_resource' or bool(re.search(r'(^|\.)null_resource\.', addr or ''))
     summary_lines = diffs[:25]  # cap to avoid huge prompts
     return {
         'address': addr,
@@ -275,7 +276,8 @@ def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
         'change_type': change_type,
         'diffs': summary_lines,
         'tags_only': tags_only,
-        'data_read': data_reads
+        'data_read': data_reads,
+        'null_resource': null_resource
     }
 
 def build_json_summary_text(summaries: List[Dict[str, Any]]) -> str:
@@ -291,6 +293,7 @@ def make_row_from_summary(stage: str, env: str, location: str, summary: Dict[str
     res_name = summary.get('address', '') or ''
     tags_only = 'Yes' if (summary['tags_only'] and summary['change_type'] == 'update') else 'No'
     data_read = 'Yes' if summary['data_read'] else 'No'
+    null_resource = 'Yes' if summary['null_resource'] else 'No'
     # Combine up to first 3 diff lines for richer context
     if summary['tags_only'] and summary['change_type'] == 'update':
         details = 'tags updated'
@@ -299,7 +302,7 @@ def make_row_from_summary(stage: str, env: str, location: str, summary: Dict[str
     else:
         details = summary['change_type']
     details = details.replace('<', '&lt;').replace('>', '&gt;')
-    return f"<tr><td>{stage}</td><td>{env}</td><td>{location}</td><td>{res_name}</td><td>{summary['change_type']}</td><td>{tags_only}</td><td>{data_read}</td><td>{details}</td></tr>"
+    return f"<tr><td>{stage}</td><td>{env}</td><td>{location}</td><td>{res_name}</td><td>{summary['change_type']}</td><td>{tags_only}</td><td>{data_read}</td><td>{null_resource}</td><td>{details}</td></tr>"
 
 for pf in plan_files:
     file_name = os.path.basename(pf)
