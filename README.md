@@ -186,3 +186,49 @@ To enable this, add the following values to your pipeline:
 
 To also disable the tfcmt functionality, pass the `publishPlanResults` parameter to the terraform.yaml with a value of `false`
 
+
+## Container image build (acr-build.yaml)
+
+`steps/acr-build.yaml` runs `az acr build` against an Azure Container Registry. Without any optional parameters it runs exactly:
+
+```bash
+az acr build -r $(acrName) -t $(Build.Repository.Name):$(imageTag) -g $(acrResourceGroup) .
+```
+
+`imageTag` is `pr-<PR number>` on pull requests, the branch name otherwise, or `customImageTag` when set.
+
+| Parameter          | Default | Description |
+|--------------------|---------|-------------|
+| `serviceConnection`| `''`    | Azure service connection used by `AzureCLI@2` |
+| `buildPath`        | `''`    | Working directory for the build |
+| `customImageTag`   | `''`    | Overrides the PR/branch based tag |
+| `imageName`        | `''`    | Image repository name. Empty uses `$(Build.Repository.Name)` |
+| `dockerfile`       | `''`    | Passed as `-f`. Empty uses the default `Dockerfile` |
+| `target`           | `''`    | Passed as `--target` to select a stage of a multi-stage Dockerfile |
+| `acrName`          | `''`    | Registry name. Empty uses the `$(acrName)` pipeline variable |
+| `acrResourceGroup` | `''`    | Registry resource group. Empty uses the `$(acrResourceGroup)` pipeline variable |
+| `additionalTags`   | `[]`    | Extra tags; each adds `-t <imageName>:<tag>` |
+| `buildContext`     | `.`     | Build context passed to `az acr build`, relative to `buildPath` |
+
+### Monorepo example: two images from one Dockerfile
+
+```yaml
+steps:
+  - template: steps/acr-build.yaml@cnp-azuredevops-libraries
+    parameters:
+      serviceConnection: $(serviceConnection)
+      buildPath: app/services/doc-intake-store
+      imageName: my-project/doc-intake-store-listener
+      target: listener
+      additionalTags:
+        - pr-$(System.PullRequest.PullRequestNumber)-$(Build.BuildId)
+
+  - template: steps/acr-build.yaml@cnp-azuredevops-libraries
+    parameters:
+      serviceConnection: $(serviceConnection)
+      buildPath: app/services/doc-intake-store
+      imageName: my-project/doc-intake-store-api
+      target: api
+```
+
+Note: `imageTag` is a single pipeline variable, so both builds above share the same primary tag; the image name distinguishes them.
