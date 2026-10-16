@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import sys
 import argparse
 from typing import List, Dict, Any, Set
 
@@ -8,11 +9,14 @@ from typing import List, Dict, Any, Set
 script_dir = os.path.dirname(os.path.abspath(__file__))
 default_template = os.path.join(script_dir, 'plan.html')
 
-parser = argparse.ArgumentParser(description="Convert Terraform JSON plan(s) to HTML table rows (local only, no AI)")
+parser = argparse.ArgumentParser(description="Convert Terraform JSON plan(s) to an HTML report, or filter the rendered text plan for console output (local only, no AI)")
 parser.add_argument("--plansDir", type=str, required=True, help="Directory containing terraform plan JSON files (terraform show -json or concatenated resource change objects)")
-parser.add_argument("--outputDir", type=str, required=True, help="Directory to write generated plan.html")
+parser.add_argument("--outputDir", type=str, default='', help="Directory to write generated plan.html (required unless --consoleFrom is used)")
 parser.add_argument("--templateFile", type=str, default=default_template, help=f"Path to HTML template (default: {default_template})")
+parser.add_argument("--consoleFrom", type=str, default='', help="Path to 'terraform show' text output; filters and prints it instead of writing HTML")
 args = parser.parse_args()
+if not args.consoleFrom and not args.outputDir:
+    parser.error("--outputDir is required unless --consoleFrom is used")
 
 plans_dir = args.plansDir
 plan_files = [os.path.join(plans_dir, f) for f in os.listdir(plans_dir) if os.path.isfile(os.path.join(plans_dir, f))]
@@ -25,6 +29,69 @@ def read_file_text(p):
 # Collect rows
 html_rows: List[str] = []
 seen_resources = set()  # (stage, env, resource_name)
+summaries_by_address: Dict[str, Dict[str, Any]] = {}
+
+# --- Console mode helpers: classification comes from the JSON summaries above,
+# --- only the tag attribute lines are matched in Terraform's rendered text.
+ANSI = re.compile(r'\x1b\[[0-9;]*m')
+STRING_LIT = re.compile(r'"(?:[^"\\]|\\.)*"')
+CHANGE_MARK = r'(?:~|\+|-|-/\+|\+/-|<=)'
+TEXT_HEADER = re.compile(r'^  # (.+?) (will |must |has )(.+)$')
+TAG_LINE = re.compile(r'^\s*(?:' + CHANGE_MARK + r'\s+)?(?:tags|tags_all)\s*=\s*(.*)')
+SECTION_END = re.compile(r'^(?:Plan:|Changes to Outputs:|Warning:|Error:|Note:|\u2577)')
+
+
+def filter_console(text: str, by_address: Dict[str, Dict[str, Any]]) -> str:
+    raw = text.split('\n')
+    plain = [ANSI.sub('', line) for line in raw]
+
+    start = next((i for i, p in enumerate(plain) if p.startswith('Terraform used the selected providers')), None)
+    if start is None:
+        start = next((i for i, p in enumerate(plain) if p.startswith('Terraform will perform')), None)
+    if start is None:
+        return '  No planned resource changes.'
+
+    end = next((i for i in range(start, len(plain)) if SECTION_END.match(plain[i])), len(plain))
+    headers = [i for i in range(start, end) if TEXT_HEADER.match(plain[i])]
+    if not headers:
+        return '  No planned resource changes.'
+
+    out = raw[start:headers[0]]
+    shown = hidden_tags = 0
+
+    for n, first in enumerate(headers):
+        last = (headers + [end])[n + 1]
+        address = TEXT_HEADER.match(plain[first]).group(1).strip()
+        summary = by_address.get(address)
+
+        # Data reads are always kept; only tag-only updates are dropped.
+        if summary and not summary.get('data_read') and summary.get('tags_only') and summary.get('change_type') == 'update':
+            hidden_tags += 1
+            continue
+
+        # Drop tag attribute lines (and any block they open) from the kept resource.
+        kept = []
+        depth = 0
+        for k in range(first, last):
+            line = plain[k]
+            if depth > 0:
+                flat = STRING_LIT.sub('""', line)
+                depth += flat.count('{') - flat.count('}')
+                continue
+            tag_match = TAG_LINE.match(line) if k > first else None
+            if tag_match:
+                flat = STRING_LIT.sub('""', tag_match.group(1))
+                depth = max(flat.count('{') - flat.count('}'), 0)
+                continue
+            kept.append(k)
+
+        shown += 1
+        out.extend(raw[k] for k in kept)
+
+    total = shown + hidden_tags
+    body = '\n'.join(out).rstrip() if shown else '  No changes outside tags.'
+    trailer = f'  {shown} of {total} resource change(s) shown; {hidden_tags} tag-only change(s) hidden.'
+    return f'{body}\n\n{trailer}'
 
 def derive_stage_and_env(file_name: str):
     base = re.sub(r'\.json$', '', file_name)
@@ -198,13 +265,19 @@ def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
         change_type = 'update'
     elif actions == ['no-op']:
         change_type = 'no changes'
+    elif actions == ['read']:
+        change_type = 'read'
+    data_reads = rc.get('mode') == 'data' or actions == ['read']
+    null_resource = rc.get('type') == 'null_resource' or bool(re.search(r'(^|\.)null_resource\.', addr or ''))
     summary_lines = diffs[:25]  # cap to avoid huge prompts
     return {
         'address': addr,
         'actions': actions,
         'change_type': change_type,
         'diffs': summary_lines,
-        'tags_only': tags_only
+        'tags_only': tags_only,
+        'data_read': data_reads,
+        'null_resource': null_resource
     }
 
 def build_json_summary_text(summaries: List[Dict[str, Any]]) -> str:
@@ -219,6 +292,8 @@ def build_json_summary_text(summaries: List[Dict[str, Any]]) -> str:
 def make_row_from_summary(stage: str, env: str, location: str, summary: Dict[str, Any]) -> str:
     res_name = summary.get('address', '') or ''
     tags_only = 'Yes' if (summary['tags_only'] and summary['change_type'] == 'update') else 'No'
+    data_read = 'Yes' if summary['data_read'] else 'No'
+    null_resource = 'Yes' if summary['null_resource'] else 'No'
     # Combine up to first 3 diff lines for richer context
     if summary['tags_only'] and summary['change_type'] == 'update':
         details = 'tags updated'
@@ -227,7 +302,7 @@ def make_row_from_summary(stage: str, env: str, location: str, summary: Dict[str
     else:
         details = summary['change_type']
     details = details.replace('<', '&lt;').replace('>', '&gt;')
-    return f"<tr><td>{stage}</td><td>{env}</td><td>{location}</td><td>{res_name}</td><td>{summary['change_type']}</td><td>{tags_only}</td><td>{details}</td></tr>"
+    return f"<tr><td>{stage}</td><td>{env}</td><td>{location}</td><td>{res_name}</td><td>{summary['change_type']}</td><td>{tags_only}</td><td>{data_read}</td><td>{null_resource}</td><td>{details}</td></tr>"
 
 for pf in plan_files:
     file_name = os.path.basename(pf)
@@ -236,9 +311,10 @@ for pf in plan_files:
     plan_obj = load_json_plan_variants(raw)
     rc_list = plan_obj.get('resource_changes', []) or []
     summaries = [summarize_resource_change(rc) for rc in rc_list]
-    print(f"Processing {file_name}: {len(rc_list)} resource change(s)")
+    print(f"Processing {file_name}: {len(rc_list)} resource change(s)", file=sys.stderr if args.consoleFrom else sys.stdout)
     for s in summaries:
         rn = s.get('address', '') or ''
+        summaries_by_address.setdefault(rn, s)
         key = (stage_name, environment, rn)
         if key in seen_resources:
             continue
@@ -246,6 +322,12 @@ for pf in plan_files:
         html_rows.append(make_row_from_summary(stage_name, environment, 'uksouth', s))
 
 ai_rows = '\n'.join(html_rows)
+
+if args.consoleFrom:
+    sys.stdout.reconfigure(encoding='utf-8')
+    print(filter_console(read_file_text(args.consoleFrom), summaries_by_address))
+    sys.exit(0)
+
 if not ai_rows.strip():
     print("[WARN] No rows produced from JSON plans.")
 
