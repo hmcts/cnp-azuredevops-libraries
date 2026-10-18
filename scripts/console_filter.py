@@ -29,7 +29,7 @@ def heredoc_closes(line: str, ident: str) -> bool:
 
 
 def is_tag_only_update(summary: Dict[str, Any]) -> bool:
-    # Data reads are always kept; only tag-only *updates* are dropped - never replacements.
+    # Default behaviour: only hide resources whose ENTIRE diff is tags. Data reads and
     return not summary.get('data_read') and bool(summary.get('tags_only')) and summary.get('change_type') == 'update'
 
 

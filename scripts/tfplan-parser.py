@@ -231,6 +231,8 @@ def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
         change_type = 'no changes'
     elif actions == ['read']:
         change_type = 'read'
+    # data_read and null_resource are reporting flags only (HTML columns); neither one hides
+    # anything by default - console mode only ever hides on tags_only (see is_tag_only_update).
     data_reads = rc.get('mode') == 'data' or actions == ['read']
     null_resource = resource_type(rc, addr) == 'null_resource'
     summary_lines = diffs[:25]  # cap to avoid huge prompts
