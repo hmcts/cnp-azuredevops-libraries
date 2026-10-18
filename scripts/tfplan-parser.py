@@ -161,17 +161,18 @@ def mask_value(value: Any) -> str:
         return '<absent>'
     return '*******'
 
-def diff_before_after(before: Any, after: Any, sensitive_paths: Set[str]) -> List[str]:
-    if before is None and after is None:
+def diff_before_after(before: Any, after: Any, sensitive_paths: Set[str], unknown_paths: Set[str] = frozenset()) -> List[str]:
+    if before is None and after is None and not unknown_paths:
         return []
     fb = flatten_dict(before) if isinstance(before, (dict, list)) else {"value": before}
     fa = flatten_dict(after) if isinstance(after, (dict, list)) else {"value": after}
     changes = []
-    keys = set(fb.keys()) | set(fa.keys())
+    keys = set(fb.keys()) | set(fa.keys()) | set(unknown_paths)
     for k in sorted(keys):
         vb = fb.get(k, '<absent>')
         va = fa.get(k, '<absent>')
-        if vb == va:
+        is_unknown = k in unknown_paths
+        if vb == va and not is_unknown:
             continue
         if is_sensitive_key_path(k, sensitive_paths):
             changes.append(f"{k}: {mask_value(vb)} -> {mask_value(va)}")
@@ -180,11 +181,22 @@ def diff_before_after(before: Any, after: Any, sensitive_paths: Set[str]) -> Lis
         def shorten(v):
             s = str(v)
             return (s[:60] + '…') if len(s) > 60 else s
+        if is_unknown and vb == va:
+            # before/after look identical but the value won't be known until apply - a real change.
+            changes.append(f"{k}: {shorten(vb)} -> (known after apply)")
+            continue
         changes.append(f"{k}: {shorten(vb)} -> {shorten(va)}")
     return changes
 
 # Skips module.<name>[<key>]. prefixes and an optional data. prefix, leaving the resource type segment.
 ADDRESS_TYPE = re.compile(r'^(?:module\.[^.\[]+(?:\[[^\]]*\])?\.)*(?:data\.)?([^.\[]+)\.')
+
+
+def collect_unknown_paths(change: Dict[str, Any]) -> Set[str]:
+    # 'after_unknown' marks attributes with no real value until apply, even when before/after look identical.
+    unknown = change.get('after_unknown')
+    flat = flatten_dict(unknown) if isinstance(unknown, (dict, list)) else {}
+    return {k for k, v in flat.items() if v is True}
 
 
 def resource_type(rc: Dict[str, Any], addr: str) -> str:
@@ -201,7 +213,8 @@ def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
     before = change.get('before')
     after = change.get('after')
     sensitive_paths = collect_sensitive_paths(change)
-    diffs = diff_before_after(before, after, sensitive_paths)
+    unknown_paths = collect_unknown_paths(change)
+    diffs = diff_before_after(before, after, sensitive_paths, unknown_paths)
     # Determine tags-only: all diffs start with 'tags' key path
     tags_only = bool(diffs) and all(d.startswith('tags') or '.tags.' in d for d in diffs)
     # Determine change type
