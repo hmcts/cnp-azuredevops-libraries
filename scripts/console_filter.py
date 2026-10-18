@@ -3,6 +3,11 @@
 Classification (tag-only / data-read / change type) is computed elsewhere from the
 JSON plan (tfplan-parser.py) and passed in as summary dicts; this module only decides which lines of the
 human-readable `terraform show` output to keep, matching resources up by address.
+
+!!! AZURERM-ONLY: tag-block removal below only tracks '{'/'}' depth, matching azurerm's
+!!! map-style `tags = { ... }` rendering. Providers that render tags as a list/set
+!!! (e.g. `tags = [ ... ]`, such as google_compute_instance.tags) are NOT handled -
+!!! the block will not be fully dropped and will leave malformed, orphaned lines.
 """
 import re
 from typing import Any, Dict, List
