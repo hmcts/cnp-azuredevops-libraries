@@ -2,6 +2,7 @@ import os
 import re
 import json
 import sys
+import html
 import argparse
 from typing import List, Dict, Any, Set
 
@@ -29,7 +30,7 @@ def read_file_text(p):
 # Collect rows
 html_rows: List[str] = []
 seen_resources = set()  # (stage, env, resource_name)
-summaries_by_address: Dict[str, Dict[str, Any]] = {}
+summaries_by_address: Dict[str, List[Dict[str, Any]]] = {}
 
 # --- Console mode helpers: classification comes from the JSON summaries above,
 # --- only the tag attribute lines are matched in Terraform's rendered text.
@@ -38,10 +39,23 @@ STRING_LIT = re.compile(r'"(?:[^"\\]|\\.)*"')
 CHANGE_MARK = r'(?:~|\+|-|-/\+|\+/-|<=)'
 TEXT_HEADER = re.compile(r'^  # (.+?) (will |must |has )(.+)$')
 TAG_LINE = re.compile(r'^\s*(?:' + CHANGE_MARK + r'\s+)?(?:tags|tags_all)\s*=\s*(.*)')
+# Terraform renders multi-line strings as <<-EOT ... EOT; the opener may carry a trailing '# forces replacement'.
+HEREDOC_START = re.compile(r'<<-?([A-Za-z_][A-Za-z0-9_]*)(?:\s+#.*)?\s*$')
 SECTION_END = re.compile(r'^(?:Plan:|Changes to Outputs:|Warning:|Error:|Note:|\u2577)')
 
 
-def filter_console(text: str, by_address: Dict[str, Dict[str, Any]]) -> str:
+def heredoc_closes(line: str, ident: str) -> bool:
+    stripped = line.strip()
+    # A removed string closes as 'EOT -> null'.
+    return stripped == ident or stripped.startswith(ident + ' -> ')
+
+
+def is_tag_only_update(summary: Dict[str, Any]) -> bool:
+    # Data reads are always kept; only tag-only updates are dropped.
+    return not summary.get('data_read') and bool(summary.get('tags_only')) and summary.get('change_type') == 'update'
+
+
+def filter_console(text: str, by_address: Dict[str, List[Dict[str, Any]]]) -> str:
     raw = text.split('\n')
     plain = [ANSI.sub('', line) for line in raw]
 
@@ -62,27 +76,42 @@ def filter_console(text: str, by_address: Dict[str, Dict[str, Any]]) -> str:
     for n, first in enumerate(headers):
         last = (headers + [end])[n + 1]
         address = TEXT_HEADER.match(plain[first]).group(1).strip()
-        summary = by_address.get(address)
+        summaries = by_address.get(address) or []
 
-        # Data reads are always kept; only tag-only updates are dropped.
-        if summary and not summary.get('data_read') and summary.get('tags_only') and summary.get('change_type') == 'update':
+        # The same address can appear in several plans, so hide it only if every one is tag-only.
+        if summaries and all(is_tag_only_update(s) for s in summaries):
             hidden_tags += 1
             continue
 
         # Drop tag attribute lines (and any block they open) from the kept resource.
+        # Heredoc bodies are string content: never matched as attributes, never brace-counted.
         kept = []
         depth = 0
+        heredoc = None
         for k in range(first, last):
             line = plain[k]
+            if heredoc:
+                if heredoc_closes(line, heredoc):
+                    heredoc = None
+                if depth == 0:
+                    kept.append(k)
+                continue
+            opener = HEREDOC_START.search(line)
             if depth > 0:
                 flat = STRING_LIT.sub('""', line)
                 depth += flat.count('{') - flat.count('}')
+                if opener:
+                    heredoc = opener.group(1)
                 continue
             tag_match = TAG_LINE.match(line) if k > first else None
             if tag_match:
                 flat = STRING_LIT.sub('""', tag_match.group(1))
                 depth = max(flat.count('{') - flat.count('}'), 0)
+                if opener:
+                    heredoc = opener.group(1)
                 continue
+            if opener:
+                heredoc = opener.group(1)
             kept.append(k)
 
         shown += 1
@@ -243,6 +272,17 @@ def diff_before_after(before: Any, after: Any, sensitive_paths: Set[str]) -> Lis
         changes.append(f"{k}: {shorten(vb)} -> {shorten(va)}")
     return changes
 
+# Skips module.<name>[<key>]. prefixes and an optional data. prefix, leaving the resource type segment.
+ADDRESS_TYPE = re.compile(r'^(?:module\.[^.\[]+(?:\[[^\]]*\])?\.)*(?:data\.)?([^.\[]+)\.')
+
+
+def resource_type(rc: Dict[str, Any], addr: str) -> str:
+    explicit = rc.get('type')
+    if explicit:
+        return explicit
+    match = ADDRESS_TYPE.match(addr or '')
+    return match.group(1) if match else ''
+
 def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
     addr = rc.get('address') or rc.get('name')
     change = rc.get('change') or {}
@@ -268,7 +308,7 @@ def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
     elif actions == ['read']:
         change_type = 'read'
     data_reads = rc.get('mode') == 'data' or actions == ['read']
-    null_resource = rc.get('type') == 'null_resource' or bool(re.search(r'(^|\.)null_resource\.', addr or ''))
+    null_resource = resource_type(rc, addr) == 'null_resource'
     summary_lines = diffs[:25]  # cap to avoid huge prompts
     return {
         'address': addr,
@@ -301,8 +341,9 @@ def make_row_from_summary(stage: str, env: str, location: str, summary: Dict[str
         details = '; '.join(summary['diffs'][:3])
     else:
         details = summary['change_type']
-    details = details.replace('<', '&lt;').replace('>', '&gt;')
-    return f"<tr><td>{stage}</td><td>{env}</td><td>{location}</td><td>{res_name}</td><td>{summary['change_type']}</td><td>{tags_only}</td><td>{data_read}</td><td>{null_resource}</td><td>{details}</td></tr>"
+    # Stage/env come from the filename and the rest from the plan, so every cell is escaped.
+    cells = [stage, env, location, res_name, summary['change_type'], tags_only, data_read, null_resource, details]
+    return '<tr>' + ''.join(f'<td>{html.escape(str(c), quote=True)}</td>' for c in cells) + '</tr>'
 
 for pf in plan_files:
     file_name = os.path.basename(pf)
@@ -314,7 +355,7 @@ for pf in plan_files:
     print(f"Processing {file_name}: {len(rc_list)} resource change(s)", file=sys.stderr if args.consoleFrom else sys.stdout)
     for s in summaries:
         rn = s.get('address', '') or ''
-        summaries_by_address.setdefault(rn, s)
+        summaries_by_address.setdefault(rn, []).append(s)
         key = (stage_name, environment, rn)
         if key in seen_resources:
             continue

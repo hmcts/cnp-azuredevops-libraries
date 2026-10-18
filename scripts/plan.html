@@ -205,7 +205,13 @@
       values.forEach(val => {
         const opt = document.createElement('label');
         opt.className = 'ms-option';
-        opt.innerHTML = `<input type="checkbox" value="${val}"><span>${val}</span>`;
+        // Values come from the plan, so build nodes instead of interpolating into HTML.
+        const box = document.createElement('input');
+        box.type = 'checkbox';
+        box.value = val;
+        const text = document.createElement('span');
+        text.textContent = val;
+        opt.append(box, text);
         panel.appendChild(opt);
       });
       panel.addEventListener('click', e => {
@@ -261,6 +267,13 @@
     });
 
     // Decorate existing rows (badges + tag-only styling)
+    function makeBadge(text, cls) {
+      const span = document.createElement('span');
+      span.className = `badge ${cls}`;
+      span.textContent = text;
+      return span;
+    }
+
     rows.forEach(r => {
       // Change type badge
   const changeCell = r.cells[4];
@@ -269,7 +282,7 @@
       if (txt.startsWith('create')) cls = 'change-create';
       else if (txt.startsWith('delete') || txt.startsWith('destroy')) cls = 'change-delete';
       else if (txt.startsWith('read')) cls = 'change-read';
-      changeCell.innerHTML = `<span class="badge ${cls}">${changeCell.textContent}</span>`;
+      changeCell.replaceChildren(makeBadge(changeCell.textContent, cls));
       // Tags badge
   const tagsCell = r.cells[5];
       const tYes = tagsCell.textContent.trim().toLowerCase() === 'yes';
@@ -283,11 +296,19 @@
       const nullCell = r.cells[7];
       const nYes = nullCell.textContent.trim().toLowerCase() === 'yes';
       nullCell.innerHTML = `<span class="badge ${nYes ? 'null-yes' : 'null-no'}">${nYes ? 'Yes' : 'No'}</span>`;
-      // Details formatting (monospace for resource names inside quotes )
+      // Details: plan-derived text stays text; only matched keywords become <strong> nodes.
   const detailsCell = r.cells[8];
-      detailsCell.innerHTML = detailsCell.textContent
-        .replace(/(\bversion\b)/ig,'<strong>$1</strong>')
-        .replace(/(tags?)/ig,'<strong>$1</strong>');
+      const detailsText = detailsCell.textContent;
+      detailsCell.replaceChildren();
+      detailsText.split(/(\bversion\b|tags?)/ig).forEach((part, i) => {
+        if (i % 2 === 1) {
+          const strong = document.createElement('strong');
+          strong.textContent = part;
+          detailsCell.appendChild(strong);
+        } else if (part) {
+          detailsCell.appendChild(document.createTextNode(part));
+        }
+      });
     });
 
     function updateMeta(filteredCount) {
