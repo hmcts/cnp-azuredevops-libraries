@@ -66,6 +66,7 @@
     .badge.change-create { background: var(--ok); color: #fff; }
     .badge.change-update { background: var(--warn); color: #fff; }
     .badge.change-delete { background: var(--danger); color: #fff; }
+    .badge.change-replace { background: linear-gradient(90deg, var(--danger) 50%, var(--ok) 50%); color: #fff; }
   /* Make 'Yes' (tag-only) badge grey like 'No' */
   .badge.tag-yes { background: var(--muted); color: #fff; }
     .badge.tag-no { background: var(--muted); color: #fff; }
@@ -280,6 +281,7 @@
       const txt = changeCell.textContent.trim().toLowerCase();
       let cls = 'change-update';
       if (txt.startsWith('create')) cls = 'change-create';
+      else if (txt.startsWith('replace')) cls = 'change-replace';
       else if (txt.startsWith('delete') || txt.startsWith('destroy')) cls = 'change-delete';
       else if (txt.startsWith('read')) cls = 'change-read';
       changeCell.replaceChildren(makeBadge(changeCell.textContent, cls));
