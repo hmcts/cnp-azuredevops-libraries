@@ -3,6 +3,14 @@ parameters:
 
 steps:
 
+- template: ./service-connection-deprecation-checker.yaml
+  parameters:
+    serviceConnections:
+      - ${{ parameters.serviceConnection }}
+      - ${{ if and(ne(parameters.backendServiceConnection, ''), ne(parameters.backendServiceConnection, parameters.serviceConnection)) }}:
+          - ${{ parameters.backendServiceConnection }}
+    kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+
 - template: ../tasks/install-os-dependencies.yaml
 
 - task: AzureCLI@1

@@ -44,6 +44,14 @@ parameters:
 steps:
   - checkout: self
   - checkout: cnp-azuredevops-libraries
+
+  - template: ./service-connection-deprecation-checker.yaml
+    parameters:
+      serviceConnections:
+        - ${{ parameters.serviceConnection }}
+        - ${{ if and(ne(parameters.backendServiceConnection, ''), ne(parameters.backendServiceConnection, parameters.serviceConnection)) }}:
+            - ${{ parameters.backendServiceConnection }}
+      kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
   
   - task: AzureKeyVault@2
     displayName: 'Get GitHub API token from Keyvault'
