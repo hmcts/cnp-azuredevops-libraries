@@ -218,7 +218,12 @@ steps:
 
   - task: Bash@3
     displayName: tf filtered output ${{ parameters.component }} (Ignores tags)
-    condition: and(succeededOrFailed(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+    condition: |
+      and(
+        succeededOrFailed(),
+        eq('${{ parameters.overrideAction }}', 'plan'),
+        not(and(eq(variables['isMain'], true), eq(variables['isAutoTriggered'], true)))
+      )
     continueOnError: true
     inputs:
       targetType: inline

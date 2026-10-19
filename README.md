@@ -158,10 +158,11 @@ In terraform you can then reference this variable as `var.foo`
 
 ### Filtered Terraform plan output
 
-The Terraform plan/apply step prints a filtered console summary after each plan or apply. It hides
+The Terraform step prints a filtered console summary after the plan task in plan-only jobs. It hides
 tag-only resource updates while leaving Terraform's plan and apply behavior unchanged. The summary
-also runs after a failed plan or apply when a plan file exists, and skips cleanly when no plan file
-was produced. This step is informational and does not fail the pipeline.
+is skipped in explicit apply jobs and auto-triggered apply jobs. If planning fails but leaves a plan
+file, the summary still runs; it skips cleanly when no plan file was produced. It is informational
+rather than a gate on the pipeline.
 
 This console summary is independent of `publishPlanResults`; that parameter controls whether the
 pipeline posts plan comments to GitHub or uploads plan JSON for the viewer workflow below.
