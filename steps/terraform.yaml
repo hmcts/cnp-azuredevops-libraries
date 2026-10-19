@@ -218,18 +218,23 @@ steps:
 
   - task: Bash@3
     displayName: tf filtered output ${{ parameters.component }} (Ignores tags)
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+    condition: and(succeededOrFailed(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
     continueOnError: true
     inputs:
       targetType: inline
       script: |
+        plan_file="tfplan-$(tfPlanName)"
+        if [[ ! -s "$plan_file" ]]; then
+          echo "No Terraform plan file found; skipping filtered summary."
+          exit 0
+        fi
+
         parser="$(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py"
         if [[ ! -f "$parser" ]]; then
           echo "tfplan-parser.py not found; skipping filtered summary."
           exit 0
         fi
 
-        plan_file="tfplan-$(tfPlanName)"
         plans_dir="$(Agent.TempDirectory)/tfplans-console"
         text_file="$(Agent.TempDirectory)/tfplan-console.txt"
         rm -rf "$plans_dir"
