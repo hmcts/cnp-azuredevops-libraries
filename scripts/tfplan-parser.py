@@ -1,18 +1,24 @@
 import os
 import re
 import json
+import sys
+import html
 import argparse
 from typing import List, Dict, Any, Set
 
+from console_filter import filter_console
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 default_template = os.path.join(script_dir, 'plan.html')
 
-parser = argparse.ArgumentParser(description="Convert Terraform JSON plan(s) to HTML table rows (local only, no AI)")
+parser = argparse.ArgumentParser(description="Convert Terraform JSON plan(s) to an HTML report, or filter the rendered text plan for console output (local only, no AI)")
 parser.add_argument("--plansDir", type=str, required=True, help="Directory containing terraform plan JSON files (terraform show -json or concatenated resource change objects)")
-parser.add_argument("--outputDir", type=str, required=True, help="Directory to write generated plan.html")
+parser.add_argument("--outputDir", type=str, default='', help="Directory to write generated plan.html (required unless --consoleFrom is used)")
 parser.add_argument("--templateFile", type=str, default=default_template, help=f"Path to HTML template (default: {default_template})")
+parser.add_argument("--consoleFrom", type=str, default='', help="Path to 'terraform show' text output; filters and prints it instead of writing HTML")
 args = parser.parse_args()
+if not args.consoleFrom and not args.outputDir:
+    parser.error("--outputDir is required unless --consoleFrom is used")
 
 plans_dir = args.plansDir
 plan_files = [os.path.join(plans_dir, f) for f in os.listdir(plans_dir) if os.path.isfile(os.path.join(plans_dir, f))]
@@ -25,6 +31,7 @@ def read_file_text(p):
 # Collect rows
 html_rows: List[str] = []
 seen_resources = set()  # (stage, env, resource_name)
+summaries_by_address: Dict[str, List[Dict[str, Any]]] = {}
 
 def derive_stage_and_env(file_name: str):
     base = re.sub(r'\.json$', '', file_name)
@@ -154,17 +161,18 @@ def mask_value(value: Any) -> str:
         return '<absent>'
     return '*******'
 
-def diff_before_after(before: Any, after: Any, sensitive_paths: Set[str]) -> List[str]:
-    if before is None and after is None:
+def diff_before_after(before: Any, after: Any, sensitive_paths: Set[str], unknown_paths: Set[str] = frozenset()) -> List[str]:
+    if before is None and after is None and not unknown_paths:
         return []
     fb = flatten_dict(before) if isinstance(before, (dict, list)) else {"value": before}
     fa = flatten_dict(after) if isinstance(after, (dict, list)) else {"value": after}
     changes = []
-    keys = set(fb.keys()) | set(fa.keys())
+    keys = set(fb.keys()) | set(fa.keys()) | set(unknown_paths)
     for k in sorted(keys):
         vb = fb.get(k, '<absent>')
         va = fa.get(k, '<absent>')
-        if vb == va:
+        is_unknown = k in unknown_paths
+        if vb == va and not is_unknown:
             continue
         if is_sensitive_key_path(k, sensitive_paths):
             changes.append(f"{k}: {mask_value(vb)} -> {mask_value(va)}")
@@ -173,8 +181,30 @@ def diff_before_after(before: Any, after: Any, sensitive_paths: Set[str]) -> Lis
         def shorten(v):
             s = str(v)
             return (s[:60] + '…') if len(s) > 60 else s
+        if is_unknown and vb == va:
+            # before/after look identical but the value won't be known until apply - a real change.
+            changes.append(f"{k}: {shorten(vb)} -> (known after apply)")
+            continue
         changes.append(f"{k}: {shorten(vb)} -> {shorten(va)}")
     return changes
+
+# Skips module.<name>[<key>]. prefixes and an optional data. prefix, leaving the resource type segment.
+ADDRESS_TYPE = re.compile(r'^(?:module\.[^.\[]+(?:\[[^\]]*\])?\.)*(?:data\.)?([^.\[]+)\.')
+
+
+def collect_unknown_paths(change: Dict[str, Any]) -> Set[str]:
+    # 'after_unknown' marks attributes with no real value until apply, even when before/after look identical.
+    unknown = change.get('after_unknown')
+    flat = flatten_dict(unknown) if isinstance(unknown, (dict, list)) else {}
+    return {k for k, v in flat.items() if v is True}
+
+
+def resource_type(rc: Dict[str, Any], addr: str) -> str:
+    explicit = rc.get('type')
+    if explicit:
+        return explicit
+    match = ADDRESS_TYPE.match(addr or '')
+    return match.group(1) if match else ''
 
 def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
     addr = rc.get('address') or rc.get('name')
@@ -183,7 +213,8 @@ def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
     before = change.get('before')
     after = change.get('after')
     sensitive_paths = collect_sensitive_paths(change)
-    diffs = diff_before_after(before, after, sensitive_paths)
+    unknown_paths = collect_unknown_paths(change)
+    diffs = diff_before_after(before, after, sensitive_paths, unknown_paths)
     # Determine tags-only: all diffs start with 'tags' key path
     tags_only = bool(diffs) and all(d.startswith('tags') or '.tags.' in d for d in diffs)
     # Determine change type
@@ -195,16 +226,24 @@ def summarize_resource_change(rc: Dict[str, Any]) -> Dict[str, Any]:
     elif actions == ['update']:
         change_type = 'update'
     elif actions == ['delete', 'create'] or actions == ['create', 'delete']:
-        change_type = 'update'
+        change_type = 'replace'
     elif actions == ['no-op']:
         change_type = 'no changes'
+    elif actions == ['read']:
+        change_type = 'read'
+    # data_read and null_resource are reporting flags only (HTML columns); neither one hides
+    # anything by default - console mode only ever hides on tags_only (see is_tag_only_update).
+    data_reads = rc.get('mode') == 'data' or actions == ['read']
+    null_resource = resource_type(rc, addr) == 'null_resource'
     summary_lines = diffs[:25]  # cap to avoid huge prompts
     return {
         'address': addr,
         'actions': actions,
         'change_type': change_type,
         'diffs': summary_lines,
-        'tags_only': tags_only
+        'tags_only': tags_only,
+        'data_read': data_reads,
+        'null_resource': null_resource
     }
 
 def build_json_summary_text(summaries: List[Dict[str, Any]]) -> str:
@@ -218,7 +257,10 @@ def build_json_summary_text(summaries: List[Dict[str, Any]]) -> str:
 
 def make_row_from_summary(stage: str, env: str, location: str, summary: Dict[str, Any]) -> str:
     res_name = summary.get('address', '') or ''
+    # A replacement is never tags-only, however the diff reads: destroying the resource is never cosmetic.
     tags_only = 'Yes' if (summary['tags_only'] and summary['change_type'] == 'update') else 'No'
+    data_read = 'Yes' if summary['data_read'] else 'No'
+    null_resource = 'Yes' if summary['null_resource'] else 'No'
     # Combine up to first 3 diff lines for richer context
     if summary['tags_only'] and summary['change_type'] == 'update':
         details = 'tags updated'
@@ -226,8 +268,9 @@ def make_row_from_summary(stage: str, env: str, location: str, summary: Dict[str
         details = '; '.join(summary['diffs'][:3])
     else:
         details = summary['change_type']
-    details = details.replace('<', '&lt;').replace('>', '&gt;')
-    return f"<tr><td>{stage}</td><td>{env}</td><td>{location}</td><td>{res_name}</td><td>{summary['change_type']}</td><td>{tags_only}</td><td>{details}</td></tr>"
+    # Stage/env come from the filename and the rest from the plan, so every cell is escaped.
+    cells = [stage, env, location, res_name, summary['change_type'], tags_only, data_read, null_resource, details]
+    return '<tr>' + ''.join(f'<td>{html.escape(str(c), quote=True)}</td>' for c in cells) + '</tr>'
 
 for pf in plan_files:
     file_name = os.path.basename(pf)
@@ -236,9 +279,10 @@ for pf in plan_files:
     plan_obj = load_json_plan_variants(raw)
     rc_list = plan_obj.get('resource_changes', []) or []
     summaries = [summarize_resource_change(rc) for rc in rc_list]
-    print(f"Processing {file_name}: {len(rc_list)} resource change(s)")
+    print(f"Processing {file_name}: {len(rc_list)} resource change(s)", file=sys.stderr if args.consoleFrom else sys.stdout)
     for s in summaries:
         rn = s.get('address', '') or ''
+        summaries_by_address.setdefault(rn, []).append(s)
         key = (stage_name, environment, rn)
         if key in seen_resources:
             continue
@@ -246,6 +290,12 @@ for pf in plan_files:
         html_rows.append(make_row_from_summary(stage_name, environment, 'uksouth', s))
 
 ai_rows = '\n'.join(html_rows)
+
+if args.consoleFrom:
+    sys.stdout.reconfigure(encoding='utf-8')
+    print(filter_console(read_file_text(args.consoleFrom), summaries_by_address))
+    sys.exit(0)
+
 if not ai_rows.strip():
     print("[WARN] No rows produced from JSON plans.")
 
