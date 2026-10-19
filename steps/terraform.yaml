@@ -217,6 +217,40 @@ steps:
     retryCountOnTaskFailure: 3 # This is at the correct level, aligned with 'displayName' and 'inputs'
 
   - task: Bash@3
+    displayName: Terraform plan - filtered console output ${{ parameters.component }}
+    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'))
+    continueOnError: true
+    inputs:
+      targetType: inline
+      script: |
+        parser="$(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfplan-parser.py"
+        if [[ ! -f "$parser" ]]; then
+          echo "tfplan-parser.py not found; skipping filtered summary."
+          exit 0
+        fi
+
+        plan_file="tfplan-$(tfPlanName)"
+        plans_dir="$(Agent.TempDirectory)/tfplans-console"
+        text_file="$(Agent.TempDirectory)/tfplan-console.txt"
+        rm -rf "$plans_dir"
+        mkdir -p "$plans_dir"
+
+        if ! terraform show "$plan_file" > "$text_file"; then
+          echo "terraform show failed; skipping filtered summary."
+          exit 0
+        fi
+        if ! terraform show -json "$plan_file" > "$plans_dir/tfplan-${{ parameters.environment }}-${{ parameters.component }}.json"; then
+          echo "terraform show -json failed; skipping filtered summary."
+          exit 0
+        fi
+
+        python3 "$parser" --plansDir "$plans_dir" --consoleFrom "$text_file"
+      ${{ if eq( parameters['baseDirectory'], '') }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+      ${{ else }}:
+        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+
+  - task: Bash@3
     displayName: Publish Plan to GitHub - ${{ parameters.component }}
     condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'true'))
     env:
