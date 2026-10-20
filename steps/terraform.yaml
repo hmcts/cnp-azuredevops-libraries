@@ -95,6 +95,10 @@ parameters:
     type: string
     default: DTS-CFTPTL-INTSVC
 
+  - name: fallbackGenerateIdToken
+    displayName: Fallback to generate ID token for azapi
+    type: boolean
+    default: false
 
 steps:
   - checkout: self
@@ -191,6 +195,10 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
+      # Enable when using azapi and a WIF-based Service Connection while running on top of AKS agent with workload identity credentials injected
+      # This is because azapi has a bug that makes it always chose the token file (which will have the Workload Identity token in this case) over the OIDC Request token
+      # Link to Issue on azapi Provider GitHub: https://github.com/Azure/terraform-provider-azapi/issues/1264
+      environmentAzureRmUseIdTokenGeneration: ${{ parameters.fallbackGenerateIdToken }}
       ${{ if eq(parameters['tfVarsFile'], '') }}:
         commandOptions: >-
           -out tfplan-$(tfPlanName)
