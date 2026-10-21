@@ -113,9 +113,10 @@ def filter_console(text: str, by_address: Dict[str, List[Dict[str, Any]]]) -> st
             shown += 1
         out.extend(raw[k] for k in kept)
 
-    total = shown + hidden_tags
+    displayed = shown + data_reads
+    total = displayed + hidden_tags
     body = '\n'.join(out).rstrip() if shown or data_reads else '  No changes outside tags.'
-    trailer = f'  {shown} of {total} resource change(s) shown; {hidden_tags} tag-only change(s) hidden'
+    trailer = f'  {displayed} of {total} resource change(s) shown; {hidden_tags} tag-only change(s) hidden'
     if data_reads:
         read_label = 'read' if data_reads == 1 else 'reads'
         trailer += f'; {data_reads} data {read_label} shown'
