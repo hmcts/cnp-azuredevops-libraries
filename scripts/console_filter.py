@@ -19,7 +19,8 @@ TEXT_HEADER = re.compile(r'^  # (.+?) (will |must |has )(.+)$')
 TAG_LINE = re.compile(r'^\s*(?:' + CHANGE_MARK + r'\s+)?(?:tags|tags_all)\s*=\s*(.*)')
 # Terraform renders multi-line strings as <<-EOT ... EOT; the opener may carry a trailing '# forces replacement'.
 HEREDOC_START = re.compile(r'<<-?([A-Za-z_][A-Za-z0-9_]*)(?:\s+#.*)?\s*$')
-SECTION_END = re.compile(r'^(?:Plan:|Changes to Outputs:|Warning:|Error:|Note:|\u2577)')
+SECTION_END = re.compile(r'^(?:Plan:|Changes to Outputs:|Warnings?:|Error:|Note:|\u2577)')
+OUTPUT_SECTION_END = re.compile(r'^(?:Warnings?:|Error:|Note:|\u2577)')
 
 
 def heredoc_closes(line: str, ident: str) -> bool:
@@ -36,25 +37,39 @@ def is_tag_only_update(summary: Dict[str, Any]) -> bool:
 def filter_console(text: str, by_address: Dict[str, List[Dict[str, Any]]]) -> str:
     raw = text.split('\n')
     plain = [ANSI.sub('', line) for line in raw]
+    output_start = next((i for i, line in enumerate(plain) if line.startswith('Changes to Outputs:')), None)
+    output_section = ''
+    if output_start is not None:
+        output_end = next(
+            (i for i in range(output_start + 1, len(plain)) if OUTPUT_SECTION_END.match(plain[i])),
+            len(plain),
+        )
+        output_section = '\n'.join(raw[output_start:output_end]).strip()
 
     start = next((i for i, p in enumerate(plain) if p.startswith('Terraform used the selected providers')), None)
     if start is None:
         start = next((i for i, p in enumerate(plain) if p.startswith('Terraform will perform')), None)
     if start is None:
-        return '  No planned resource changes.'
+        result = '  No planned resource changes.'
+        return f'{result}\n\n{output_section}' if output_section else result
 
     end = next((i for i in range(start, len(plain)) if SECTION_END.match(plain[i])), len(plain))
     headers = [i for i in range(start, end) if TEXT_HEADER.match(plain[i])]
     if not headers:
-        return '  No planned resource changes.'
+        result = '  No planned resource changes.'
+        return f'{result}\n\n{output_section}' if output_section else result
 
     out = raw[start:headers[0]]
-    shown = hidden_tags = 0
+    shown = hidden_tags = data_reads = 0
 
     for n, first in enumerate(headers):
         last = (headers + [end])[n + 1]
-        address = TEXT_HEADER.match(plain[first]).group(1).strip()
+        header_match = TEXT_HEADER.match(plain[first])
+        address = header_match.group(1).strip()
         summaries = by_address.get(address) or []
+        is_data_read = header_match.group(3).startswith('be read') or (
+            bool(summaries) and all(summary.get('data_read') for summary in summaries)
+        )
 
         # The same address can appear in several plans, so hide it only if every one is tag-only.
         if summaries and all(is_tag_only_update(s) for s in summaries):
@@ -92,10 +107,19 @@ def filter_console(text: str, by_address: Dict[str, List[Dict[str, Any]]]) -> st
                 heredoc = opener.group(1)
             kept.append(k)
 
-        shown += 1
+        if is_data_read:
+            data_reads += 1
+        else:
+            shown += 1
         out.extend(raw[k] for k in kept)
 
-    total = shown + hidden_tags
-    body = '\n'.join(out).rstrip() if shown else '  No changes outside tags.'
-    trailer = f'  {shown} of {total} resource change(s) shown; {hidden_tags} tag-only change(s) hidden.'
-    return f'{body}\n\n{trailer}'
+    displayed = shown + data_reads
+    total = displayed + hidden_tags
+    body = '\n'.join(out).rstrip() if shown or data_reads else '  No changes outside tags.'
+    trailer = f'  {displayed} of {total} resource change(s) shown; {hidden_tags} tag-only change(s) hidden'
+    if data_reads:
+        read_label = 'read' if data_reads == 1 else 'reads'
+        trailer += f'; {data_reads} data {read_label} shown'
+    trailer += '.'
+    result = f'{body}\n\n{trailer}'
+    return f'{result}\n\n{output_section}' if output_section else result
