@@ -80,11 +80,15 @@ steps:
         fi
 
   - ${{ if eq(parameters.chartPath, './') }}:
-    - script: helm dependency update ${{ parameters.chartName }}
+    - script: |
+        sed -i "s|oci://[^/]*\.azurecr\.io/helm|oci://${{ parameters.acrName }}.azurecr.io/helm|g" ${{ parameters.chartName }}/Chart.yaml
+        helm dependency update ${{ parameters.chartName }}
       workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
       displayName: "Retrieve helm dependencies (if any)"
   - ${{ else }}:
-    - script: helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
+    - script: |
+        sed -i "s|oci://[^/]*\.azurecr\.io/helm|oci://${{ parameters.acrName }}.azurecr.io/helm|g" ${{ parameters.chartPath }}${{ parameters.chartName }}/Chart.yaml
+        helm dependency update ${{ parameters.chartPath }}${{ parameters.chartName }}
       displayName: "Retrieve helm dependencies (if any)"
 
   - task: AzureCLI@2

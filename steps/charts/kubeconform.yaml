@@ -1,0 +1,53 @@
+parameters:
+  workingDirectory: "$(System.DefaultWorkingDirectory)"
+  chartTarget: ""
+  chartReleaseName: ""
+  valuesFile: ""
+  kubeconformValuesFile: ""
+  renderedManifestPath: "$(Agent.TempDirectory)/rendered-manifest.yaml"
+  kubernetesVersion: "1.35.0"
+  kubeconformVersion: "v0.6.7"
+  kubeconformCrdSchemaLocation: "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+  asoVersion: "v2.17.0"
+  asoSchemaRoot: "$(Agent.TempDirectory)/aso-schemas"
+  generateAsoSchemas: false
+  libraryCheckoutPath: "$(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries"
+
+steps:
+  - script: |
+      set -e -o pipefail
+
+      curl -sSL https://github.com/yannh/kubeconform/releases/download/${{ parameters.kubeconformVersion }}/kubeconform-linux-amd64.tar.gz | tar xz -C /tmp/
+
+      HELM_VALUES_ARGS=(-f "${{ parameters.valuesFile }}")
+      if [[ -n "${{ parameters.kubeconformValuesFile }}" ]]; then
+        HELM_VALUES_ARGS+=(-f "${{ parameters.kubeconformValuesFile }}")
+      fi
+
+      helm template "${{ parameters.chartReleaseName }}" "${{ parameters.chartTarget }}" \
+        "${HELM_VALUES_ARGS[@]}" \
+        > "${{ parameters.renderedManifestPath }}"
+    workingDirectory: ${{ parameters.workingDirectory }}
+    displayName: "Render chart manifests for kubeconform"
+
+  - ${{ if eq(parameters.generateAsoSchemas, true) }}:
+    - script: |
+        bash "${{ parameters.libraryCheckoutPath }}/scripts/generate-aso-schemas.sh" \
+          "${{ parameters.renderedManifestPath }}" \
+          "${{ parameters.asoVersion }}" \
+          "${{ parameters.asoSchemaRoot }}"
+      workingDirectory: ${{ parameters.workingDirectory }}
+      displayName: "Generate ASO CRD schemas from rendered manifest"
+
+  - script: |
+      set -e -o pipefail
+      /tmp/kubeconform \
+        -strict \
+        -summary \
+        -kubernetes-version "${{ parameters.kubernetesVersion }}" \
+        -schema-location default \
+        -schema-location "${{ parameters.asoSchemaRoot }}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" \
+        -schema-location "${{ parameters.kubeconformCrdSchemaLocation }}" \
+        < "${{ parameters.renderedManifestPath }}"
+    workingDirectory: ${{ parameters.workingDirectory }}
+    displayName: "Kubeconform strict validation"
