@@ -338,6 +338,7 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
       environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
+      environmentAzureRmUseIdTokenGeneration: ${{ parameters.fallbackGenerateIdToken }}
       commandOptions: "${{ parameters.applyCommandOptions }} -auto-approve tfplan-$(tfPlanName)"
 
   - ${{ if eq(parameters.overrideAction, 'destroy') }}:
@@ -354,6 +355,7 @@ steps:
           ${{ else }}:
             workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
           environmentServiceNameAzureRM: ${{ parameters.serviceConnection }}
+          environmentAzureRmUseIdTokenGeneration: ${{ parameters.fallbackGenerateIdToken }}
           ${{ if eq(parameters['tfVarsFile'], '') }}:
             commandOptions: >-
               -var env=${{ parameters.environment }}
