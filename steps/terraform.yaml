@@ -100,6 +100,16 @@ parameters:
     type: boolean
     default: false
 
+  - name: savePlanResults
+    displayName: Save PR plans to tfplan-viewer when publishPlanResults is false (needs savePlanResultsServiceConnection)
+    type: boolean
+    default: true
+
+  - name: unlockState
+    displayName: Break a leftover state lease after apply (needs the control storage account)
+    type: boolean
+    default: true
+
 steps:
   - checkout: self
     clean: true
@@ -121,21 +131,22 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  - task: Bash@3
-    displayName: Install tfcmt
-    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
-    inputs:
-      filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/install-tfcmt.sh
-      workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
+  - ${{ if eq(parameters.publishPlanResults, true) }}:
+      - task: Bash@3
+        displayName: Install tfcmt
+        condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+        inputs:
+          filePath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/install-tfcmt.sh
+          workingDirectory: $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)
 
-  - task: AzureKeyVault@2
-    displayName: 'Get GitHub API token from Keyvault'
-    condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
-    inputs:
-      runAsPreJob: false
-      ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
-      keyVaultName: 'infra-vault-nonprod'
-      secretsFilter: 'github-api-token'
+      - task: AzureKeyVault@2
+        displayName: 'Get GitHub API token from Keyvault'
+        condition: ne(variables['System.PullRequest.PullRequestNumber'], '')
+        inputs:
+          runAsPreJob: false
+          ConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+          keyVaultName: 'infra-vault-nonprod'
+          secretsFilter: 'github-api-token'
 
   - task: Bash@3
     displayName: Build resource values
@@ -268,58 +279,60 @@ steps:
       ${{ else }}:
         workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  - task: Bash@3
-    displayName: Publish Plan to GitHub - ${{ parameters.component }}
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'true'))
-    env:
-      GITHUB_TOKEN: $(github-api-token)
-    inputs:
-      targetType: 'inline'
-      script: |
-        tfcmt --owner hmcts \
-          --repo $(buildRepoSuffix) \
-          --pr $(System.PullRequest.PullRequestNumber) \
-          --var target:"$(System.DefinitionId): $(System.StageName) - $(System.JobDisplayName)" \
-          --var ado_url:$SYSTEM_COLLECTIONURI \
-          --var ado_project:"$SYSTEM_TEAMPROJECT" \
-          --var build_id:$BUILD_BUILDID \
-          --var sensitive:${{ parameters.sensitive }} \
-          --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
-          plan -patch -- \
-          terraform show tfplan-$(tfPlanName)
-      ${{ if eq( parameters['baseDirectory'], '') }}:
-        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      ${{ else }}:
-        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+  - ${{ if eq(parameters.publishPlanResults, true) }}:
+      - task: Bash@3
+        displayName: Publish Plan to GitHub - ${{ parameters.component }}
+        condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'true'))
+        env:
+          GITHUB_TOKEN: $(github-api-token)
+        inputs:
+          targetType: 'inline'
+          script: |
+            tfcmt --owner hmcts \
+              --repo $(buildRepoSuffix) \
+              --pr $(System.PullRequest.PullRequestNumber) \
+              --var target:"$(System.DefinitionId): $(System.StageName) - $(System.JobDisplayName)" \
+              --var ado_url:$SYSTEM_COLLECTIONURI \
+              --var ado_project:"$SYSTEM_TEAMPROJECT" \
+              --var build_id:$BUILD_BUILDID \
+              --var sensitive:${{ parameters.sensitive }} \
+              --config $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/tfcmt.yaml \
+              plan -patch -- \
+              terraform show tfplan-$(tfPlanName)
+          ${{ if eq( parameters['baseDirectory'], '') }}:
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+          ${{ else }}:
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  - task: Bash@3
-    displayName: Terraform show - ${{ parameters.component }}
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
-    inputs:
-      targetType: 'inline'
-      script: |
-        terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[]' > tfplan-${{ parameters.environment }}-${{ parameters.component }}.json
-      ${{ if eq( parameters['baseDirectory'], '') }}:
-        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
-      ${{ else }}:
-        workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
+  - ${{ if eq(parameters.savePlanResults, true) }}:
+      - task: Bash@3
+        displayName: Terraform show - ${{ parameters.component }}
+        condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan', 'apply'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
+        inputs:
+          targetType: 'inline'
+          script: |
+            terraform show -json tfplan-$(tfPlanName) | jq '.resource_changes[]' > tfplan-${{ parameters.environment }}-${{ parameters.component }}.json
+          ${{ if eq( parameters['baseDirectory'], '') }}:
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}'
+          ${{ else }}:
+            workingDirectory: '$(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/${{ parameters.baseDirectory }}/${{ parameters.component }}'
 
-  - task: AzureKeyVault@2
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
-    inputs:
-      azureSubscription: ${{ parameters.savePlanResultsServiceConnection }}
-      KeyVaultName: tfplan-viewer-ptl-kv
-      SecretsFilter: 'storage-account-primary-key'
+      - task: AzureKeyVault@2
+        condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
+        inputs:
+          azureSubscription: ${{ parameters.savePlanResultsServiceConnection }}
+          KeyVaultName: tfplan-viewer-ptl-kv
+          SecretsFilter: 'storage-account-primary-key'
 
-  - task: AzureCLI@2
-    displayName: 'Upload plans to blob'
-    condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
-    inputs:
-      scriptType: bash
-      scriptLocation: inlineScript
-      inlineScript: |
-        az storage azcopy blob upload -c plan-json --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).json -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).json" --subscription ${{ parameters.savePlanResultsServiceConnection }} --account-key $(storage-account-primary-key)
-      azureSubscription: ${{ parameters.serviceConnection }}
+      - task: AzureCLI@2
+        displayName: 'Upload plans to blob'
+        condition: and(succeeded(), in('${{ parameters.overrideAction }}', 'plan'), ne(variables['System.PullRequest.PullRequestNumber'], ''), eq('${{ parameters.publishPlanResults }}', 'false'))
+        inputs:
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            az storage azcopy blob upload -c plan-json --account-name tfplanviewersa -s $(System.DefaultWorkingDirectory)/$(buildRepoSuffix)/components/${{ parameters.component }}/tfplan-$(tfPlanName).json -d "$(Build.Repository.Name)/$(System.PullRequest.PullRequestNumber)/tfplan-$(tfPlanName).json" --subscription ${{ parameters.savePlanResultsServiceConnection }} --account-key $(storage-account-primary-key)
+          azureSubscription: ${{ parameters.serviceConnection }}
 
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-release-task.TerraformTask@5
     displayName: Terraform apply ${{ parameters.component }}
@@ -373,24 +386,25 @@ steps:
               -var builtFrom=$(Build.Repository.Name)
               -var product=${{ parameters.product }} ${{ parameters.destroyCommandOptions }}
               -var-file "${{ parameters.tfVarsFile }}"
-  - task: AzureCLI@2
-    displayName: 'Unlock TF state if required'
-    condition: |
-      and( succeeded(),
-        or(
-            and(
-                ne('${{ parameters.overrideAction }}', 'plan'),
-                eq(variables['isAutoTriggered'], false)
-            ),
-            and(
-                eq(variables['isAutoTriggered'], true),
-                eq(variables['isMain'], true)
+  - ${{ if eq(parameters.unlockState, true) }}:
+      - task: AzureCLI@2
+        displayName: 'Unlock TF state if required'
+        condition: |
+          and( succeeded(),
+            or(
+                and(
+                    ne('${{ parameters.overrideAction }}', 'plan'),
+                    eq(variables['isAutoTriggered'], false)
+                ),
+                and(
+                    eq(variables['isAutoTriggered'], true),
+                    eq(variables['isMain'], true)
+                )
             )
-        )
-      )
-    inputs:
-      scriptType: bash
-      scriptLocation: scriptPath
-      azureSubscription: ${{ parameters.serviceConnection }}
-      scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/unlock-tf-state.sh
-      arguments: $(controlStorageAccount) "${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate" ${{ parameters.terraformInitSubscription }}
+          )
+        inputs:
+          scriptType: bash
+          scriptLocation: scriptPath
+          azureSubscription: ${{ parameters.serviceConnection }}
+          scriptPath: $(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/unlock-tf-state.sh
+          arguments: $(controlStorageAccount) "${{ parameters.location }}/${{ parameters.product }}/$(buildRepoSuffix)/${{ parameters.environment }}/${{ parameters.component }}/terraform.tfstate" ${{ parameters.terraformInitSubscription }}
