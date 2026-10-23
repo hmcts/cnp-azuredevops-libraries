@@ -2,6 +2,20 @@ parameters:
   serviceConnection: ''
   buildPath: ''
   customImageTag: ''
+  # Image repository name. Empty => $(Build.Repository.Name)
+  imageName: ''
+  # Dockerfile path (-f), relative to the build context root. Empty => az default (Dockerfile)
+  dockerfile: ''
+  # Multi-stage Dockerfile stage (--target). Empty => not passed
+  target: ''
+  # Empty => $(acrName) pipeline variable
+  acrName: ''
+  # Empty => $(acrResourceGroup) pipeline variable
+  acrResourceGroup: ''
+  # Extra tags, each pushed as <imageName>:<tag>
+  additionalTags: []
+  # Build context, relative to buildPath (if set)
+  buildContext: '.'
 
 steps:
 
@@ -34,13 +48,39 @@ steps:
 #
 # ACR Build
 #
-- task: AzureCLI@1
+- task: AzureCLI@2
   displayName: 'ACR Build'
   enabled: true
+  env:
+    ACR_NAME: ${{ coalesce(parameters.acrName, '$(acrName)') }}
+    ACR_RESOURCE_GROUP: ${{ coalesce(parameters.acrResourceGroup, '$(acrResourceGroup)') }}
+    IMAGE_NAME: ${{ coalesce(parameters.imageName, '$(Build.Repository.Name)') }}
+    IMAGE_TAG: $(imageTag)
+    DOCKERFILE: ${{ parameters.dockerfile }}
+    BUILD_TARGET: ${{ parameters.target }}
+    ADDITIONAL_TAGS: ${{ join(',', parameters.additionalTags) }}
+    BUILD_CONTEXT: ${{ parameters.buildContext }}
   inputs:
     azureSubscription: ${{ parameters.serviceConnection }}
+    scriptType: 'bash'
     scriptLocation: 'inlineScript'
-    ${{ if ne('${{ parameters.buildPath }}', '') }}:
+    ${{ if ne(parameters.buildPath, '') }}:
       workingDirectory: ${{ parameters.buildPath }}
     inlineScript: |
-      az acr build -r $(acrName) -t $(Build.Repository.Name):$(imageTag) -g $(acrResourceGroup) .
+      set -e
+      args=(-r "$ACR_NAME" -t "$IMAGE_NAME:$IMAGE_TAG" -g "$ACR_RESOURCE_GROUP")
+      if [ -n "$DOCKERFILE" ]; then
+        args+=(-f "$DOCKERFILE")
+      fi
+      if [ -n "$BUILD_TARGET" ]; then
+        args+=(--target "$BUILD_TARGET")
+      fi
+      IFS=',' read -r -a extra_tags <<< "$ADDITIONAL_TAGS"
+      for extra_tag in "${extra_tags[@]}"; do
+        if [ -n "$extra_tag" ]; then
+          args+=(-t "$IMAGE_NAME:$extra_tag")
+        fi
+      done
+      args+=("$BUILD_CONTEXT")
+      echo "az acr build ${args[*]}"
+      az acr build "${args[@]}"
