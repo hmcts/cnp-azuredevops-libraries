@@ -469,6 +469,29 @@ def main(argv=None):
         policies, current_identity_info["identity_type"]
     )
     if selected_policy is None:
+        project = os.getenv("SYSTEM_TEAMPROJECT", "")
+        already_using_replacement = any(
+            current_identity_info["identity_type"] == policy["replacement_identity_type"]
+            and current_identity_info["identity_name"].endswith(
+                policy["replacement_identity_name_suffix"]
+            )
+            and any(
+                project_name.casefold() == project.casefold()
+                and any(
+                    name.casefold() == args.service_connection.casefold()
+                    for name in connections.values()
+                )
+                for project_name, connections in policy["replacements"].items()
+            )
+            for _, policy in policies
+        )
+        if already_using_replacement:
+            logger.info(
+                "Correct service connection '%s' is already in use; "
+                "no further action required",
+                args.service_connection,
+            )
+            return 0
         logger.info(
             "Skipping service connection '%s': no policy matches identity type '%s'",
             args.service_connection,

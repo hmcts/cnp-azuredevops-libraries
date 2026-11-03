@@ -225,6 +225,60 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
         endpoint.assert_not_called()
         notify.assert_not_called()
 
+    @mock.patch.object(MODULE, "notify_slack")
+    @mock.patch.object(MODULE, "get_service_endpoint")
+    @mock.patch.object(MODULE, "get_current_identity_info")
+    @mock.patch.object(MODULE, "load_service_connection_policies")
+    def test_main_recognizes_valid_replacement_without_lookup_or_notifications(
+        self, load, current, endpoint, notify
+    ):
+        load.return_value = [("policy", self.config)]
+        current.return_value = self.replacement_identity_info
+        with mock.patch.dict(MODULE.os.environ, {"SYSTEM_TEAMPROJECT": "PROJECT NAME"}):
+            with self.assertLogs(MODULE.logger, level="INFO") as logs:
+                result = MODULE.main(
+                    [
+                        "--filepath", "map.yaml",
+                        "--service-connection", "RENAMED-CONNECTION-wif",
+                    ]
+                )
+        self.assertEqual(result, 0)
+        self.assertIn("no further action required", "\n".join(logs.output))
+        self.assertNotIn("no policy matches", "\n".join(logs.output))
+        endpoint.assert_not_called()
+        notify.assert_not_called()
+
+    @mock.patch.object(MODULE, "get_current_identity_info")
+    @mock.patch.object(MODULE, "load_service_connection_policies")
+    def test_main_does_not_claim_unverified_connections_are_correct(self, load, current):
+        load.return_value = [("policy", self.config)]
+        for project, connection, identity in (
+            ("Other project", "renamed-connection-WIF", self.replacement_identity_info),
+            ("Project name", "unknown-WIF", self.replacement_identity_info),
+            ("", "renamed-connection-WIF", self.replacement_identity_info),
+            (
+                "Project name", "renamed-connection-WIF",
+                {"identity_type": "ManagedIdentity", "identity_name": "unexpected"},
+            ),
+            (
+                "Project name", "renamed-connection-WIF",
+                {"identity_type": "Unknown", "identity_name": "legacy-WIF-mi"},
+            ),
+        ):
+            with self.subTest(project=project, connection=connection, identity=identity):
+                current.return_value = identity
+                with mock.patch.dict(MODULE.os.environ, {"SYSTEM_TEAMPROJECT": project}):
+                    with self.assertLogs(MODULE.logger, level="INFO") as logs:
+                        result = MODULE.main(
+                            [
+                                "--filepath", "map.yaml",
+                                "--service-connection", connection,
+                            ]
+                        )
+                self.assertEqual(result, 0)
+                self.assertIn("no policy matches", "\n".join(logs.output))
+                self.assertNotIn("no further action required", "\n".join(logs.output))
+
     def test_policy_selection_ignores_policy_identifier(self):
         policies = [("arbitrary-policy-id", self.config)]
 
