@@ -152,23 +152,33 @@ def normalize_identity_type(service_principal_type):
 
 
 def get_service_principal_info(client_id):
-    result = subprocess.run(
-        [
-            "az",
-            "ad",
-            "sp",
-            "show",
-            "--id",
-            client_id,
-            "--query",
-            "{identity_type:servicePrincipalType,identity_name:displayName}",
-            "--output",
-            "json",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            [
+                "az",
+                "ad",
+                "sp",
+                "show",
+                "--id",
+                client_id,
+                "--query",
+                "{identity_type:servicePrincipalType,identity_name:displayName}",
+                "--output",
+                "json",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as error:
+        message = (
+            f"Could not inspect service principal '{client_id}': "
+            f"az ad sp show exited with status {error.returncode}"
+        )
+        stderr = (error.stderr or "").strip()
+        if stderr:
+            message += f": {stderr}"
+        raise RuntimeError(message) from error
     info = json.loads(result.stdout)
     if not isinstance(info, dict) or not info.get("identity_type") or not info.get("identity_name"):
         raise RuntimeError(

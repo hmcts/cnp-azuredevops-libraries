@@ -392,6 +392,56 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
     def test_normalize_application_type_to_service_principal(self):
         self.assertEqual(MODULE.normalize_identity_type("Application"), "ServicePrincipal")
 
+    @mock.patch.object(MODULE.subprocess, "run")
+    def test_identity_lookup_failure_reports_stderr_without_stdout(self, run):
+        error = subprocess.CalledProcessError(
+            1, ["az", "ad", "sp", "show"],
+            output="stdout must not be logged",
+            stderr="  ERROR: Insufficient privileges to complete the operation.\n",
+        )
+        run.side_effect = error
+
+        with self.assertRaises(RuntimeError) as raised:
+            MODULE.get_service_principal_info("replacement-client-id")
+
+        message = str(raised.exception)
+        self.assertIn("replacement-client-id", message)
+        self.assertIn("az ad sp show exited with status 1", message)
+        self.assertTrue(message.endswith(error.stderr.strip()))
+        self.assertNotIn(error.stdout, message)
+        self.assertIs(raised.exception.__cause__, error)
+
+    @mock.patch.object(MODULE.subprocess, "run")
+    def test_identity_lookup_failure_without_stderr_remains_explicit(self, run):
+        for stderr in (None, "", " \n"):
+            with self.subTest(stderr=stderr):
+                run.side_effect = subprocess.CalledProcessError(
+                    2, ["az", "ad", "sp", "show"], stderr=stderr
+                )
+                with self.assertRaisesRegex(
+                    RuntimeError,
+                    "Could not inspect service principal 'client-id': "
+                    "az ad sp show exited with status 2$",
+                ):
+                    MODULE.get_service_principal_info("client-id")
+
+    @mock.patch.object(MODULE.subprocess, "run")
+    def test_identity_lookup_preserves_successful_parsing_and_normalization(self, run):
+        for azure_type, expected in (
+            ("Application", "ServicePrincipal"),
+            ("ManagedIdentity", "ManagedIdentity"),
+        ):
+            with self.subTest(identity_type=azure_type):
+                run.return_value = mock.Mock(
+                    stdout=json.dumps(
+                        {"identity_type": azure_type, "identity_name": "identity"}
+                    )
+                )
+                self.assertEqual(
+                    MODULE.get_service_principal_info("client-id"),
+                    {"identity_type": expected, "identity_name": "identity"},
+                )
+
     @mock.patch.object(MODULE, "get_service_principal_info")
     def test_get_endpoint_identity_info_uses_endpoint_client_id(self, get_info):
         get_info.return_value = {
