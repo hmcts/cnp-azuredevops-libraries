@@ -2,6 +2,7 @@ import datetime
 import importlib.util
 import json
 import pathlib
+import re
 import subprocess
 import tempfile
 import unittest
@@ -20,6 +21,38 @@ SPEC = importlib.util.spec_from_file_location("ado_service_connection_nagger", S
 MODULE = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 SPEC.loader.exec_module(MODULE)
+
+
+class ServiceConnectionTemplateTests(unittest.TestCase):
+    def nagger_templates(self):
+        root = SCRIPT_PATH.parents[1]
+        for directory in ("steps", "tasks", "jobs"):
+            for path in (root / directory).rglob("*.yaml"):
+                text = path.read_text()
+                if "service-connection-deprecation-checker.yaml" in text:
+                    yield path, text, yaml.safe_load(text)
+
+    def test_nagger_callers_only_reference_declared_parameters(self):
+        for path, text, template in self.nagger_templates():
+            with self.subTest(template=path):
+                parameters = template.get("parameters", {})
+                declared = (
+                    set(parameters)
+                    if isinstance(parameters, dict)
+                    else {parameter["name"] for parameter in parameters}
+                )
+                referenced = set(re.findall(r"parameters\.([A-Za-z0-9_]+)", text))
+                self.assertEqual(referenced - declared, set())
+
+    def test_nagger_template_paths_resolve(self):
+        for path, text, _ in self.nagger_templates():
+            with self.subTest(template=path):
+                includes = re.findall(
+                    r"template:\s*(\S*service-connection-deprecation-checker\.yaml)",
+                    text,
+                )
+                for include in includes:
+                    self.assertTrue((path.parent / include).is_file(), include)
 
 
 class ServiceConnectionNaggerTests(unittest.TestCase):
