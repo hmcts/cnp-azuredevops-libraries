@@ -14,8 +14,11 @@ parameters:
 
 steps:
   - script: |
+      set -euo pipefail
+      map_directory=$(mktemp -d "$(Agent.TempDirectory)/service-connection-deprecation-map.XXXXXX")
       git clone --depth 1 --branch "${{ parameters.deprecationMapRef }}" \
-        https://github.com/hmcts/cnp-deprecation-map.git
+        https://github.com/hmcts/cnp-deprecation-map.git "$map_directory"
+      echo "##vso[task.setvariable variable=serviceConnectionDeprecationMapDirectory]$map_directory"
     displayName: Clone deprecation map
 
   - task: AzureKeyVault@2
@@ -36,7 +39,7 @@ steps:
         inlineScript: |
           set -euo pipefail
           python3 "$(System.DefaultWorkingDirectory)/cnp-azuredevops-libraries/scripts/ado-service-connection-nagger.py" \
-            --filepath "$(System.DefaultWorkingDirectory)/cnp-deprecation-map/nagger-versions.yaml" \
+            --filepath "$(serviceConnectionDeprecationMapDirectory)/nagger-versions.yaml" \
             --service-connection "$SERVICE_CONNECTION" \
             --slack-notifications "${{ parameters.slackNotificationsEnabled }}"
       env:

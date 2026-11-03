@@ -24,6 +24,57 @@ SPEC.loader.exec_module(MODULE)
 
 
 class ServiceConnectionTemplateTests(unittest.TestCase):
+    def test_map_clones_are_isolated_from_terraform_and_each_other(self):
+        template = yaml.safe_load(
+            (SCRIPT_PATH.parents[1] / "steps/service-connection-deprecation-checker.yaml")
+            .read_text()
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            source = root / "source"
+            source.mkdir()
+            subprocess.run(
+                ["git", "init", "-q", "-b", "test-policy", str(source)], check=True
+            )
+            (source / "nagger-versions.yaml").write_text("service_connections: {}\n")
+            subprocess.run(["git", "-C", str(source), "add", "."], check=True)
+            subprocess.run(
+                [
+                    "git", "-C", str(source),
+                    "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                    "-c", "commit.gpgsign=false",
+                    "commit", "-qm", "Test policy",
+                ],
+                check=True,
+            )
+            terraform_map = root / "cnp-deprecation-map"
+            terraform_map.mkdir()
+            existing_policy = terraform_map / "nagger-versions.yaml"
+            existing_policy.write_text("Terraform policy\n")
+            script = (
+                template["steps"][0]["script"]
+                .replace("$(Agent.TempDirectory)", str(root))
+                .replace("${{ parameters.deprecationMapRef }}", "test-policy")
+                .replace(
+                    "https://github.com/hmcts/cnp-deprecation-map.git",
+                    source.as_uri(),
+                )
+            )
+            checkouts = []
+            for _ in range(2):
+                result = subprocess.run(
+                    ["bash", "-c", script],
+                    cwd=root, check=True, capture_output=True, text=True,
+                )
+                checkout = pathlib.Path(result.stdout.strip().split("]", 1)[1])
+                self.assertEqual(
+                    (checkout / "nagger-versions.yaml").read_text(),
+                    "service_connections: {}\n",
+                )
+                checkouts.append(checkout)
+            self.assertNotEqual(*checkouts)
+            self.assertEqual(existing_policy.read_text(), "Terraform policy\n")
+
     def nagger_templates(self):
         root = SCRIPT_PATH.parents[1]
         for directory in ("steps", "tasks", "jobs"):
