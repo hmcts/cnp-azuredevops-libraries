@@ -164,9 +164,32 @@ The Terraform template checks the `serviceConnection` and, when different, the
 runtime and does not modify it. Map keys are policy identifiers, not Azure
 DevOps service connection names; policies are selected by the current identity
 type. Only one policy may match a given identity type. Each entry specifies
-the legacy identity type, replacement identity type, suffixes used to derive
-the replacement connection name and validate its Azure service principal
-display name, and the deadline.
+the legacy identity type, replacement identity type, replacement identity
+display-name suffix, deadline, and explicit `replacements` grouped by Azure
+DevOps project and old connection name. For example:
+
+```yaml
+service_connections:
+  legacy-service-connection:
+    identity_type: ServicePrincipal
+    replacement_identity_type: ManagedIdentity
+    replacement_identity_name_suffix: "-WIF-mi"
+    date_deadline: "2026-11-30"
+    replacements:
+      CNP:
+        OPS-APPROVAL-GATE-DEV-ENVS: DTS-DEV-CFT-WIF
+      PlatformOperations:
+        OPS-APPROVAL-GATE-DEV-ENVS: DTS-DEV-WIF
+        azurerm-sandbox: DCD-CFT-Sandbox-WIF
+```
+
+The current project (`SYSTEM_TEAMPROJECT`) and connection name are matched
+case-insensitively. A missing project or connection mapping is logged and skipped;
+there is no suffix fallback. Duplicate project/connection names (including
+case-only differences) and malformed mappings fail explicitly. The mapping
+covers the CNP section of the [service connection replacement table](https://hmcts.atlassian.net/wiki/spaces/DTSPO/pages/362971462);
+Crime is out of scope. Update the policy and nagger together when migrating
+from the old `replacement_name_suffix` schema.
 It only warns or fails when the legacy identity, replacement connection, and
 replacement identity all match the policy; otherwise it logs why the check was
 skipped. The pipeline identity needs permission to read service connections
@@ -175,13 +198,11 @@ and Entra service principals.
 Slack notices use the GitHub-author-to-Slack-user mapping from
 `hmcts/github-slack-user-mappings`, matching the existing Terraform nagger;
 no Slack recipient is configured in the deprecation map. The reusable checker
-has a `slackNotificationsEnabled` string parameter (default `false`) so Slack
+has a `slackNotificationsEnabled` string parameter (default `'true'`) so Slack
 delivery can be disabled for testing without disabling pipeline warnings or
 deadline enforcement. The checker also accepts a `deprecationMapRef` parameter;
 its current default points to the open DTSPO-34384 map PR branch for pre-merge
-testing and should be changed to `master` after that PR is merged. See
-[`examples/service-connection-deprecation-map.yaml`](examples/service-connection-deprecation-map.yaml)
-for a placeholder example.
+testing and should be changed to `master` after that PR is merged.
 
 Before the deadline, matching deprecated service principals generate a
 pipeline warning and a Slack message; after the deadline, they fail the

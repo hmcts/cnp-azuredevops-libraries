@@ -8,6 +8,8 @@ import unittest
 from urllib.parse import parse_qs, urlparse
 from unittest import mock
 
+import yaml
+
 
 SCRIPT_PATH = (
     pathlib.Path(__file__).resolve().parents[1]
@@ -26,14 +28,20 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "identity_type": "ServicePrincipal",
             "replacement_identity_type": "ManagedIdentity",
             "replacement_identity_name_suffix": "-WIF-mi",
-            "replacement_name_suffix": "-WIF",
+            "replacements": {
+                "Project name": {
+                    "legacy-connection": "renamed-connection-WIF",
+                    "normal": "normal-WIF",
+                },
+                "Other project": {"legacy-connection": "other-WIF"},
+            },
             "date_deadline": datetime.date(2026, 11, 30),
         }
         self.identity_info = {
             "identity_type": "ServicePrincipal",
             "identity_name": "legacy",
         }
-        self.replacement_endpoint = {"name": "legacy-connection-WIF"}
+        self.replacement_endpoint = {"name": "renamed-connection-WIF"}
         self.replacement_identity_info = {
             "identity_type": "ManagedIdentity",
             "identity_name": "legacy-WIF-mi",
@@ -47,7 +55,9 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
                 "    identity_type: ServicePrincipal\n"
                 "    replacement_identity_type: ManagedIdentity\n"
                 "    replacement_identity_name_suffix: -WIF-mi\n"
-                "    replacement_name_suffix: -WIF\n"
+                "    replacements:\n"
+                "      Project name:\n"
+                "        legacy-connection: renamed-connection-WIF\n"
                 "    date_deadline: '2026-11-30'\n"
             )
             config_file.flush()
@@ -57,7 +67,10 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
         self.assertEqual(len(result), 1)
         policy_id, policy = result[0]
         self.assertEqual(policy_id, "policy-id-not-ado-name")
-        self.assertEqual(policy["replacement_name_suffix"], "-WIF")
+        self.assertEqual(
+            MODULE.resolve_replacement_name(policy, "Project name", "legacy-connection"),
+            "renamed-connection-WIF",
+        )
         self.assertEqual(policy["replacement_identity_name_suffix"], "-WIF-mi")
         self.assertEqual(policy["date_deadline"], datetime.date(2026, 11, 30))
 
@@ -69,6 +82,115 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             result = MODULE.load_service_connection_policies(config_file.name)
 
         self.assertEqual(result, [])
+
+    def test_resolves_names_with_project_scope_and_case_insensitive_matching(self):
+        for project, connection, expected in (
+            ("project NAME", "LEGACY-connection", "renamed-connection-WIF"),
+            ("Other project", "legacy-connection", "other-WIF"),
+            ("Project name", "normal", "normal-WIF"),
+        ):
+            with self.subTest(project=project, connection=connection):
+                self.assertEqual(
+                    MODULE.resolve_replacement_name(self.config, project, connection),
+                    expected,
+                )
+
+    def test_unmapped_project_or_connection_logs_and_does_not_guess(self):
+        for project, connection in (
+            ("Unknown project", "normal"),
+            ("Project name", "unknown"),
+        ):
+            with self.subTest(project=project, connection=connection):
+                with self.assertLogs(MODULE.logger, level="INFO") as logs:
+                    self.assertIsNone(
+                        MODULE.resolve_replacement_name(self.config, project, connection)
+                    )
+                self.assertIn("no replacement mapping exists", logs.output[0])
+
+    def test_missing_project_context_fails_explicitly(self):
+        with self.assertRaisesRegex(RuntimeError, "SYSTEM_TEAMPROJECT"):
+            MODULE.resolve_replacement_name(self.config, None, "normal")
+
+    def test_invalid_and_ambiguous_mappings_are_rejected(self):
+        cases = (
+            None,
+            [],
+            {"Project": []},
+            {"Project": {"legacy": ""}},
+            {"Project": {"legacy": 123}},
+            {" ": {"legacy": "replacement"}},
+            {"Project": {"legacy": "a"}, "PROJECT": {"legacy": "b"}},
+            {"Project": {"legacy": "a", "LEGACY": "b"}},
+        )
+        for replacements in cases:
+            with self.subTest(replacements=replacements):
+                with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8") as file:
+                    yaml.safe_dump(
+                        {
+                            "service_connections": {
+                                "policy": {
+                                    **self.config,
+                                    "replacements": replacements,
+                                }
+                            }
+                        },
+                        file,
+                    )
+                    file.flush()
+                    with self.assertRaises(ValueError):
+                        MODULE.load_service_connection_policies(file.name)
+
+    def test_exact_duplicate_yaml_keys_are_rejected(self):
+        for replacements in (
+            "      Project:\n        legacy: first\n        legacy: second\n",
+            "      Project:\n        a: first\n      Project:\n        b: second\n",
+        ):
+            with self.subTest(replacements=replacements):
+                with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8") as file:
+                    file.write(
+                        "service_connections:\n  policy:\n    replacements:\n" + replacements
+                    )
+                    file.flush()
+                    with self.assertRaisesRegex(ValueError, "Duplicate"):
+                        MODULE.load_service_connection_policies(file.name)
+
+    @mock.patch.dict(MODULE.os.environ, {"SYSTEM_TEAMPROJECT": "Project name"})
+    @mock.patch.object(MODULE, "notify_slack")
+    @mock.patch.object(MODULE, "get_endpoint_identity_info")
+    @mock.patch.object(MODULE, "get_service_endpoint")
+    @mock.patch.object(MODULE, "get_current_identity_info")
+    @mock.patch.object(MODULE, "load_service_connection_policies")
+    def test_main_resolves_alias_once_and_uses_it_for_lookup_and_notice(
+        self, load, current, endpoint, replacement, notify
+    ):
+        load.return_value = [("policy", self.config)]
+        current.return_value = self.identity_info
+        endpoint.return_value = self.replacement_endpoint
+        replacement.return_value = self.replacement_identity_info
+        with mock.patch.object(MODULE, "log_pipeline_issue") as issue:
+            MODULE.main(
+                ["--filepath", "map.yaml", "--service-connection", "legacy-connection"]
+            )
+        self.assertEqual(endpoint.call_args.args[0], "renamed-connection-WIF")
+        self.assertIn("renamed-connection-WIF", issue.call_args.args[1])
+        self.assertIn("renamed-connection-WIF", notify.call_args.args[2])
+
+    @mock.patch.dict(MODULE.os.environ, {"SYSTEM_TEAMPROJECT": "Project name"})
+    @mock.patch.object(MODULE, "notify_slack")
+    @mock.patch.object(MODULE, "get_service_endpoint")
+    @mock.patch.object(MODULE, "get_current_identity_info")
+    @mock.patch.object(MODULE, "load_service_connection_policies")
+    def test_main_unmapped_connection_skips_lookup_and_notifications(
+        self, load, current, endpoint, notify
+    ):
+        load.return_value = [("policy", self.config)]
+        current.return_value = self.identity_info
+        self.assertEqual(
+            MODULE.main(["--filepath", "map.yaml", "--service-connection", "unmapped"]),
+            0,
+        )
+        endpoint.assert_not_called()
+        notify.assert_not_called()
 
     def test_policy_selection_ignores_policy_identifier(self):
         policies = [("arbitrary-policy-id", self.config)]
@@ -192,6 +314,7 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "repo",
             "build-url",
             "alice",
+            replacement_name="renamed-connection-WIF",
         )
 
         self.assertEqual(result, 0)
@@ -212,6 +335,7 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "repo",
             "build-url",
             "alice",
+            replacement_name="renamed-connection-WIF",
         )
 
         self.assertEqual(result, 0)
@@ -236,6 +360,7 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "repo",
             "build-url",
             "alice",
+            replacement_name="renamed-connection-WIF",
         )
 
         self.assertEqual(result, 0)
@@ -260,6 +385,7 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "repo",
             "build-url",
             "alice",
+            replacement_name="renamed-connection-WIF",
         )
 
         self.assertEqual(result, 0)
@@ -280,6 +406,7 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "repo",
             "build-url",
             "alice",
+            replacement_name="renamed-connection-WIF",
         )
 
         self.assertEqual(result, 0)
@@ -301,6 +428,7 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "build-url",
             "alice",
             slack_notifications_enabled=False,
+            replacement_name="renamed-connection-WIF",
         )
 
         self.assertEqual(result, 0)
@@ -321,11 +449,14 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "repo",
             "build-url",
             "alice",
+            replacement_name="renamed-connection-WIF",
         )
 
         self.assertEqual(result, 1)
         self.assertEqual(log_issue.call_args.args[0], "error")
+        self.assertIn("renamed-connection-WIF", log_issue.call_args.args[1])
         notify.assert_called_once()
+        self.assertIn("renamed-connection-WIF", notify.call_args.args[2])
 
     @mock.patch.object(MODULE, "send_slack_message")
     @mock.patch.object(MODULE, "get_hmcts_github_slack_user_mappings")

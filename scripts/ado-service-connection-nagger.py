@@ -17,9 +17,66 @@ import yaml
 logger = logging.getLogger("ado-service-connection-nagger")
 
 
+class UniqueKeyLoader(yaml.SafeLoader):
+    def construct_mapping(self, node, deep=False):
+        self.flatten_mapping(node)
+        keys = set()
+        for key_node, _ in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if not isinstance(key, str):
+                raise ValueError("Deprecation map keys must be strings")
+            if key in keys:
+                raise ValueError(f"Duplicate deprecation map key: '{key}'")
+            keys.add(key)
+        return super().construct_mapping(node, deep=deep)
+
+
+def validate_replacements(replacements, policy_id):
+    if not isinstance(replacements, dict):
+        raise ValueError(f"Policy '{policy_id}' replacements must be a mapping")
+    projects = set()
+    for project, connections in replacements.items():
+        if not isinstance(project, str) or not project.strip():
+            raise ValueError(f"Policy '{policy_id}' has an invalid replacement project")
+        if project.casefold() in projects:
+            raise ValueError(f"Duplicate replacement project: '{project}'")
+        projects.add(project.casefold())
+        if not isinstance(connections, dict):
+            raise ValueError(f"Replacements for project '{project}' must be a mapping")
+        names = set()
+        for name, replacement in connections.items():
+            if not all(
+                isinstance(value, str) and value.strip()
+                for value in (name, replacement)
+            ):
+                raise ValueError(f"Project '{project}' has an invalid replacement name")
+            if name.casefold() in names:
+                raise ValueError(f"Duplicate replacement connection in '{project}': '{name}'")
+            names.add(name.casefold())
+
+
+def resolve_replacement_name(config, project, service_connection):
+    if not project or not project.strip():
+        raise RuntimeError(
+            "SYSTEM_TEAMPROJECT is required to resolve service connection replacements"
+        )
+    for project_name, connections in config["replacements"].items():
+        if project_name.casefold() == project.casefold():
+            for name, replacement in connections.items():
+                if name.casefold() == service_connection.casefold():
+                    return replacement
+            break
+    logger.info(
+        "Skipping deprecation notice for '%s' in project '%s': no replacement mapping exists",
+        service_connection,
+        project,
+    )
+    return None
+
+
 def load_service_connection_policies(filepath):
     with open(filepath, encoding="utf-8") as config_file:
-        config = yaml.safe_load(config_file) or {}
+        config = yaml.load(config_file, Loader=UniqueKeyLoader) or {}
 
     connections = config.get("service_connections", {})
     if not isinstance(connections, dict):
@@ -37,13 +94,12 @@ def load_service_connection_policies(filepath):
         replacement_identity_name_suffix = connection.get(
             "replacement_identity_name_suffix"
         )
-        replacement_name_suffix = connection.get("replacement_name_suffix")
+        replacements = connection.get("replacements")
         deadline = connection.get("date_deadline")
         required = {
             "identity_type": identity_type,
             "replacement_identity_type": replacement_identity_type,
             "replacement_identity_name_suffix": replacement_identity_name_suffix,
-            "replacement_name_suffix": replacement_name_suffix,
             "date_deadline": deadline,
         }
         missing = [key for key, value in required.items() if not value]
@@ -52,6 +108,7 @@ def load_service_connection_policies(filepath):
                 f"Service connection policy '{policy_id}' is missing required "
                 f"configuration: {', '.join(missing)}"
             )
+        validate_replacements(replacements, policy_id)
 
         if isinstance(deadline, datetime.datetime):
             deadline = deadline.date()
@@ -65,7 +122,7 @@ def load_service_connection_policies(filepath):
                     "identity_type": identity_type,
                     "replacement_identity_type": replacement_identity_type,
                     "replacement_identity_name_suffix": replacement_identity_name_suffix,
-                    "replacement_name_suffix": replacement_name_suffix,
+                    "replacements": replacements,
                     "date_deadline": deadline,
                 },
             )
@@ -296,6 +353,8 @@ def check_service_connection(
     build_url,
     github_user,
     slack_notifications_enabled=True,
+    *,
+    replacement_name,
 ):
     if identity_info["identity_type"] != config["identity_type"]:
         logger.info(
@@ -306,7 +365,6 @@ def check_service_connection(
         )
         return 0
 
-    replacement_name = service_connection + config["replacement_name_suffix"]
     if replacement_endpoint is None:
         logger.info(
             "Skipping deprecation notice for '%s': replacement service connection "
@@ -424,10 +482,15 @@ def main(argv=None):
         args.service_connection,
     )
 
+    replacement_name = resolve_replacement_name(
+        config, os.getenv("SYSTEM_TEAMPROJECT"), args.service_connection
+    )
+    if replacement_name is None:
+        return 0
+
     replacement_endpoint = None
     replacement_identity_info = None
     if current_identity_info["identity_type"] == config["identity_type"]:
-        replacement_name = args.service_connection + config["replacement_name_suffix"]
         logger.info(
             "Looking for replacement service connection '%s'",
             replacement_name,
@@ -462,6 +525,7 @@ def main(argv=None):
             )
     return check_service_connection(
         service_connection=args.service_connection,
+        replacement_name=replacement_name,
         config=config,
         identity_info=current_identity_info,
         replacement_endpoint=replacement_endpoint,
@@ -484,6 +548,7 @@ if __name__ == "__main__":
         RuntimeError,
         subprocess.CalledProcessError,
         json.JSONDecodeError,
+        yaml.YAMLError,
     ) as error:
         log_pipeline_issue("error", str(error))
         logger.error("%s", error)
