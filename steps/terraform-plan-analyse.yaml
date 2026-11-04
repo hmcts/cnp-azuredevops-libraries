@@ -44,6 +44,12 @@ steps:
   - bash: echo ${{ parameters.environment }}
     displayName: Display environment parameter
 
+  - template: ./service-connection-deprecation-checker.yaml
+    parameters:
+      serviceConnections:
+        - ${{ parameters.serviceConnection }}
+      kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
+
   - task: AzureKeyVault@2
     displayName: 'Get GitHub API token from Keyvault'
     condition: ne(variables['System.PullRequest.PullRequestNumber'], '')

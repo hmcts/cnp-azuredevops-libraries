@@ -2,6 +2,11 @@ parameters:
   serviceConnection: ''
 
 steps:
+- template: ../steps/service-connection-deprecation-checker.yaml
+  parameters:
+    serviceConnections:
+      - ${{ parameters.serviceConnection }}
+
 - task: AzureRmWebAppDeployment@4
   inputs:
     connectionType: 'AzureRM'

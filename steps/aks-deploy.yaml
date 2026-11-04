@@ -3,6 +3,11 @@ parameters:
 
 steps:
 
+- template: ./service-connection-deprecation-checker.yaml
+  parameters:
+    serviceConnections:
+      - ${{ parameters.serviceConnection }}
+
 - template: ../tasks/install-os-dependencies.yaml
 
 - task: AzureCLI@1

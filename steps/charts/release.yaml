@@ -26,6 +26,11 @@ steps:
 
   - template: ../set-build-repo-suffix-env-var.yaml
 
+  - template: ../service-connection-deprecation-checker.yaml
+    parameters:
+      serviceConnections:
+        - ${{ parameters.serviceConnection }}
+
   - task: HelmInstaller@1
     displayName: 'Install Helm ${{parameters.helmVersion}}'
     inputs:

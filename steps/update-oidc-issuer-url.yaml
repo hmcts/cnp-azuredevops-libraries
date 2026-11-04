@@ -27,6 +27,12 @@ parameters:
     type: string
 
 steps:
+
+- template: ./service-connection-deprecation-checker.yaml
+  parameters:
+    serviceConnections:
+      - ${{ parameters.serviceConnection }}
+
 - task: AzureKeyVault@1
   displayName: 'Get OIDC issuer URL git token from Keyvault'
   inputs:

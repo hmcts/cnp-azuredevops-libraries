@@ -2,6 +2,12 @@ parameters:
   serviceConnection: ''
 
 steps:
+
+- template: ./service-connection-deprecation-checker.yaml
+  parameters:
+    serviceConnections:
+      - ${{ parameters.serviceConnection }}
+
 - template: ../tasks/install-helm.yaml
 
 - template: ../tasks/initialise-helm-client.yaml

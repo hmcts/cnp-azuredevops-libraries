@@ -11,6 +11,11 @@ jobs:
   steps:
   - checkout: none
 
+  - template: ../steps/service-connection-deprecation-checker.yaml
+    parameters:
+      serviceConnections:
+        - ${{ parameters.serviceConnection }}
+
   - template: ../steps/configure-helm.yaml
     parameters:
       serviceConnection: ${{ parameters.serviceConnection }}

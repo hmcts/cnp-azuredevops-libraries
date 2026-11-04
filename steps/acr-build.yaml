@@ -4,6 +4,10 @@ parameters:
   customImageTag: ''
 
 steps:
+- template: ./service-connection-deprecation-checker.yaml
+  parameters:
+    serviceConnections:
+      - ${{ parameters.serviceConnection }}
 
 # On PR: Set the tag to the PR number
 - script: |

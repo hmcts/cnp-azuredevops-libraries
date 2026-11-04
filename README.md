@@ -156,6 +156,57 @@ Which then can be used as variable within terraform code as shown in below examp
 ```
 In terraform you can then reference this variable as `var.foo`
 
+### Service connection deprecation check
+
+The Terraform template checks the `serviceConnection` and, when different, the
+`backendServiceConnection` against the static `service_connections` policy in
+`cnp-deprecation-map/nagger-versions.yaml`. The nagger reads this file at
+runtime and does not modify it. Map keys are policy identifiers, not Azure
+DevOps service connection names; policies are selected by the current identity
+type. Only one policy may match a given identity type. Each entry specifies
+the legacy identity type, deadline, and explicit `replacements` grouped by Azure
+DevOps project and old connection name. For example:
+
+```yaml
+service_connections:
+  legacy-service-connection:
+    identity_type: ServicePrincipal
+    date_deadline: "2026-11-30"
+    replacements:
+      CNP:
+        OPS-APPROVAL-GATE-DEV-ENVS: DTS-DEV-CFT-WIF
+      PlatformOperations:
+        OPS-APPROVAL-GATE-DEV-ENVS: DTS-DEV-WIF
+        azurerm-sandbox: DCD-CFT-Sandbox-WIF
+```
+
+The current project (`SYSTEM_TEAMPROJECT`) and connection name are matched
+case-insensitively. A missing project or connection mapping is logged and skipped;
+there is no suffix fallback. Duplicate project/connection names (including
+case-only differences) and malformed mappings fail explicitly. The mapping
+covers the CNP section of the [service connection replacement table](https://hmcts.atlassian.net/wiki/spaces/DTSPO/pages/362971462);
+Crime is out of scope. Update the policy and nagger together when migrating
+from the old `replacement_name_suffix` schema.
+The map is the source of truth for replacement availability. A mapped legacy
+connection warns or fails without querying Azure DevOps for its replacement or
+reading the replacement's managed identity. No endpoint Reader grants,
+`System.AccessToken`, or permission to read other Entra principals are needed.
+Only the currently authenticated identity is inspected to select the policy.
+A mapped replacement already using a managed identity logs that no action is
+required; its display-name suffix is not validated.
+
+Slack notices use the GitHub-author-to-Slack-user mapping from
+`hmcts/github-slack-user-mappings`, matching the existing Terraform nagger;
+no Slack recipient is configured in the deprecation map. The reusable checker
+has a `slackNotificationsEnabled` string parameter (default `'true'`) so Slack
+delivery can be disabled for testing without disabling pipeline warnings or
+deadline enforcement. The checker also accepts a `deprecationMapRef` parameter;
+its current default points to `master`.
+
+Before the deadline, matching deprecated service principals generate a
+pipeline warning and a Slack message; after the deadline, they fail the
+pipeline. Current-identity authentication or lookup errors fail the check
+rather than being treated as a successful migration.
 ### Filtered Terraform plan output
 
 The Terraform step prints a filtered console summary after the plan task in plan-only jobs. It hides
@@ -196,4 +247,3 @@ To enable this, add the following values to your pipeline:
 ```
 
 To also disable the tfcmt functionality, pass the `publishPlanResults` parameter to the terraform.yaml with a value of `false`
-

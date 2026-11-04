@@ -9,6 +9,11 @@ jobs:
   steps:
   - checkout: none
 
+  - template: ../steps/service-connection-deprecation-checker.yaml
+    parameters:
+      serviceConnections:
+        - ${{ parameters.serviceConnection }}
+
   - task: AzureKeyVault@2
     displayName: 'Get secrets from Keyvault'
     inputs:

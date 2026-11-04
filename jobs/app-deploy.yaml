@@ -10,6 +10,11 @@ jobs:
     - agent.name -equals $(projectName)-$(Build.BuildId)
 
   steps:
+  - template: ../steps/service-connection-deprecation-checker.yaml
+    parameters:
+      serviceConnections:
+        - ${{ parameters.serviceConnection }}
+
   - script: 'env'
     displayName: 'Display Environment Variables'
 

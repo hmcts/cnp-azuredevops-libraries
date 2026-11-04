@@ -2,6 +2,11 @@ parameters:
   serviceConnection: ''
 
 steps:
+- template: ../steps/service-connection-deprecation-checker.yaml
+  parameters:
+    serviceConnections:
+      - ${{ parameters.serviceConnection }}
+
 - task: AzureCLI@2
   displayName: 'Configure Helm with ACR'
   enabled: true

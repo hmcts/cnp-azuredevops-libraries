@@ -2,6 +2,12 @@ parameters:
   serviceConnection: ''
 
 steps:
+
+- template: ../steps/service-connection-deprecation-checker.yaml
+  parameters:
+    serviceConnections:
+      - ${{ parameters.serviceConnection }}
+
 - task: HelmDeploy@0
   displayName: 'Initialise Helm Client'
   enabled: true
