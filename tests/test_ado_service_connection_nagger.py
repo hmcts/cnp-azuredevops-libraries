@@ -6,7 +6,6 @@ import re
 import subprocess
 import tempfile
 import unittest
-from urllib.parse import parse_qs, urlparse
 from unittest import mock
 
 import yaml
@@ -110,8 +109,6 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
     def setUp(self):
         self.config = {
             "identity_type": "ServicePrincipal",
-            "replacement_identity_type": "ManagedIdentity",
-            "replacement_identity_name_suffix": "-WIF-mi",
             "replacements": {
                 "Project name": {
                     "legacy-connection": "renamed-connection-WIF",
@@ -125,10 +122,9 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "identity_type": "ServicePrincipal",
             "identity_name": "legacy",
         }
-        self.replacement_endpoint = {"name": "renamed-connection-WIF"}
         self.replacement_identity_info = {
             "identity_type": "ManagedIdentity",
-            "identity_name": "legacy-WIF-mi",
+            "identity_name": "any-managed-identity-name",
         }
 
     def test_load_config_returns_policies_keyed_by_identifier(self):
@@ -137,8 +133,6 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
                 "service_connections:\n"
                 "  policy-id-not-ado-name:\n"
                 "    identity_type: ServicePrincipal\n"
-                "    replacement_identity_type: ManagedIdentity\n"
-                "    replacement_identity_name_suffix: -WIF-mi\n"
                 "    replacements:\n"
                 "      Project name:\n"
                 "        legacy-connection: renamed-connection-WIF\n"
@@ -155,7 +149,6 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             MODULE.resolve_replacement_name(policy, "Project name", "legacy-connection"),
             "renamed-connection-WIF",
         )
-        self.assertEqual(policy["replacement_identity_name_suffix"], "-WIF-mi")
         self.assertEqual(policy["date_deadline"], datetime.date(2026, 11, 30))
 
     def test_load_config_returns_empty_list_when_no_policies(self):
@@ -238,34 +231,70 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, "Duplicate"):
                         MODULE.load_service_connection_policies(file.name)
 
-    @mock.patch.dict(MODULE.os.environ, {"SYSTEM_TEAMPROJECT": "Project name"})
     @mock.patch.object(MODULE, "notify_slack")
-    @mock.patch.object(MODULE, "get_endpoint_identity_info")
-    @mock.patch.object(MODULE, "get_service_endpoint")
-    @mock.patch.object(MODULE, "get_current_identity_info")
+    @mock.patch.object(MODULE, "urlopen", side_effect=AssertionError("Unexpected HTTP lookup"))
+    @mock.patch.object(MODULE.subprocess, "run")
     @mock.patch.object(MODULE, "load_service_connection_policies")
-    def test_main_resolves_alias_once_and_uses_it_for_lookup_and_notice(
-        self, load, current, endpoint, replacement, notify
+    def test_main_uses_map_without_replacement_lookup_or_access_token(
+        self, load, run, http, notify
     ):
         load.return_value = [("policy", self.config)]
-        current.return_value = self.identity_info
-        endpoint.return_value = self.replacement_endpoint
-        replacement.return_value = self.replacement_identity_info
-        with mock.patch.object(MODULE, "log_pipeline_issue") as issue:
-            MODULE.main(
-                ["--filepath", "map.yaml", "--service-connection", "legacy-connection"]
-            )
-        self.assertEqual(endpoint.call_args.args[0], "renamed-connection-WIF")
-        self.assertIn("renamed-connection-WIF", issue.call_args.args[1])
-        self.assertIn("renamed-connection-WIF", notify.call_args.args[2])
+        for today, expected_level, expected_result in (
+            (datetime.date(2026, 11, 1), "warning", 0),
+            (datetime.date(2026, 11, 30), "warning", 0),
+            (datetime.date(2026, 12, 1), "error", 1),
+        ):
+            for slack in ("true", "false"):
+                with self.subTest(today=today, slack=slack):
+                    run.reset_mock()
+                    notify.reset_mock()
+                    run.side_effect = [
+                        mock.Mock(stdout=json.dumps({
+                            "user": {"type": "servicePrincipal", "name": "current-client"}
+                        })),
+                        mock.Mock(stdout=json.dumps({
+                            "identity_type": "Application", "identity_name": "legacy"
+                        })),
+                    ]
+                    with (
+                        mock.patch.object(MODULE, "log_pipeline_issue") as issue,
+                        mock.patch.dict(
+                            MODULE.os.environ,
+                            {"SYSTEM_TEAMPROJECT": "Project name"},
+                            clear=True,
+                        ),
+                        mock.patch.object(MODULE.datetime, "date") as date,
+                    ):
+                        date.today.return_value = today
+                        result = MODULE.main([
+                            "--filepath", "map.yaml",
+                            "--service-connection", "legacy-connection",
+                            "--slack-notifications", slack,
+                        ])
+                    self.assertEqual(result, expected_result)
+                    self.assertEqual(issue.call_args.args[0], expected_level)
+                    self.assertIn("renamed-connection-WIF", issue.call_args.args[1])
+                    self.assertEqual(notify.call_count, int(slack == "true"))
+                    if slack == "true":
+                        self.assertIn(
+                            "renamed-connection-WIF", notify.call_args.args[2]
+                        )
+                    self.assertEqual(run.call_count, 2)
+                    self.assertEqual(
+                        run.call_args_list[0].args[0],
+                        ["az", "account", "show", "--output", "json"],
+                    )
+                    self.assertEqual(run.call_args.args[0][0:6], [
+                        "az", "ad", "sp", "show", "--id", "current-client"
+                    ])
+                    http.assert_not_called()
 
     @mock.patch.dict(MODULE.os.environ, {"SYSTEM_TEAMPROJECT": "Project name"})
     @mock.patch.object(MODULE, "notify_slack")
-    @mock.patch.object(MODULE, "get_service_endpoint")
     @mock.patch.object(MODULE, "get_current_identity_info")
     @mock.patch.object(MODULE, "load_service_connection_policies")
     def test_main_unmapped_connection_skips_lookup_and_notifications(
-        self, load, current, endpoint, notify
+        self, load, current, notify
     ):
         load.return_value = [("policy", self.config)]
         current.return_value = self.identity_info
@@ -273,15 +302,13 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             MODULE.main(["--filepath", "map.yaml", "--service-connection", "unmapped"]),
             0,
         )
-        endpoint.assert_not_called()
         notify.assert_not_called()
 
     @mock.patch.object(MODULE, "notify_slack")
-    @mock.patch.object(MODULE, "get_service_endpoint")
     @mock.patch.object(MODULE, "get_current_identity_info")
     @mock.patch.object(MODULE, "load_service_connection_policies")
     def test_main_recognizes_valid_replacement_without_lookup_or_notifications(
-        self, load, current, endpoint, notify
+        self, load, current, notify
     ):
         load.return_value = [("policy", self.config)]
         current.return_value = self.replacement_identity_info
@@ -296,7 +323,6 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertIn("no further action required", "\n".join(logs.output))
         self.assertNotIn("no policy matches", "\n".join(logs.output))
-        endpoint.assert_not_called()
         notify.assert_not_called()
 
     @mock.patch.object(MODULE, "get_current_identity_info")
@@ -307,10 +333,6 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             ("Other project", "renamed-connection-WIF", self.replacement_identity_info),
             ("Project name", "unknown-WIF", self.replacement_identity_info),
             ("", "renamed-connection-WIF", self.replacement_identity_info),
-            (
-                "Project name", "renamed-connection-WIF",
-                {"identity_type": "ManagedIdentity", "identity_name": "unexpected"},
-            ),
             (
                 "Project name", "renamed-connection-WIF",
                 {"identity_type": "Unknown", "identity_name": "legacy-WIF-mi"},
@@ -442,51 +464,6 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
                     {"identity_type": expected, "identity_name": "identity"},
                 )
 
-    @mock.patch.object(MODULE, "get_service_principal_info")
-    def test_get_endpoint_identity_info_uses_endpoint_client_id(self, get_info):
-        get_info.return_value = {
-            "identity_type": "ManagedIdentity",
-            "identity_name": "legacy-WIF-mi",
-        }
-        result = MODULE.get_endpoint_identity_info(
-            {
-                "name": "legacy-WIF",
-                "authorization": {
-                    "parameters": {"serviceprincipalid": "client-id"}
-                },
-            }
-        )
-
-        self.assertEqual(result["identity_type"], "ManagedIdentity")
-        get_info.assert_called_once_with("client-id")
-
-    @mock.patch.object(MODULE, "urlopen")
-    def test_get_service_endpoint_matches_exact_endpoint_name(self, urlopen):
-        response = mock.MagicMock()
-        response.__enter__.return_value.read.return_value = json.dumps(
-            {
-                "value": [
-                    {"name": "legacy-connection-WIF", "id": "matching"},
-                    {"name": "legacy-connection-WIF-extra", "id": "other"},
-                ]
-            }
-        ).encode()
-        urlopen.return_value = response
-
-        result = MODULE.get_service_endpoint(
-            "legacy-connection-WIF",
-            "https://dev.azure.com/org/",
-            "project name",
-            "token",
-        )
-
-        self.assertEqual(result["id"], "matching")
-        request = urlopen.call_args.args[0]
-        query = parse_qs(urlparse(request.full_url).query)
-        self.assertEqual(query["actionFilter"], ["view"])
-        self.assertNotIn("endpointNames", query)
-        self.assertEqual(request.get_header("Authorization"), "Bearer token")
-
     @mock.patch.object(MODULE, "notify_slack")
     @mock.patch.object(MODULE, "log_pipeline_issue")
     def test_service_principal_identity_does_not_match_map_noops(self, log_issue, notify):
@@ -495,79 +472,6 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "legacy-connection",
             self.config,
             identity,
-            None,
-            None,
-            datetime.date(2026, 11, 1),
-            "webhook",
-            "repo",
-            "build-url",
-            "alice",
-            replacement_name="renamed-connection-WIF",
-        )
-
-        self.assertEqual(result, 0)
-        log_issue.assert_not_called()
-        notify.assert_not_called()
-
-    @mock.patch.object(MODULE, "notify_slack")
-    @mock.patch.object(MODULE, "log_pipeline_issue")
-    def test_missing_replacement_connection_noops(self, log_issue, notify):
-        result = MODULE.check_service_connection(
-            "legacy-connection",
-            self.config,
-            self.identity_info,
-            None,
-            None,
-            datetime.date(2026, 11, 1),
-            "webhook",
-            "repo",
-            "build-url",
-            "alice",
-            replacement_name="renamed-connection-WIF",
-        )
-
-        self.assertEqual(result, 0)
-        log_issue.assert_not_called()
-        notify.assert_not_called()
-
-    @mock.patch.object(MODULE, "notify_slack")
-    @mock.patch.object(MODULE, "log_pipeline_issue")
-    def test_wrong_replacement_identity_type_noops(self, log_issue, notify):
-        replacement_identity = {
-            "identity_type": "ServicePrincipal",
-            "identity_name": "legacy-WIF-mi",
-        }
-        result = MODULE.check_service_connection(
-            "legacy-connection",
-            self.config,
-            self.identity_info,
-            self.replacement_endpoint,
-            replacement_identity,
-            datetime.date(2026, 11, 1),
-            "webhook",
-            "repo",
-            "build-url",
-            "alice",
-            replacement_name="renamed-connection-WIF",
-        )
-
-        self.assertEqual(result, 0)
-        log_issue.assert_not_called()
-        notify.assert_not_called()
-
-    @mock.patch.object(MODULE, "notify_slack")
-    @mock.patch.object(MODULE, "log_pipeline_issue")
-    def test_wrong_replacement_identity_name_suffix_noops(self, log_issue, notify):
-        replacement_identity = {
-            "identity_type": "ManagedIdentity",
-            "identity_name": "legacy-wrong-suffix",
-        }
-        result = MODULE.check_service_connection(
-            "legacy-connection",
-            self.config,
-            self.identity_info,
-            self.replacement_endpoint,
-            replacement_identity,
             datetime.date(2026, 11, 1),
             "webhook",
             "repo",
@@ -587,8 +491,6 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "legacy-connection",
             self.config,
             self.identity_info,
-            self.replacement_endpoint,
-            self.replacement_identity_info,
             datetime.date(2026, 11, 30),
             "webhook",
             "repo",
@@ -608,8 +510,6 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "legacy-connection",
             self.config,
             self.identity_info,
-            self.replacement_endpoint,
-            self.replacement_identity_info,
             datetime.date(2026, 11, 30),
             "webhook",
             "repo",
@@ -630,8 +530,6 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
             "legacy-connection",
             self.config,
             self.identity_info,
-            self.replacement_endpoint,
-            self.replacement_identity_info,
             datetime.date(2026, 12, 1),
             "webhook",
             "repo",

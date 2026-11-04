@@ -10,7 +10,7 @@ parameters:
     default: 'true'
   - name: deprecationMapRef
     type: string
-    default: feat/DTSPO-34384-service-connection-policy
+    default: master
 
 steps:
   - script: |
@@ -44,7 +44,6 @@ steps:
             --slack-notifications "${{ parameters.slackNotificationsEnabled }}"
       env:
         SERVICE_CONNECTION: ${{ serviceConnection }}
-        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         SLACK_WEBHOOK_URL: $(registry-slack-webhook)
         BUILD_REPOSITORY_NAME: $(Build.Repository.Name)
         BUILD_BUILDURI: $(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)

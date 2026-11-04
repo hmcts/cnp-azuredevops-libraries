@@ -8,7 +8,6 @@ import os
 import subprocess
 import sys
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
 import yaml
@@ -90,16 +89,10 @@ def load_service_connection_policies(filepath):
             )
 
         identity_type = connection.get("identity_type")
-        replacement_identity_type = connection.get("replacement_identity_type")
-        replacement_identity_name_suffix = connection.get(
-            "replacement_identity_name_suffix"
-        )
         replacements = connection.get("replacements")
         deadline = connection.get("date_deadline")
         required = {
             "identity_type": identity_type,
-            "replacement_identity_type": replacement_identity_type,
-            "replacement_identity_name_suffix": replacement_identity_name_suffix,
             "date_deadline": deadline,
         }
         missing = [key for key, value in required.items() if not value]
@@ -120,8 +113,6 @@ def load_service_connection_policies(filepath):
                 {
                     **connection,
                     "identity_type": identity_type,
-                    "replacement_identity_type": replacement_identity_type,
-                    "replacement_identity_name_suffix": replacement_identity_name_suffix,
                     "replacements": replacements,
                     "date_deadline": deadline,
                 },
@@ -204,68 +195,6 @@ def get_current_identity_info():
         raise RuntimeError(
             "Azure CLI is not authenticated as a service principal for the "
             "configured service connection"
-        )
-    return get_service_principal_info(client_id)
-
-
-def get_service_endpoint(service_connection, organization_url, project, access_token):
-    if not organization_url or not project or not access_token:
-        raise RuntimeError(
-            "SYSTEM_COLLECTIONURI, SYSTEM_TEAMPROJECT, and SYSTEM_ACCESSTOKEN "
-            "are required to inspect Azure DevOps service connections"
-        )
-
-    query = urlencode(
-        {
-            "actionFilter": "view",
-            "api-version": "7.1",
-        }
-    )
-    url = (
-        f"{organization_url.rstrip('/')}/{quote(project, safe='')}"
-        f"/_apis/serviceendpoint/endpoints?{query}"
-    )
-    request = Request(
-        url,
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-    try:
-        with urlopen(request, timeout=15) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError) as error:
-        raise RuntimeError(
-            f"Could not look up Azure DevOps service connection "
-            f"'{service_connection}': {error}"
-        ) from error
-
-    endpoints = payload.get("value")
-    if not isinstance(endpoints, list):
-        raise RuntimeError("Azure DevOps returned an invalid service endpoint response")
-    matches = [
-        endpoint
-        for endpoint in endpoints
-        if endpoint.get("name", "").casefold() == service_connection.casefold()
-    ]
-    if len(matches) > 1:
-        raise RuntimeError(
-            f"More than one Azure DevOps service connection named "
-            f"'{service_connection}' was returned"
-        )
-    return matches[0] if matches else None
-
-
-def get_endpoint_identity_info(endpoint):
-    try:
-        client_id = endpoint["authorization"]["parameters"]["serviceprincipalid"]
-    except (KeyError, TypeError) as error:
-        raise RuntimeError(
-            f"Azure DevOps service connection '{endpoint.get('name', 'unknown')}' "
-            "does not expose a service principal ID"
-        ) from error
-    if not client_id:
-        raise RuntimeError(
-            f"Azure DevOps service connection '{endpoint.get('name', 'unknown')}' "
-            "has an empty service principal ID"
         )
     return get_service_principal_info(client_id)
 
@@ -355,8 +284,6 @@ def check_service_connection(
     service_connection,
     config,
     identity_info,
-    replacement_endpoint,
-    replacement_identity_info,
     today,
     slack_webhook_url,
     build_repository,
@@ -372,53 +299,6 @@ def check_service_connection(
             service_connection,
             identity_info["identity_type"],
             config["identity_type"],
-        )
-        return 0
-
-    if replacement_endpoint is None:
-        logger.info(
-            "Skipping deprecation notice for '%s': replacement service connection "
-            "'%s' was not found",
-            service_connection,
-            replacement_name,
-        )
-        return 0
-
-    if replacement_endpoint.get("name", "").casefold() != replacement_name.casefold():
-        logger.info(
-            "Skipping deprecation notice for '%s': found replacement service "
-            "connection '%s', expected '%s'",
-            service_connection,
-            replacement_endpoint.get("name", "unknown"),
-            replacement_name,
-        )
-        return 0
-
-    if replacement_identity_info is None:
-        raise RuntimeError(
-            f"Replacement service connection '{replacement_name}' exists but its "
-            "identity details were not retrieved"
-        )
-
-    if replacement_identity_info["identity_type"] != config["replacement_identity_type"]:
-        logger.info(
-            "Skipping deprecation notice for '%s': replacement identity type is '%s', "
-            "expected '%s'",
-            service_connection,
-            replacement_identity_info["identity_type"],
-            config["replacement_identity_type"],
-        )
-        return 0
-
-    if not replacement_identity_info["identity_name"].endswith(
-        config["replacement_identity_name_suffix"]
-    ):
-        logger.info(
-            "Skipping deprecation notice for '%s': replacement identity name '%s' "
-            "does not end with '%s'",
-            service_connection,
-            replacement_identity_info["identity_name"],
-            config["replacement_identity_name_suffix"],
         )
         return 0
 
@@ -481,10 +361,7 @@ def main(argv=None):
     if selected_policy is None:
         project = os.getenv("SYSTEM_TEAMPROJECT", "")
         already_using_replacement = any(
-            current_identity_info["identity_type"] == policy["replacement_identity_type"]
-            and current_identity_info["identity_name"].endswith(
-                policy["replacement_identity_name_suffix"]
-            )
+            current_identity_info["identity_type"] == "ManagedIdentity"
             and any(
                 project_name.casefold() == project.casefold()
                 and any(
@@ -521,48 +398,12 @@ def main(argv=None):
     if replacement_name is None:
         return 0
 
-    replacement_endpoint = None
-    replacement_identity_info = None
-    if current_identity_info["identity_type"] == config["identity_type"]:
-        logger.info(
-            "Looking for replacement service connection '%s'",
-            replacement_name,
-        )
-        replacement_endpoint = get_service_endpoint(
-            replacement_name,
-            os.getenv("SYSTEM_COLLECTIONURI"),
-            os.getenv("SYSTEM_TEAMPROJECT"),
-            os.getenv("SYSTEM_ACCESSTOKEN"),
-        )
-        if replacement_endpoint is None:
-            logger.info(
-                "Replacement service connection '%s' does not exist",
-                replacement_name,
-            )
-        else:
-            logger.info(
-                "Found replacement service connection '%s'",
-                replacement_endpoint.get("name", replacement_name),
-            )
-        replacement_identity_info = (
-            get_endpoint_identity_info(replacement_endpoint)
-            if replacement_endpoint is not None
-            else None
-        )
-        if replacement_identity_info is not None:
-            logger.info(
-                "Replacement service connection '%s' uses identity '%s' (type: %s)",
-                replacement_endpoint.get("name", replacement_name),
-                replacement_identity_info["identity_name"],
-                replacement_identity_info["identity_type"],
-            )
+    logger.info("Using replacement '%s' from the deprecation map", replacement_name)
     return check_service_connection(
         service_connection=args.service_connection,
         replacement_name=replacement_name,
         config=config,
         identity_info=current_identity_info,
-        replacement_endpoint=replacement_endpoint,
-        replacement_identity_info=replacement_identity_info,
         today=datetime.date.today(),
         slack_webhook_url=os.getenv("SLACK_WEBHOOK_URL"),
         build_repository=os.getenv("BUILD_REPOSITORY_NAME"),
