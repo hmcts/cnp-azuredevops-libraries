@@ -502,6 +502,12 @@ class ServiceConnectionNaggerTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertEqual(log_issue.call_args.args[0], "warning")
         notify.assert_called_once()
+        guidance_url = (
+            "https://hmcts.atlassian.net/wiki/spaces/DTSPO/pages/362971462/"
+            "DTSPO-34618+-+Service+principal+connections+and+their+WIF+replacements"
+        )
+        self.assertIn(guidance_url, log_issue.call_args.args[1])
+        self.assertIn(guidance_url, notify.call_args.args[2])
 
     @mock.patch.object(MODULE, "notify_slack")
     @mock.patch.object(MODULE, "log_pipeline_issue")

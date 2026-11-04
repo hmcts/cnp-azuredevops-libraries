@@ -306,7 +306,7 @@ def check_service_connection(
     after_deadline = today > deadline
     level = "error" if after_deadline else "warning"
     status = "is deprecated and must be replaced" if after_deadline else "is deprecated"
-    documentation_link = "https://hmcts.atlassian.net/wiki/spaces/DTSPO/pages/277283418/DTSPO-33859+-+Convert+existing+Azure+DevOps+service+connections+to+Workload+Identity+Federation"
+    documentation_link = "https://hmcts.atlassian.net/wiki/spaces/DTSPO/pages/362971462/DTSPO-34618+-+Service+principal+connections+and+their+WIF+replacements"
     message = (
         f"Service connection '{service_connection}' {status}. "
         f"\nPlease replace existing service connection in your pipeline with '{replacement_name}' before deprecation deadline {deadline.isoformat()}. "
