@@ -9,10 +9,6 @@ parameters:
   envVariableName: 'env'
 
 steps:
-- template: ./service-connection-deprecation-checker.yaml
-  parameters:
-    serviceConnections:
-      - ${{ parameters.serviceConnection }}
 
 - task: AzureCLI@2
   displayName: Determine Key Vault and Storage names
