@@ -17,7 +17,7 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az account set -s ${{ parameters.serviceConnection }}
+      # AzureCLI@2 selects the subscription configured on the service connection.
       SUB_ID=$(az account show --query id -o tsv)
       TENANT_ID=$(az account show --query tenantId -o tsv)
 
