@@ -25,6 +25,9 @@ parameters:
     default: 'aks-cft-deploy-bootstrap-issuer-url-token'
   - name: fluxConfigRepo
     type: string
+  - name: kvConnectedServiceName
+    type: string
+    default: 'azurerm-sandbox'
 
 steps:
 
@@ -32,6 +35,7 @@ steps:
   parameters:
     serviceConnections:
       - ${{ parameters.serviceConnection }}
+    kvConnectedServiceName: ${{ parameters.kvConnectedServiceName }}
 
 - task: AzureKeyVault@1
   displayName: 'Get OIDC issuer URL git token from Keyvault'
